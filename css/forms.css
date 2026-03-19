@@ -1,3 +1,4 @@
+
 .login-page {
     display: flex;
     justify-content: center;
@@ -61,3 +62,50 @@
 .login-btn:hover {
     background-color: #2980b9;
 }
+
+
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh; 
+    padding: 40px 0; 
+}
+
+.signup-box {
+    max-width: 500px; 
+}
+
+.input-group select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.radio-options {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.radio-label {
+    cursor: pointer;
+}
+
+.input-group input[type="radio"] {
+    width: auto;           
+    margin-right: 5px;     
+    margin-left: 20px;     
+    cursor: pointer;
+}
+.error{
+    color:red;
+    font-size:12px;
+}
+
+
+
+
