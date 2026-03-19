@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container auth-page">
+        <div class="login-box signup-box">
+            <h2>Create an Account</h2>
+            <form id="signup-form">
+                <div class="input-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter your name" required>
+                </div>
+
+                <div class="input-group radio-group">
+                   <label>Gender</label>
+                    <div class="radio-options">
+                        <input type="radio" id="female" name="gender" value="Female" required>
+                        <label for="female" class="radio-label">Female</label>
+
+                        <input type="radio" id="male" name="gender" value="Male">
+                        <label for="male" class="radio-label">Male</label>
+                        
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="university">University</label>
+                    <select id="university" required>
+                        <option value="" disabled selected>Select your university...</option>
+                        <option value="MIU">MIU</option>
+                        <option value="GIU">GIU</option>
+                        <option value="AAST">AAST</option>
+                        <option value="ACU">ACU (Chinese)</option>
+                        <option value="ASU">ASU (Ain Shams)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="major">Major</label>
+                    <select id="major" required>
+                        <option value="" disabled selected>Select your Major...</option>
+                        <option value="cs">Computer Science</option>
+                        <option value="B">Business</option>
+                        <option value="Bi">Business Informatics</option>
+                        <option value="M">Masscom</option>
+                        <option value="E">Engineering</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="text" id="email" placeholder="student@uni.edu" required>
+                    <div id="emailError" class="error"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="new-password">Password</label>
+                    <input type="password" id="new-password" placeholder="Create a password" required>
+                    <div id="passwordError" class="error"></div>
+                </div>
+
+                <div class="input-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" placeholder="Type password again" required>
+                    <div id="confirmError" class="error"></div>
+                </div>
+                
+                <button type="submit" class="login-btn">Sign Up</button>
+            </form>
+            
+            <p id="signup-message" style="display: none; margin-top: 10px;"></p>
+            <p style="margin-top: 15px; font-size: 14px;">
+                Have an account? <a href="login.html" style="color: #3498db; text-decoration: none; font-weight: bold;">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="../javaScript/app.js"></script>
+</body>
+</html>
