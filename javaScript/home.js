@@ -26,11 +26,14 @@ const emojisDict = {
 };
 
 // Transition from Home to Features Page
+// Transition from Home to Features Page
 btnFeatures.addEventListener('click', () => {
     homePage.style.display = 'none';
     featuresPage.style.display = 'flex';
+    cylinderScene.style.display = 'flex'; // <-- Added this to show the 3D scene & lid!
 });
 
+// Trigger 3D Cylinder Scene
 // Trigger 3D Cylinder Scene
 triggerLogo.addEventListener('click', () => {
     if(isCylinderOpen) return; 
@@ -38,20 +41,21 @@ triggerLogo.addEventListener('click', () => {
     
     // Fade out and remove the START button
     triggerLogo.style.opacity = '0';
+    
     setTimeout(() => { 
         triggerLogo.style.display = 'none'; 
         
-        // Show the 3D scene and controls
-        cylinderScene.style.display = 'flex';
+        // Show controls and trigger the card fade-in
         controls.style.display = 'flex';
+        cylinderScene.classList.add('is-open'); 
         
         // Initialize the view and start background effects
         updateCylinder();
         startEffects();
-    }, 400); // Wait for the CSS opacity transition
-});
+        
+    }, 400); // <-- Closes the setTimeout and sets the 400ms delay
+}); 
 
-// Rotate Cylinder & Change Background Color
 function updateCylinder() {
     if(!isCylinderOpen) return;
     
