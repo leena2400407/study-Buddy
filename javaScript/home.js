@@ -64,7 +64,7 @@ function updateCylinder() {
     
     // Pause the animated CSS gradient and apply the matching solid/radial background
     document.body.style.animation = 'none'; 
-    document.body.style.background = `linear-gradient(45deg, #e5e3e3 15%, ${bgColors[activeIdx]} 25%)`;
+    document.body.style.background = `radial-gradient(circle at center, ${bgColors[activeIdx]} 40%, #e5e3e3 95%) center / cover no-repeat`;
 }
 
 // Navigation Listeners

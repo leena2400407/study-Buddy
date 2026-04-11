@@ -44,14 +44,13 @@ body {
 
 .logo-placeholder {
     width: 160px; height: 160px; margin: 0 auto 30px auto;
-    background: linear-gradient(135deg, #FF416C 0%, #442bff 100%);
+    background:linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
     border-radius: 50%; display: flex; justify-content: center; align-items: center;
     font-weight: 900; font-size: 28px; cursor: pointer;
-    box-shadow: 0 0 40px rgba(255, 65, 108, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
-.logo-placeholder:hover { transform: scale(1.15) rotate(-5deg); box-shadow: 0 0 60px rgba(255, 65, 108, 0.8); }
+.logo-placeholder:hover { transform: scale(1.15) rotate(-5deg); box-shadow: 0 0 30px lab(90.53% 4.6 -0.01); }
 
 h1.title {
     font-size: 4.5rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px;
