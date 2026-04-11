@@ -69,3 +69,31 @@ body {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         button.main-btn:hover { background: #00F2FE; border-color: #00F2FE; color: #1a0b2e; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.5); }
+
+
+         #features-page { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: relative; z-index: 5;}
+        
+        .scene { width: 100vw; height: 100vh; perspective: 1500px; display: none; justify-content: center; align-items: center; }
+        .Cylinder { width: 400px; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1); }
+
+        .Cylinder__cell {
+            position: absolute; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; transition: all 0.5s ease; cursor: pointer;
+        }
+
+        .Cylinder__cell:nth-child(1) { transform: rotateY(0deg) translateZ(600px); }
+        .Cylinder__cell:nth-child(2) { transform: rotateY(60deg) translateZ(600px); }
+        .Cylinder__cell:nth-child(3) { transform: rotateY(120deg) translateZ(600px); }
+        .Cylinder__cell:nth-child(4) { transform: rotateY(180deg) translateZ(600px); }
+        .Cylinder__cell:nth-child(5) { transform: rotateY(240deg) translateZ(600px); }
+        .Cylinder__cell:nth-child(6) { transform: rotateY(300deg) translateZ(600px); }
+
+        .controls { position: absolute; bottom: 40px; display: flex; gap: 40px; z-index: 100; }
+        .control-btn { background: rgba(0,0,0,0.6); padding: 15px 30px; border-radius: 50px; border: 2px solid white; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .control-btn:hover { background: white; color: black; box-shadow: 0 0 20px white; }
+
+        h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
