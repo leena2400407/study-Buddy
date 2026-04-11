@@ -11,7 +11,7 @@ if (loginForm) {
         const errorMessage = document.getElementById('login-error');
         
         if (username === 'admin' || username === 'Admin' && password === 'Admin123') {
-            window.location.href = 'admin.html'; 
+            window.location.href = 'Admin.html'; 
             
         } else if (username === 'student' || username === 'Student' && password === 'Student123') {
             window.location.href = '../index.html'; 
