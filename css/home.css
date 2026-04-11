@@ -12,9 +12,7 @@ body {
     animation: gradientBG 15s ease infinite;
     color: white;
     min-height: 100vh;
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
+    display: flex; justify-content: center; align-items: center;
     overflow: hidden;
     transition: background 1s ease;
 }
@@ -24,84 +22,86 @@ body {
     pointer-events: none; z-index: 1; overflow: hidden;
 }
 
-.content {
-    position: relative;
-    z-index: 2;
-    text-align: center;
+@keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+}
+
+.floating-emoji { position: absolute; font-size: 3rem; animation: floatUp linear infinite; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+.sticky-note {
+    position: absolute; width: 100px; height: 100px;
+    background: #ffeb3b; color: black; padding: 10px;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
+    animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;
+}
+
+#home-page {
+    text-align: center; width: 100%; max-width: 900px;
+    position: absolute; z-index: 10;
 }
 
 .logo-placeholder {
-            width: 160px; height: 160px; margin: 0 auto 30px auto;
-            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-weight: 900; font-size: 28px; cursor: pointer;
-            box-shadow: 0 0 40px rgba(255, 65, 108, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
+    width: 160px; height: 160px; margin: 0 auto 30px auto;
+    background: linear-gradient(135deg, #FF416C 0%, #442bff 100%);
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    font-weight: 900; font-size: 28px; cursor: pointer;
+    box-shadow: 0 0 40px rgba(255, 65, 108, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
 .logo-placeholder:hover { transform: scale(1.15) rotate(-5deg); box-shadow: 0 0 60px rgba(255, 65, 108, 0.8); }
 
- /* === Home Page === */
+h1.title {
+    font-size: 4.5rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px;
+    background: linear-gradient(to right, #00F2FE, #4FACFE, #00F2FE);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(0, 242, 254, 0.3); font-weight: 900;
+}
 
-#home-page {
-        text-align: center; width: 100%; max-width: 900px;
-        position: absolute; z-index: 10;
-    }
+.btn-container { display: flex; justify-content: center; gap: 30px; margin-top: 40px; }
 
-    .logo-placeholder {
-        width: 60px; height: 60px; margin: 0 auto 30px auto; border-radius: 20%; display: flex; justify-content: center; align-items: center;
-    }
+button.main-btn {
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2);
+    padding: 18px 45px; font-size: 1.2rem; border-radius: 50px;
+    color: white; font-weight: 800; cursor: pointer;
+    backdrop-filter: blur(10px); transition: all 0.3s ease; text-transform: uppercase;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+button.main-btn:hover { background: #00F2FE; border-color: #00F2FE; color: #1a0b2e; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.5); }
 
-        h1.title {
-            font-size: 4.5rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px;
-            background: linear-gradient(to right, #00F2FE, #4FACFE, #00F2FE);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 242, 254, 0.3); font-weight: 900;
-        }
-        
-        .btn-container { display: flex; justify-content: center; gap: 30px; margin-top: 40px; }
-        button.main-btn {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2);
-            padding: 18px 45px; font-size: 1.2rem; border-radius: 50px;
-            color: rgb(255, 255, 255); font-weight: 800; cursor: pointer;
-            backdrop-filter: blur(10px); transition: all 0.3s ease; text-transform: uppercase;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        button.main-btn:hover { background: #00F2FE; border-color: #00F2FE; color: #1a0b2e; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.5); }
+#features-page { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: relative; z-index: 5;}
 
+.scene { width: 100vw; height: 100vh; perspective: 1500px; display: none; justify-content: center; align-items: center; }
+.Cylinder { width: 400px; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1); }
 
-         #features-page { display: none; flex-direction: column; justify-content: center; align-items: center; height: 100vh; position: relative; z-index: 5;}
-        
-        .scene { width: 100vw; height: 100vh; perspective: 1500px; display: none; justify-content: center; align-items: center; }
-        .Cylinder { width: 400px; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1); }
+.Cylinder__cell {
+    position: absolute; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; transition: all 0.5s ease; cursor: pointer;
+}
 
-        .Cylinder__cell {
-            position: absolute; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; transition: all 0.5s ease; cursor: pointer;
-        }
+.Cylinder__cell:nth-child(1) { transform: rotateY(0deg) translateZ(600px); }
+.Cylinder__cell:nth-child(2) { transform: rotateY(60deg) translateZ(600px); }
+.Cylinder__cell:nth-child(3) { transform: rotateY(120deg) translateZ(600px); }
+.Cylinder__cell:nth-child(4) { transform: rotateY(180deg) translateZ(600px); }
+.Cylinder__cell:nth-child(5) { transform: rotateY(240deg) translateZ(600px); }
+.Cylinder__cell:nth-child(6) { transform: rotateY(300deg) translateZ(600px); }
 
-        .Cylinder__cell:nth-child(1) { transform: rotateY(0deg) translateZ(600px); }
-        .Cylinder__cell:nth-child(2) { transform: rotateY(60deg) translateZ(600px); }
-        .Cylinder__cell:nth-child(3) { transform: rotateY(120deg) translateZ(600px); }
-        .Cylinder__cell:nth-child(4) { transform: rotateY(180deg) translateZ(600px); }
-        .Cylinder__cell:nth-child(5) { transform: rotateY(240deg) translateZ(600px); }
-        .Cylinder__cell:nth-child(6) { transform: rotateY(300deg) translateZ(600px); }
+.controls { position: absolute; bottom: 40px; display: flex; gap: 40px; z-index: 100; }
+.control-btn { background: rgba(0,0,0,0.6); padding: 15px 30px; border-radius: 50px; border: 2px solid white; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+.control-btn:hover { background: white; color: black; box-shadow: 0 0 20px white; }
 
-        .controls { position: absolute; bottom: 40px; display: flex; gap: 40px; z-index: 100; }
-        .control-btn { background: rgba(0,0,0,0.6); padding: 15px 30px; border-radius: 50px; border: 2px solid white; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .control-btn:hover { background: white; color: black; box-shadow: 0 0 20px white; }
+h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
 
-        h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
-
-        .floating-emoji { position: absolute; font-size: 3rem; animation: floatUp linear infinite; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-        .sticky-note {
-            position: absolute; width: 100px; height: 100px;
-            background: #ffeb3b; color: black; padding: 10px;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
-            animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;
-        }
+.floating-emoji { position: absolute; font-size: 3rem; animation: floatUp linear infinite; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+.sticky-note {
+    position: absolute; width: 100px; height: 100px;
+    background: #ffeb3b; color: black; padding: 10px;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
+    animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;      
+ }
