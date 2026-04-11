@@ -17,7 +17,11 @@ h1{
 }
 
 
-.stack{position:relative;width:330px;height:380px}
+.stack{
+  position:relative;
+  width:330px;
+  height:380px
+}
 
 
 .note{
@@ -39,9 +43,11 @@ h1{
 .note::before{
   content:'';
   position:absolute;
-  top:-12px;left:50%;
+  top:-12px;
+  left:50%;
   transform:translateX(-50%);
-  width:60px;height:25px;
+  width:60px;
+  height:25px;
   background:rgba(255,255,255,.5);
   border-radius:3px;
 }
@@ -50,16 +56,28 @@ h1{
 .note::after{
   content:'';
   position:absolute;
-  bottom:0;right:0;
-  width:60px;height:60px;
+  bottom:0;
+  right:0;
+  width:60px;
+  height:60px;
   background:linear-gradient(225deg,rgba(0,0,0,.2) 50%,transparent 50%);
   border-radius:0 0 40px 0;
 }
 
 
-.active{opacity:1;transform:rotate(-2deg) scale(1)}
-.behind{opacity:1;transform:rotate(2deg) scale(.95)}
-.fly{opacity:0;transform:translate(250px,-200px) rotate(20deg) scale(.5)}
+.active{
+  opacity:1;
+  transform:rotate(-2deg) scale(1)
+}
+
+.behind{
+  opacity:1;
+  transform:rotate(2deg) scale(.95)
+}
+.fly{
+  opacity:0;
+  transform:translate(250px,-200px) rotate(20deg) scale(.5)
+}
 
 
 .note:nth-child(1){background:#fff176}
@@ -67,14 +85,31 @@ h1{
 .note:nth-child(3){background:#80deea}
 .note:nth-child(4){background:#a5d6a7}
 .note:nth-child(5){background:#ffcc80}
+.note:nth-child(6){background:#ce93d8}
+.note:nth-child(7){background:#81d4fa}
+.note:nth-child(8){background:#aed581}
+.note:nth-child(9){background:#ffab91}
+.note:nth-child(10){background:#b0bec5}
 
 
-.dots{display:flex;gap:10px;margin-top:20px}
+.dots{ 
+  display:flex;
+  gap:10px;
+  margin-top:20px
+}
+
+
 .dot{
-  width:10px;height:10px;border-radius:50%;
+  width:10px;
+  height:10px;
+  border-radius:50%;
   background:rgba(255,255,255,.4);
 }
-.done{background:#fff}
+
+
+.done{
+  background:#fff
+}
 
 
 .hint{
@@ -83,13 +118,20 @@ h1{
   font-size:14px;
   animation:fade 1.5s infinite alternate;
 }
+
+
 @keyframes fade{
   from{opacity:.4}
   to{opacity:1}
 }
 
 
-.final{display:none;color:#fff8e7;text-align:center}
+.final{
+  display:none;
+  color:#fff8e7;
+  text-align:center
+}
+
 button{
   margin-top:15px;
   padding:10px 20px;
