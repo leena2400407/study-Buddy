@@ -30,7 +30,7 @@ body {
     text-align: center;
 }
 
- .logo-placeholder {
+.logo-placeholder {
             width: 160px; height: 160px; margin: 0 auto 30px auto;
             background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
@@ -41,3 +41,31 @@ body {
         }
 
 .logo-placeholder:hover { transform: scale(1.15) rotate(-5deg); box-shadow: 0 0 60px rgba(255, 65, 108, 0.8); }
+
+ /* === Home Page === */
+
+#home-page {
+        text-align: center; width: 100%; max-width: 900px;
+        position: absolute; z-index: 10;
+    }
+
+    .logo-placeholder {
+        width: 60px; height: 60px; margin: 0 auto 30px auto; border-radius: 20%; display: flex; justify-content: center; align-items: center;
+    }
+
+        h1.title {
+            font-size: 4.5rem; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px;
+            background: linear-gradient(to right, #00F2FE, #4FACFE, #00F2FE);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.3); font-weight: 900;
+        }
+        
+        .btn-container { display: flex; justify-content: center; gap: 30px; margin-top: 40px; }
+        button.main-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 18px 45px; font-size: 1.2rem; border-radius: 50px;
+            color: rgb(255, 255, 255); font-weight: 800; cursor: pointer;
+            backdrop-filter: blur(10px); transition: all 0.3s ease; text-transform: uppercase;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        button.main-btn:hover { background: #00F2FE; border-color: #00F2FE; color: #1a0b2e; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.5); }
