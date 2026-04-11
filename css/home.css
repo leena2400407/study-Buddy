@@ -1,0 +1,43 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+body {
+    background: linear-gradient(-45deg, #001eff, #6f00ff, #e75506, #e30202, #efd700, #07f30b);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: white;
+    min-height: 100vh;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    overflow: hidden;
+    transition: background 1s ease;
+}
+
+#bg-effects {
+    position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none; z-index: 1; overflow: hidden;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+ .logo-placeholder {
+            width: 160px; height: 160px; margin: 0 auto 30px auto;
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 28px; cursor: pointer;
+            box-shadow: 0 0 40px rgba(255, 65, 108, 0.6), inset 0 0 20px rgba(255,255,255,0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+.logo-placeholder:hover { transform: scale(1.15) rotate(-5deg); box-shadow: 0 0 60px rgba(255, 65, 108, 0.8); }
