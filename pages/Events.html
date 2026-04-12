@@ -143,10 +143,30 @@
     </div>
 
 
-
-
-
-
-
+ <div id="registration-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <div class="header-section" style="justify-content:space-between;">
+                <h2 id="modal-tournament-name" style="color:#00e5ff;">Tournament Name</h2>
+                <button class="remove-btn" onclick="closeRegistration()" style="font-size: 1.5rem;">&times;</button>
+            </div>
+            <form id="team-form" onsubmit="submitTeam(event)">
+                <div class="form-group">
+                    <label>Team Name *</label>
+                    <input type="text" id="team-name" required placeholder="Enter team name">
+                </div>
+                <div id="players-container">
+                    <div class="form-group">
+                        <label>Player 1 (Captain) *</label>
+                        <div class="player-inputs">
+                            <input type="text" placeholder="Full Name" required>
+                            <input type="email" placeholder="Email Address" required>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="add-player-btn" onclick="addPlayer()">+ Add Another Player</button>
+                <button type="submit" class="submit-btn">Complete Registration</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
