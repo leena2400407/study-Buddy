@@ -131,3 +131,25 @@ function startEffects() {
         setTimeout(() => { el.remove(); }, 7000);
     }, 400); 
 }
+window.addEventListener('DOMContentLoaded', () => {
+    
+    if (window.location.hash === '#cylinder') {
+        
+    
+        if (homePage) homePage.style.display = 'none';
+        if (featuresPage) featuresPage.style.display = 'flex';
+        
+        isCylinderOpen = true;
+        if (triggerLogo) triggerLogo.style.display = 'none'; 
+        
+        if (cylinderScene) {
+            cylinderScene.style.display = 'flex';
+            cylinderScene.classList.add('is-open'); // <-- CRITICAL: This makes the cards pop out!
+        }
+        
+        if (controls) controls.style.display = 'flex';
+        
+        updateCylinder();
+        startEffects();
+    }
+});
