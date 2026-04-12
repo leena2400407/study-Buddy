@@ -7,6 +7,8 @@ const controls = document.getElementById('controls');
 const CylinderElem = document.getElementById('Cylinder');
 const bgEffects = document.getElementById('bg-effects');
 const resourcesCard = document.getElementById('resources-card');
+const events = document.getElementById('event');
+const guid = document.getElementById('guid');
 
 
 let selectedIndex = 0;
@@ -92,6 +94,14 @@ document.getElementById('next-btn').addEventListener('click', () => {
 // Resources Card Link
 resourcesCard.addEventListener('click', () => {
     window.location.href = 'pages/Links&Resources.html'; 
+});
+
+events.addEventListener('click', () => {
+    window.location.href = 'pages/Events.html'; 
+});
+
+guid.addEventListener('click', () => {
+    window.location.href = 'pages/FreshmanGuid.html'; 
 });
 
 // Spawn Floating Emojis & Sticky Notes
