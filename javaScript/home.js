@@ -9,6 +9,7 @@ const bgEffects = document.getElementById('bg-effects');
 const resourcesCard = document.getElementById('resources-card');
 const events = document.getElementById('event');
 const guid = document.getElementById('guid');
+const eduGAte = document.getElementById('btn-edugate');
 
 
 let selectedIndex = 0;
@@ -102,6 +103,10 @@ events.addEventListener('click', () => {
 
 guid.addEventListener('click', () => {
     window.location.href = 'pages/FreshmanGuid.html'; 
+});
+
+eduGAte.addEventListener('click', () => {
+    window.location.href = 'pages/eduGAte.html'; 
 });
 
 // Spawn Floating Emojis & Sticky Notes
