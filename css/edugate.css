@@ -79,9 +79,9 @@ body {
 /* =========================================
    University Specific Backgrounds (Logos)
    ========================================= */
-.bg-miu { background-image: url('../assests/miuLogo.png'); background-size:initial; background-repeat: no-repeat; background-position: center; }
-.bg-asu { background-image: url('../assests/ASULogo.png'); background-size:contain; background-repeat: no-repeat; background-position: center; }
-.bg-aast { background-image: url('../assests/AASTLogo.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+.bg-miu { background-image: url('../assests/images/miuLogo.png'); background-size:initial; background-repeat: no-repeat; background-position: center; }
+.bg-asu { background-image: url('../assests/images/ASULogo.png'); background-size:contain; background-repeat: no-repeat; background-position: center; }
+.bg-aast { background-image: url('../assests/images/AASTLogo.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
 
 /* Card Content Wrappers */
 .card-top {
