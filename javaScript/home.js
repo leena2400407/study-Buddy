@@ -83,9 +83,24 @@ function updateCylinder() {
 
 // Navigation Listeners
 document.getElementById('prev-btn').addEventListener('click', () => { 
+
     selectedIndex--; 
     updateCylinder(); 
 });
+
+document.addEventListener('keydown', (event) => { 
+    if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        selectedIndex--;
+        updateCylinder();
+    }
+    if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        selectedIndex++;
+        updateCylinder();
+    }
+});
+
 
 document.getElementById('next-btn').addEventListener('click', () => { 
     selectedIndex++; 
