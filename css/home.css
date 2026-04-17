@@ -123,7 +123,7 @@ h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
     box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
     animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;      
  }
-.login-btn {
+.login-btn,.home {
             position: absolute;
             position: fixed;
             top: 15px;
@@ -140,7 +140,7 @@ h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
             z-index: 1000;
         }
 
-        .login-btn:hover {
+        .login-btn:hover,.home:hover {
             background: #00F2FE;
             color: #121212;
             box-shadow: 0 0 15px #00F2FE;

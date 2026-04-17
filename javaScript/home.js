@@ -173,3 +173,13 @@ window.addEventListener('DOMContentLoaded', () => {
         startEffects();
     }
 });
+function goHome() {
+    // 1. Hide the features section
+    document.getElementById('features-page').style.display = 'none';
+    
+    // 2. Show the home section (use 'block' or 'flex' depending on your CSS)
+    document.getElementById('home-page').style.display = 'block';
+    
+    // 3. Optional: Reset the URL hash
+    window.location.hash = 'home-page';
+}
