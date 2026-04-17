@@ -13,7 +13,22 @@
         <div class="scene" id="cylinder-scene" style="display: flex;">
             <div>
                <div class="home" onclick="window.location.href='../index.html'">Home</div> 
-
+               <div class="dropdown" style="right: 120px; ">
+                <button class="dropbtn" onclick="toggleDropdown()" style="background: none;border: none ;color: azure; cursor: pointer; padding: 5px 10px; font-weight: bold; ">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 5px;">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                        <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+                        <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
+                    </svg>
+                    Cylinder ▾
+                </button>
+                <div id="myDropdown" class="dropdown-content" style="display: none; position: absolute; background-color: rgba(0,0,0,0.9); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 8px; margin-top: 5px;">
+                    <a href="#" onclick="scrollToCell('event')" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Events 🎭</a>
+                    <a href="#" onclick="scrollToCell('game')" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Game 🎮</a>
+                    <a href="#" onclick="scrollToCell('resources-card')" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Resources 📚</a>
+                    <a href="#" onclick="scrollToCell('match')" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Match 🔥</a>
+                    <a href="#" onclick="scrollToCell('ai-chat')" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">AI Chat 🤖</a>
+                </div>
             </div>
             <div class="Cylinder" id="Cylinder">
                 

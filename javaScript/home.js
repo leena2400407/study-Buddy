@@ -202,3 +202,43 @@ function goHome() {
     // 3. Optional: Reset the URL hash
     window.location.hash = 'home-page';
 }
+// Toggle the dropdown visibility
+function toggleDropdown() {
+    const dropdown = document.getElementById("myDropdown");
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+}
+
+// Function to return to the landing page
+function goHome() {
+    document.getElementById('features-page').style.display = 'none';
+    document.getElementById('home-page').style.display = 'block';
+}
+
+// Function to navigate to specific cells
+function scrollToCell(cellId) {
+    const targetCell = document.getElementById(cellId);
+    if (targetCell) {
+        // Close dropdown after click
+        document.getElementById("myDropdown").style.display = "none";
+        
+        // Logic to rotate your 3D cylinder would go here
+        // For now, we will highlight the cell
+        targetCell.style.boxShadow = "0 0 20px #fff";
+        setTimeout(() => targetCell.style.boxShadow = "none", 2000);
+        
+        console.log("Navigating to: " + cellId);
+    }
+}
+
+// Close the dropdown if the user clicks outside of it
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.style.display === "block") {
+                openDropdown.style.display = "none";
+            }
+        }
+    }
+}
