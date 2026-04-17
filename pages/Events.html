@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Next Plan - Events</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/Events.css">
     </head>
 
@@ -19,30 +17,30 @@
         
         <div class="cards-container">
             <a href="#" class="main-card card-sports" onclick="showPage('tournaments-page', 'bg-sports')">
-                <i class="fa-solid fa-futbol"></i>
+                <span class="emoji">⚽</span>
                 <h2>Sports</h2>
                 <p>Match Tickets</p>
             </a>
 
             <a href="#" class="main-card card-entertainment" onclick="showPage('entertainment-page', 'bg-entertainment')">
-                <i class="fa-solid fa-music"></i>
+                <span class="emoji">🎤</span>
                 <h2>Entertainment</h2>
                 <p>Parties & Music Events</p>
             </a>
         </div>
 
         <div class="action-area">
-            <a href="#" class="sign-in">Sign in</a>
-            <span>or</span>
-            <a href="#" class="register-btn"><i class="fa-regular fa-user"></i> Register Now!</a>
-        </div>
+                <button class="sign-in">👋 Sign in</button>
+                <span>or</span>
+                <button class="register-btn">📝 Register Now!</button>
+            </div>
     </main>
 </div>
 
 <div id="tournaments-page" class="hidden">
         <div class="app-container">
             <div class="header-section">
-                <button class="glass-ui back-btn" onclick="goBack()"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="glass-ui back-btn" onclick="goBack()">&lt;</button>
                 <h1 class="page-title">Browse Tournaments</h1>
             </div>
 
@@ -85,7 +83,7 @@
     <div id="entertainment-page" class="hidden">
         <div class="app-container">
             <div class="header-section">
-                <button class="glass-ui back-btn" onclick="goBack()"><i class="fa-solid fa-chevron-left"></i></button>
+               <button class="glass-ui back-btn" onclick="goBack()">&lt;</button>
                 <h1 class="page-title">Events</h1>
             </div>
             
