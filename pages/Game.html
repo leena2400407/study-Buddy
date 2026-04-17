@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Puzzle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <ul class="bg-shapes" id="bgShapes"></ul>
+    <div class="glow-blob glow-blob-1"></div>
+    <div class="glow-blob glow-blob-2"></div>
+    <div class="glow-blob glow-blob-3"></div>
+    <div class="screen-flash" id="screenFlash"></div>
+
+    <div class="layout">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Best</div>
+                <div class="stat-value best-value" id="highScoreVal">0</div>
+            </div>
+            <div class="leaderboard-card">
+                <div class="lb-title">Top Scores</div>
+                <ul class="lb-list" id="leaderboardList"></ul>
+            </div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="game-center" id="mainContainer">
+            <div class="game-title">Block Puzzle</div>
+            <div class="grid-wrapper">
+                <div class="grid" id="grid"></div>
+            </div>
+            <div class="shapes-tray">
+                <div class="shapes-container" id="shapes"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="game-over-overlay" id="gameOverScreen">
+        <div class="game-over-box">
+            <div class="go-title">GAME OVER</div>
+            <div class="go-scores">
+                <div class="go-score-card">
+                    <div class="go-score-label">Your Score</div>
+                    <div class="go-score-val" id="finalScore">0</div>
+                </div>
+                <div class="go-score-card">
+                    <div class="go-score-label">All-Time Best</div>
+                    <div class="go-score-val best" id="finalBest">0</div>
+                </div>
+            </div>
+            <div class="go-rank-text" id="rankText"></div>
+            <div class="go-top-player">Leader: <span id="finalTopPlayer">-</span> with <span id="finalTopScore">0</span> pts</div>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+<script src="java.js"></script   >
+</body>
+</html>
