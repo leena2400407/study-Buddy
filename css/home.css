@@ -124,7 +124,7 @@ h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
     animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;      
  }
 
- 
+
 /* The 3D Lid (START Button) */
 .cylinder__lid {
     position: absolute;
@@ -227,4 +227,75 @@ h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
 
 .dropdown-content a:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+/* Container to anchor the card */
+.profile-dropdown {
+    position: relative;
+}
+
+/* The Card (Hidden by default) */
+.profile-card {
+    display: none; /* CRITICAL: This hides it until clicked */
+    position: absolute;
+    right: 0; 
+    top: 100%; 
+    background-color: #0b0b0b; /* Solid dark background from your image */
+    min-width: 240px;
+    border-radius: 16px; /* Slightly rounder corners */
+    margin-top: 15px;
+    padding: 25px 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    color: white;
+    
+    /* Prepares it for when JS reveals it */
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The Profile Image */
+.profile-avatar-img {
+    width: 80px; 
+    height: 80px; 
+    object-fit: cover; 
+    border-radius: 50%; 
+    border: 3px solid #2a2a2a; /* Dark gray ring from the image */
+    margin-bottom: 15px;
+}
+
+/* Text Styling */
+.profile-name {
+    margin: 0 0 15px 0;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.profile-info {
+    margin: 5px 0;
+    font-size: 0.95rem;
+    color: #cccccc;
+}
+
+.profile-info strong {
+    color: #ffffff;
+}
+
+/* The Dark Gray Button */
+.full-profile-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 16px;
+    background-color: #222222; /* Dark gray from your image */
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: background 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.full-profile-btn:hover {
+    background-color: #333333;
 }

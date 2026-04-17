@@ -249,3 +249,23 @@ window.onclick = function(event) {
         }
     }
 }
+function toggleProfile() {
+        var profileCard = document.getElementById("profileCard");
+        
+        // Toggle between hidden and flex (flex keeps everything centered!)
+        if (profileCard.style.display === "flex") {
+            profileCard.style.display = "none";
+        } else {
+            profileCard.style.display = "flex";
+        }
+    }
+
+    // This closes the card if you click anywhere else on the page
+    window.onclick = function(event) {
+        if (!event.target.closest('.profile-dropdown')) {
+            var profileCard = document.getElementById("profileCard");
+            if (profileCard && profileCard.style.display === "flex") {
+                profileCard.style.display = "none";
+            }
+        }
+    }

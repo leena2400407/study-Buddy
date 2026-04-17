@@ -12,36 +12,48 @@
     <div id="features-page" style="display: flex;">
         <div class="scene" id="cylinder-scene" style="display: flex;">
             <nav class="top-nav">
-        <div class="nav-container" style="position: fixed; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 1000;">
-            <div class="profile-link" onclick="window.location.href='profile.html'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                Profile
-            </div>
-           <div class="dropdown">
-                <button class="dropbtn" onclick="toggleDropdown()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                        <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
-                        <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
-                    </svg>
-                    Cylinder ▾
-                </button>
-                 <div id="myDropdown" class="dropdown-content" style="display: none; position: absolute; background-color: rgba(0,0,0,0.9); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 8px; margin-top: 5px;">
-                    <a href="Events.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center; ">Events </a>
-                    <a href="Game.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Game </a>
-                    <a href="Links&Resources.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Resources </a>
-                    <a href="Matching.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Match </a>
-                    <a href="ai.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">AI Chat </a>
-                    <a href="FreshmanGuid.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Guide </a>
+                <div class="nav-container" style="position: fixed; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 1000;">
+                    <div class="profile-dropdown">
+                        <button class="profile-link" onclick="toggleProfile()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Profile
+                        </button>
+                        <div id="profileCard" class="profile-card">
+                            <img src="../assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
+                            <h3 class="profile-name">Student</h3>
+                            <p class="profile-info"><strong>Gender:</strong> Female</p>
+                            <p class="profile-info"><strong>University:</strong> MIU</p>
+                            <p class="profile-info"><strong>Major:</strong> Computer Science</p>
+                            <p class="profile-info"><strong>Email:</strong>student@example.com</p>
+                            <a href="profile.html" class="full-profile-btn">View Full Profile</a>
+                        </div>
+</div>
+                
+                    <div class="dropdown">
+                         <button class="dropbtn" onclick="toggleDropdown()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+                                <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
+                            </svg>
+                            Cylinder ▾
+                        </button>
+                        <div id="myDropdown" class="dropdown-content" style="display: none; position: absolute; background-color: rgba(0,0,0,0.9); min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 8px; margin-top: 5px;">
+                            <a href="Events.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center; ">Events </a>
+                            <a href="Game.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Game </a>
+                            <a href="Links&Resources.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Resources </a>
+                            <a href="Matching.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Match </a>
+                            <a href="ai.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">AI Chat </a>
+                            <a href="FreshmanGuid.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Guide </a>
+                        </div>
+                    </div>
+                    <div class="home-link" onclick="window.location.href='../index.html'">Home</div>
+                    <div class="login-link" onclick="window.location.href='login.html'">Login</div>
                 </div>
-            </div>
-            <div class="home-link" onclick="window.location.href='../index.html'">Home</div> 
-            <div class="login-link" onclick="window.location.href='login.html'">Login</div>
-        </div>
-    </nav>
+            </nav>
             <div class="Cylinder" id="Cylinder">
                 
                 <div class="cylinder__lid" id="trigger-logo">START</div>
