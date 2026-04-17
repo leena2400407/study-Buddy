@@ -9,6 +9,7 @@ const bgEffects = document.getElementById('bg-effects');
 const resourcesCard = document.getElementById('resources-card');
 const events = document.getElementById('event');
 const guid = document.getElementById('guid');
+const ai = document.getElementById('ai');
 const eduGAte = document.getElementById('btn-edugate');
 
 
@@ -129,6 +130,12 @@ if (events) {
 if (guid) {
     guid.addEventListener('click', () => {
         window.location.href = 'FreshmanGuid.html'; 
+    });
+}
+
+if (ai) {
+    ai.addEventListener('click', () => {
+        window.location.href = 'ai.html'; 
     });
 }
 
