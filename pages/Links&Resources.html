@@ -3,28 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy - Library</title></head>
+    <title>The Academic Atlas</title></head>
 <body>
 
     <div class="huge-book">
         <div class="book-half left">
-            <h2 style="font-size: 3rem; color: #e96705; margin-bottom: 20px;">Library & Notes</h2>
-            <p style="font-size: 1.2rem; line-height: 1.8;">Welcome to the ultimate resource hub. Here you can find all your study materials, lecture summaries, and helpful links organized by major.</p>
-            <ul style="margin-top: 20px; font-size: 1.2rem; padding-left: 20px; line-height: 2;">
-                <li>📁 Computer Science 101</li>
-                <li>📁 Business Administration</li>
-                <li>📁 Engineering Physics</li>
-            </ul>
+            <h1 style="color: var(--book-orange); margin-bottom: 10px;">The Library</h1>
+            <p style="color: #666; font-style: italic;">"The more that you read, the more things you will know."</p>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #ccc;">
+            
+            <h3 class="section-title">📌 Quick Navigation</h3>
+            <p>Welcome to the ultimate resource hub. Here you can find all your study materials, lecture summaries, and helpful links organized by major.</p>
         </div>
-        <div class="book-half right">
-            <button class="close-book-btn" id="close-book" title="Go back">✖</button>
-            <h2 style="font-size: 3rem; color: #0077b6; margin-bottom: 20px;">Helper Links</h2>
-            <p style="font-size: 1.2rem; line-height: 1.8;">Click on any link below to access external tools and past exams.</p>
-            <div style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
-                <div style="padding: 15px; background: #e0f7fa; border-radius: 10px; cursor: pointer; border: 1px solid #00acc1;">🔗 Past Exams Drive</div>
-                <div style="padding: 15px; background: #f7f6f6; border-radius: 10px; cursor: pointer; border: 1px solid #ff8a65;">🔗 YouTube Playlists</div>
+       <div class="book-half right">
+            <div class="close-btn" onclick="window.location.href='home.html'">✖</div>
+
+            <div id="cs" class="content-set active">
+                <h2 style="color: var(--cs-color);">Computer Science</h2>
+                
+                <h3 class="section-title">📺 YouTube Playlists</h3>
+                <div class="link-grid">
+                    <a href="https://www.youtube.com/@DesoukiEgypt" target="_blank" class="resource-card" style="--hover-color: var(--yt-red)">
+                        <span>Your Comprehensive Guide to CS (Arabic)</span>
+                        <span class="icon-label">PLAYLIST ➔</span>
+                    </a>
+                    <a href="https://www.youtube.com/@abdul_bari" target="_blank" class="resource-card" style="--hover-color: var(--yt-red)">
+                        <span>Your Comprehensive Guide to CS (English)</span>
+                        <span class="icon-label">PLAYLIST ➔</span>
+                    </a>
+                    
+                </div>
+
+                <h3 class="section-title">📚 Books & PDFs</h3>
+                <div class="link-grid">
+                    <a href="https://www.sanfoundry.com/" target="_blank" class="resource-card" style="--hover-color: var(--cs-color)">
+                        <span>sanfoundry</span>
+                        <span class="icon-label">website ➔</span>
+                    </a>
+                    <a href="https://www.w3schools.com/" target="_blank" class="resource-card" style="--hover-color: var(--cs-color)">
+                        <span>w3schools</span>
+                        <span class="icon-label">website ➔</span>
+                    </a>
+                    <a href="C:\Users\Leena\Documents\GitHub\study-Buddy\assests\Links.pdf" target="_blank" class="resource-card" style="--hover-color: var(--cs-color)">
+                        <span>Helper links</span>
+                        <span class="icon-label">PDF ⬇</span>
+                    </a>
+                </div>
             </div>
-        </div>
+
+            <div id="bt" class="content-set">
+                <h2 style="color: var(--bt-color);">Business Tech</h2>
+                <h3 class="section-title">📺 YouTube Playlists</h3>
+                <div class="link-grid">
+                    <a href="#" class="resource-card" style="--hover-color: var(--yt-red)">
+                        <span>Tech Management for Beginners</span>
+                        <span class="icon-label">PLAYLIST ➔</span>
+                    </a>
+                </div>
+                <h3 class="section-title">📚 Books</h3>
+                <div class="link-grid">
+                    <a href="#" class="resource-card" style="--hover-color: var(--bt-color)">
+                        <span>Business Strategy 101</span>
+                        <span class="icon-label">PDF ⬇</span>
+                    </a>
+                </div>
+            </div>
+
+            <div id="b" class="content-set">
+                <h2 style="color: var(--b-color);">Biology</h2>
+                <h3 class="section-title">📺 YouTube Playlists</h3>
+                <div class="link-grid">
+                    <a href="#" class="resource-card" style="--hover-color: var(--yt-red)">
+                        <span>Crash Course Business</span>
+                        <span class="icon-label">PLAYLIST ➔</span>
+                    </a>
+                </div>
+                <h3 class="section-title">📚 Books</h3>
+                <div class="link-grid">
+                    <a href="#" class="resource-card" style="--hover-color: var(--b-color)">
+                        <span>Business Books and links</span>
+                        <span class="icon-label">PDF ⬇</span>
+                    </a>
+                </div>
+            </div>
     </div>
 </body>
 </html>
