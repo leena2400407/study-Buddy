@@ -12,3 +12,21 @@ function showPage(pageId, bgClass) {
      function goBack() {
         showPage('landing-page', 'bg-landing');
     }   
+    function openRegistration(event, name) {
+            event.preventDefault();
+            document.getElementById('modal-tournament-name').innerText = name;
+            document.getElementById('registration-modal').classList.remove('hidden');
+        }
+
+        function closeRegistration() {
+            document.getElementById('registration-modal').classList.add('hidden');
+        }
+
+       
+
+        function submitTeam(event) {
+            event.preventDefault();
+            alert('Registration Successful!');
+            closeRegistration();
+            document.getElementById('team-form').reset();
+        }
