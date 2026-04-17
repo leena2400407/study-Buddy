@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Buddy - Cylinder</title>
+    <link rel="stylesheet" href="../css/home.css"> 
+</head>
+<body>
+    <div id="bg-effects"></div>
+  
+    <div id="features-page" style="display: flex;">
+        <div class="scene" id="cylinder-scene" style="display: flex;">
+            <div>
+               <div class="home" onclick="window.location.href='../index.html'">Home</div> 
+
+            </div>
+            <div class="Cylinder" id="Cylinder">
+                
+                <div class="cylinder__lid" id="trigger-logo">START</div>
+                
+                <div class="Cylinder__cell" id="event">
+                    <h3>EVENTS 🎭</h3>
+                    <p style="font-size: 1.2rem; margin-top: 10px;">Fun & Sports</p>
+                </div>
+                <div class="Cylinder__cell">
+                    <h3>GAME 🎮</h3>
+                    <p style="font-size: 1.2rem;">Block Blast</p>
+                </div>
+                <div class="Cylinder__cell" id="resources-card">
+                    <h3>RESOURCES 📚</h3>
+                    <p style="font-size: 1.2rem;">Summaries & Materials</p>
+                </div>
+                <div class="Cylinder__cell">
+                    <h3>MATCH 🔥</h3>
+                    <p style="font-size: 1.2rem;">Find your study buddy</p>
+                </div>
+                <div class="Cylinder__cell">
+                    <h3>AI CHAT 🤖</h3>
+                    <p style="font-size: 1.2rem;">Your smart assistant</p>
+                </div>
+                <div class="Cylinder__cell" id ="guid">
+                    <h3>GUIDE 📌</h3>
+                    <p style="font-size: 1.2rem;">Freshmen Survival Kit</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <button class="control-btn" id="prev-btn">◀ PREV</button>
+            <button class="control-btn" id="next-btn">NEXT ▶</button>
+        </div>
+    </div>
+
+    <script src="../javaScript/home.js"></script>
+</body>
+</html>

@@ -28,34 +28,38 @@ const emojisDict = {
 
 
 // Transition from Home to Features Page
-btnFeatures.addEventListener('click', () => {
-    homePage.style.display = 'none';
-    featuresPage.style.display = 'flex';
-    cylinderScene.style.display = 'flex'; // <-- Added this to show the 3D scene & lid!
-});
+if (btnFeatures) {
+    btnFeatures.addEventListener('click', () => {
+        homePage.style.display = 'none';
+        featuresPage.style.display = 'flex';
+        cylinderScene.style.display = 'flex'; // <-- Added this to show the 3D scene & lid!
+    });
+}
 
 
 // Trigger 3D Cylinder Scene
-triggerLogo.addEventListener('click', () => {
-    if(isCylinderOpen) return; 
-    isCylinderOpen = true;
-    
-    // Fade out and remove the START button
-    triggerLogo.style.opacity = '0';
-    
-    setTimeout(() => { 
-        triggerLogo.style.display = 'none'; 
+if (triggerLogo) {
+    triggerLogo.addEventListener('click', () => {
+        if(isCylinderOpen) return; 
+        isCylinderOpen = true;
         
-        // Show controls and trigger the card fade-in
-        controls.style.display = 'flex';
-        cylinderScene.classList.add('is-open'); 
+        // Fade out and remove the START button
+        triggerLogo.style.opacity = '0';
         
-        // Initialize the view and start background effects
-        updateCylinder();
-        startEffects();
-        
-    }, 400); // <-- Closes the setTimeout and sets the 400ms delay
-}); 
+        setTimeout(() => { 
+            triggerLogo.style.display = 'none'; 
+            
+            // Show controls and trigger the card fade-in
+            controls.style.display = 'flex';
+            cylinderScene.classList.add('is-open'); 
+            
+            // Initialize the view and start background effects
+            updateCylinder();
+            startEffects();
+            
+        }, 400); // <-- Closes the setTimeout and sets the 400ms delay
+    }); 
+} 
 
 function updateCylinder() {
     if(!isCylinderOpen) return;
@@ -82,11 +86,12 @@ function updateCylinder() {
 }
 
 // Navigation Listeners
-document.getElementById('prev-btn').addEventListener('click', () => { 
-
-    selectedIndex--; 
-    updateCylinder(); 
-});
+if (document.getElementById('prev-btn')) {
+    document.getElementById('prev-btn').addEventListener('click', () => { 
+        selectedIndex--; 
+        updateCylinder(); 
+    });
+}
 
 document.addEventListener('keydown', (event) => { 
     if (event.key === 'ArrowLeft') {
@@ -101,31 +106,41 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-
-document.getElementById('next-btn').addEventListener('click', () => { 
-    selectedIndex++; 
-    updateCylinder(); 
-});
+if (document.getElementById('next-btn')) {
+    document.getElementById('next-btn').addEventListener('click', () => { 
+        selectedIndex++; 
+        updateCylinder(); 
+    });
+}
 
 // Resources Card Link
-resourcesCard.addEventListener('click', () => {
-    window.location.href = 'pages/Links&Resources.html'; 
-});
+if (resourcesCard) {
+    resourcesCard.addEventListener('click', () => {
+        window.location.href = 'Links&Resources.html'; 
+    });
+}
 
-events.addEventListener('click', () => {
-    window.location.href = 'pages/Events.html'; 
-});
+if (events) {
+    events.addEventListener('click', () => {
+        window.location.href = 'Events.html'; 
+    });
+}
 
-guid.addEventListener('click', () => {
-    window.location.href = 'pages/FreshmanGuid.html'; 
-});
+if (guid) {
+    guid.addEventListener('click', () => {
+        window.location.href = 'FreshmanGuid.html'; 
+    });
+}
 
-eduGAte.addEventListener('click', () => {
-    window.location.href = 'pages/eduGAte.html'; 
-});
+if (eduGAte) {
+    eduGAte.addEventListener('click', () => {
+        window.location.href = 'pages/eduGAte.html'; 
+    });
+}
 
 // Spawn Floating Emojis & Sticky Notes
 function startEffects() {
+    if (!bgEffects) return;
     setInterval(() => {
         let activeIdx = ((selectedIndex % cellCount) + cellCount) % cellCount;
         let el = document.createElement('div');
@@ -175,10 +190,14 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 function goHome() {
     // 1. Hide the features section
-    document.getElementById('features-page').style.display = 'none';
+    if (document.getElementById('features-page')) {
+        document.getElementById('features-page').style.display = 'none';
+    }
     
     // 2. Show the home section (use 'block' or 'flex' depending on your CSS)
-    document.getElementById('home-page').style.display = 'block';
+    if (document.getElementById('home-page')) {
+        document.getElementById('home-page').style.display = 'block';
+    }
     
     // 3. Optional: Reset the URL hash
     window.location.hash = 'home-page';
