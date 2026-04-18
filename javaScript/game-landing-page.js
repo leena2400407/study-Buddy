@@ -35,3 +35,16 @@
         }
 
         setInterval(createFloatingItem, 400);
+
+        function showPage(pageId) {
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('blockblast-page').classList.add('hidden');
+            document.getElementById('wordle-page').classList.add('hidden');
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.getElementById('blockblast-page').classList.add('hidden');
+            document.getElementById('wordle-page').classList.add('hidden');
+        }

@@ -225,6 +225,10 @@ function createFloatingLetters() {
 
           document.addEventListener("keydown", (e) => {
 
+             if(event.key === 'Backspace'){
+                deleteLetter();
+            }
+
             handleInput(e.key.toUpperCase());
         });
 

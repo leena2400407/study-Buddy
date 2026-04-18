@@ -8,9 +8,11 @@ const CylinderElem = document.getElementById('Cylinder');
 const bgEffects = document.getElementById('bg-effects');
 const resourcesCard = document.getElementById('resources-card');
 const events = document.getElementById('event');
+const gameCell = document.getElementById('game');
 const guid = document.getElementById('guid');
 const ai = document.getElementById('ai');
 const eduGAte = document.getElementById('btn-edugate');
+const game = document.getElementById('btn-game');
 
 
 let selectedIndex = 0;
@@ -129,6 +131,12 @@ if (events) {
     });
 }
 
+if (gameCell) {
+    gameCell.addEventListener('click', () => {
+        window.location.href = 'game-landing-page.html';
+    });
+}
+
 if (guid) {
     guid.addEventListener('click', () => {
         window.location.href = 'FreshmanGuid.html'; 
@@ -146,6 +154,7 @@ if (eduGAte) {
         window.location.href = 'pages/eduGAte.html'; 
     });
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
     
