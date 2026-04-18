@@ -161,6 +161,18 @@
             </form>
         </div>
     </div>
+    <div id="auth-modal" class="hidden modal-overlay">
+    <div class="modal-content" style="text-align: center;">
+        <h2 style="color:#00e5ff; margin-bottom: 20px;">Join the Game!</h2>
+        <p style="margin-bottom: 30px;">You need to have an account to register in tournaments.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <button class="submit-btn" onclick="window.location.href='login.html'">Login</button>
+            <button class="add-player-btn" style="border-style: solid;" onclick="window.location.href='SignUp.html'">Sign Up</button>
+            <button class="remove-btn" onclick="closeAuthModal()" style="font-size: 1rem;">Maybe Later</button>
+        </div>
+    </div>
+</div>
     <script src="../javaScript/events.js"></script>
 </body>
 </html>

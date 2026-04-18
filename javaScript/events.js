@@ -78,3 +78,43 @@ function showPage(pageId, bgClass) {
 function closeRegistration() {
     document.getElementById('registration-modal').classList.add('hidden');
 }
+
+let isLoggedIn = false; 
+let pendingTournamentName = "";
+
+function openRegistration(e, name) {
+    e.preventDefault();
+    
+    
+    if (!isLoggedIn) {
+        pendingTournamentName = name; 
+        document.getElementById('auth-modal').classList.remove('hidden');
+        return; 
+    }
+
+    
+    maxP = name.toLowerCase().includes('padel') ? 2 : 10; 
+    document.getElementById('modal-tournament-name').innerText = name;
+    
+    document.getElementById('players-container').innerHTML = `
+        <div class="form-group">
+            <label>Player 1 (Captain) *</label>
+            <div class="player-inputs">
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email Address" required>
+            </div>
+        </div>`;
+
+    document.querySelector('.add-player-btn').style.display = 'block';
+    document.getElementById('registration-modal').classList.remove('hidden');
+}
+
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').classList.add('hidden');
+}
+
+function simulateLogin() {
+    isLoggedIn = true; 
+    closeAuthModal();
+    }
