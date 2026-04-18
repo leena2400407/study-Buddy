@@ -1,0 +1,247 @@
+    /* RESET & BASE — dark, warm, readable */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0c0b0f;  /* deep dark, not pure black */
+      color: #e2dfe7;
+      font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.7;
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* normal page flow – no flex centering of container, just a column */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;        /* horizontal centering is fine, but content is full-width inside */
+      padding: 2.5rem 2rem 3rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* header – clean, minimal, like a real nav */
+    .story-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start; /* changed from space-between since no nav */
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+      border-bottom: 1px solid rgba(220, 210, 240, 0.08);
+      padding-bottom: 1.2rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 6px #b47aff55);
+    }
+
+    .logo-text {
+      font-size: 1.9rem;
+      font-weight: 350;
+      letter-spacing: -0.02em;
+      color: #f0eaff;
+    }
+
+    .logo-text span {
+      font-weight: 500;
+      color: #c4b0ff;
+    }
+
+    /* story section — normal block layout, not a box */
+    .story-section {
+      margin-bottom: 4rem;
+    }
+
+    .story-label {
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-size: 0.85rem;
+      color: #a28fd0;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 {
+      font-size: 3.4rem;
+      font-weight: 350;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #f3ecff;
+      margin-bottom: 1.8rem;
+      max-width: 900px;
+    }
+
+    h1 strong {
+      font-weight: 500;
+      color: #d4befc;
+    }
+
+    /* the story text – like a real narrative */
+    .story-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .story-block {
+      max-width: 880px;
+    }
+
+    .story-block p {
+      font-size: 1.25rem;
+      color: #cfc8e0;
+      margin-bottom: 1.5rem;
+    }
+
+    .story-block p:last-child {
+      margin-bottom: 0;
+    }
+
+    .highlight {
+      color: #e2d2ff;
+      font-weight: 400;
+      border-left: 3px solid #8f6ed6;
+      padding-left: 1.5rem;
+      margin: 2rem 0 1.5rem;
+    }
+
+    .story-quote {
+      font-style: italic;
+      font-size: 1.35rem;
+      color: #cdbdf2;
+      background: rgba(45, 30, 70, 0.2);
+      padding: 1.2rem 2rem;
+      border-radius: 2px;
+      margin: 2.2rem 0 1rem;
+      border-left: 1px solid #7a5ac7;
+    }
+
+    /* signature / who we are */
+    .signature-line {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .signature-line .line {
+      height: 1px;
+      background: rgba(170, 140, 220, 0.25);
+      flex: 1;
+    }
+
+    .signature-text {
+      color: #b6a2dc;
+      font-weight: 300;
+      letter-spacing: 2px;
+      font-size: 1rem;
+    }
+
+    /* button area — at the end of page, clearly separated */
+    .enter-section {
+      margin-top: 5rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid rgba(210, 190, 250, 0.1);
+      text-align: left;
+    }
+
+    .enter-message {
+      font-size: 1.2rem;
+      margin-bottom: 1.8rem;
+      color: #beb2db;
+    }
+
+    /* the "button" — not a box, but a nicely styled call-to-action */
+    .story-enter-btn {
+      display: inline-block;
+      background: transparent;
+      color: #e9deff;
+      font-size: 1.5rem;
+      font-weight: 380;
+      padding: 0.9rem 2.8rem 0.9rem 2.8rem;
+      border: 1.5px solid #7a62b9;
+      border-radius: 40px;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      background: rgba(20, 15, 30, 0.5);
+    }
+
+    .story-enter-btn:hover {
+      background: #7a62b9;
+      border-color: #a489e2;
+      color: #0f0c16;
+      box-shadow: 0 6px 18px #3d2c5e80;
+      transform: translateY(-2px);
+    }
+
+    .story-enter-btn i {
+      font-style: normal;
+      margin-left: 10px;
+      transition: margin 0.2s;
+    }
+
+    .story-enter-btn:hover i {
+      margin-left: 16px;
+    }
+
+    /* footer note — subtle */
+    .story-footer {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      color: #5e517a;
+      text-align: left;
+    }
+
+    /* responsiveness */
+    @media (max-width: 680px) {
+      .page {
+        padding: 1.8rem 1.5rem 2.5rem;
+      }
+      h1 {
+        font-size: 2.5rem;
+      }
+      .story-block p {
+        font-size: 1.15rem;
+      }
+      .story-enter-btn {
+        font-size: 1.3rem;
+        padding: 0.7rem 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .story-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+      }
+      h1 {
+        font-size: 2.1rem;
+      }
+    }
+
+    /* normal scroll, no box tricks — everything feels like a full page */
+    a, button {
+      cursor: pointer;
+    }
+
+    /* the "logo" from the picture description, just style */
+    .small-note {
+      opacity: 0.7;
+    }
