@@ -13,6 +13,7 @@ const guid = document.getElementById('guid');
 const ai = document.getElementById('ai');
 const eduGAte = document.getElementById('btn-edugate');
 const game = document.getElementById('btn-game');
+const matching = document.getElementById('btn-matching');
 
 
 let selectedIndex = 0;
@@ -155,7 +156,11 @@ if (eduGAte) {
     });
 }
 
-
+if (matching) {
+    matching.addEventListener('click', () => {
+        window.location.href = '../pages/Matching.html'; 
+    });
+}
 window.addEventListener('DOMContentLoaded', () => {
     
     if (window.location.hash === '#cylinder') {
