@@ -36,11 +36,7 @@ if (loginForm) {
                 university: 'Study Buddy',
                 major: 'System Administration'
             }));
-<<<<<<< Updated upstream
             window.location.href = getRedirectUrl();
-=======
-            window.location.href = 'Admin.html';
->>>>>>> Stashed changes
         } else if ((username === 'student' || username === 'Student') && password === 'Student123') {
             localStorage.setItem('currentUser', JSON.stringify({
                 username: 'student',
