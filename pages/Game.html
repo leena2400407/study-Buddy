@@ -6,7 +6,8 @@
     <title>Block Puzzle</title>
     <link rel="stylesheet" href="../css/game.css"></head>
 <body>
-
+   
+ 
     <ul class="bg-shapes" id="bgShapes"></ul>
     <div class="glow-blob glow-blob-1"></div>
     <div class="glow-blob glow-blob-2"></div>
@@ -21,6 +22,7 @@
                 <div class="stat-label">Score</div>
                 <div class="stat-value" id="score">0</div>
             </div>
+           
             <div class="stat-card">
                 <div class="stat-label">Best</div>
                 <div class="stat-value best-value" id="highScoreVal">0</div>
@@ -63,6 +65,8 @@
             <button class="restart-btn" onclick="restartGame()">Play Again</button>
         </div>
     </div>
+     <div class="close-btn" onclick="window.location.href='game-landing-page.html#cylinder'" style="color:rgb(255, 255, 255)">✖</div>
+    
 
 <script src="../javaScript/game.js"></script>
 </body>

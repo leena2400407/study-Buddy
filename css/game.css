@@ -344,3 +344,4 @@
         }
         .restart-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,245,255,0.4); }
         .restart-btn:active { transform: scale(0.96); }
+         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; color: #ffffff; }
