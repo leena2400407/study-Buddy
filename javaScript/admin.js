@@ -206,3 +206,202 @@ function saveGame() {
     toggleForm('form-games');
     renderGamesTable();
 }
+
+
+// DELETE FUNCTIONS
+function deleteEvent(index) {
+    if(confirm(`Remove "${adminData.events[index].title}"?`)) {
+        adminData.events.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderEventsTable();
+    }
+}
+
+function deleteResource(index) {
+    if(confirm(`Remove "${adminData.resources[index].title}"?`)) {
+        adminData.resources.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderResourcesTable();
+    }
+}
+
+function deleteGuide(index) {
+    if(confirm(`Remove "${adminData.guides[index].title}"?`)) {
+        adminData.guides.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderGuidesTable();
+    }
+}
+
+function deleteAI(index) {
+    if(confirm(`Remove "${adminData.ai[index].title}"?`)) {
+        adminData.ai.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderAITable();
+    }
+}
+
+
+function deleteEduGate(index) {
+    if(confirm(`Remove "${adminData.edugate[index].title}"?`)) {
+        adminData.edugate.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderEduGateTable();
+    }
+}
+
+function deleteGame(index) {
+    if(confirm(`Remove "${adminData.games[index].title}"?`)) {
+        adminData.games.splice(index, 1);
+        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
+        renderGamesTable();
+    }
+}
+
+
+// RENDER FUNCTIONS
+function renderEventsTable() {
+    const tbody = document.getElementById('table-events');
+    if (adminData.events.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No events available. Click "+ Create Event" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.events.map((e, i) => {
+        const badgeClass = e.category === 'sports' ? 'badge-sports' : 'badge-entertainment';
+        const badgeText = e.category === 'sports' ? '⚽ Sports' : '🎤 Entertainment';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(e.title)}</strong></td>
+            <td>${escapeHtml(e.desc)}</td>
+            <td><button class="btn-del" onclick="deleteEvent(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+function renderResourcesTable() {
+    const tbody = document.getElementById('table-resources');
+    if (adminData.resources.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No resources available. Click "+ Add Resource" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.resources.map((r, i) => {
+        const badgeClass = r.category === 'academic' ? 'badge-sports' : r.category === 'tools' ? 'badge-entertainment' : 'badge-sports';
+        const badgeText = r.category === 'academic' ? '📚 Academic' : r.category === 'tools' ? '🛠️ Tools' : '📄 Other';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(r.title)}</strong></td>
+            <td>${escapeHtml(r.desc)}</td>
+            <td><a href="${escapeHtml(r.link)}" target="_blank" style="color: #00e5ff;">Link</a></td>
+            <td><button class="btn-del" onclick="deleteResource(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+function renderGuidesTable() {
+    const tbody = document.getElementById('table-guides');
+    if (adminData.guides.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No guides available. Click "+ Add Guide" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.guides.map((g, i) => {
+        const badgeClass = g.category === 'freshman' ? 'badge-sports' : g.category === 'study' ? 'badge-entertainment' : 'badge-sports';
+        const badgeText = g.category === 'freshman' ? '🆕 Freshman' : g.category === 'study' ? '📖 Study' : '📄 Other';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(g.title)}</strong></td>
+            <td>${escapeHtml(g.desc)}</td>
+            <td><button class="btn-del" onclick="deleteGuide(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+function renderAITable() {
+    const tbody = document.getElementById('table-ai');
+    if (adminData.ai.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No AI features available. Click "+ Add AI Feature" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.ai.map((a, i) => {
+        const badgeClass = a.category === 'chatbot' ? 'badge-sports' : a.category === 'tools' ? 'badge-entertainment' : 'badge-sports';
+        const badgeText = a.category === 'chatbot' ? '💬 Chatbot' : a.category === 'tools' ? '🛠️ Tools' : '🤖 Other';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(a.title)}</strong></td>
+            <td>${escapeHtml(a.desc)}</td>
+            <td><a href="${escapeHtml(a.link)}" target="_blank" style="color: #00e5ff;">Link</a></td>
+            <td><button class="btn-del" onclick="deleteAI(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+function renderEduGateTable() {
+    const tbody = document.getElementById('table-edugate');
+    if (adminData.edugate.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No EduGate items available. Click "+ Add EduGate Item" to add one.侧
+        <td colspan="4" class="empty-state">No EduGate items available. Click "+ Add EduGate Item" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.edugate.map((e, i) => {
+        const badgeClass = e.category === 'courses' ? 'badge-sports' : e.category === 'tutorials' ? 'badge-entertainment' : 'badge-sports';
+        const badgeText = e.category === 'courses' ? '📚 Courses' : e.category === 'tutorials' ? '🎥 Tutorials' : '📄 Other';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(e.title)}</strong></td>
+            <td>${escapeHtml(e.desc)}</td>
+            <td><button class="btn-del" onclick="deleteEduGate(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+function renderGamesTable() {
+    const tbody = document.getElementById('table-games');
+    if (adminData.games.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games available. Click "+ Add Game" to add one.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = adminData.games.map((g, i) => {
+        const badgeClass = g.category === 'puzzle' ? 'badge-sports' : g.category === 'quiz' ? 'badge-entertainment' : 'badge-sports';
+        const badgeText = g.category === 'puzzle' ? '🧩 Puzzle' : g.category === 'quiz' ? '❓ Quiz' : '🎮 Other';
+        return `
+        <tr>
+            <td><span class="${badgeClass}">${badgeText}</span></td>
+            <td><strong>${escapeHtml(g.title)}</strong></td>
+            <td>${escapeHtml(g.desc)}</td>
+            <td><a href="${escapeHtml(g.link)}" target="_blank" style="color: #00e5ff;">Play</a></td>
+            <td><button class="btn-del" onclick="deleteGame(${i})">Remove</button></td>
+        </tr>`;
+    }).join('');
+}
+
+
+// Security: Escape HTML to prevent XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+
+// Initialize all tables on page load
+document.addEventListener('DOMContentLoaded', function() {
+    renderEventsTable();
+    renderResourcesTable();
+    renderGuidesTable();
+    renderAITable();
+    renderEduGateTable();
+    renderGamesTable();
+});
