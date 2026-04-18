@@ -152,7 +152,7 @@ if (ai) {
 
 if (eduGAte) {
     eduGAte.addEventListener('click', () => {
-        window.location.href = 'eduGate.html'; 
+        window.location.href = '../pages/eduGate.html'; 
     });
 }
 
