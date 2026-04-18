@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Admin - Cylinder</title>
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>CYLINDER ADMIN</h2>
+        <ul class="nav-links">
+            <li><a class="active" id="nav-events">🎟️ Manage Events</a></li>
+            <li><a id="nav-resources">📚 Manage Resources</a></li>
+            <li><a id="nav-guides">🗒️ Manage Guides</a></li>
+            <li><a id="nav-ai">🤖 Manage AI</a></li>
+            <li><a id="nav-edugate">🎓 Manage EduGate</a></li>
+            <li><a id="nav-games">🎮 Manage Games</a></li>
+        </ul>
+        <a href="../index.html" class="exit-btn">Exit to Site</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Website Admin Panel</h1>
+            <p class="subtitle">Manage all content across the website sections.</p>
+        </div>
+
+        <!-- EVENTS SECTION -->
+        <div id="view-events" class="workspace active">
+            <div class="workspace-header">
+                <h2>Listed Events</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-events')">+ Create Event</button>
+                    <button class="btn-reset" onclick="resetToExample('events')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-events" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="ev-category">
+                        <option value="sports">Sports</option>
+                        <option value="entertainment">Entertainment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Event Title</label>
+                    <input type="text" id="ev-title" placeholder="e.g. University Football Cup">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="ev-desc" placeholder="e.g. Registration open for 5-a-side teams">
+                </div>
+                <div class="form-group">
+                    <label>Background Image Path (Optional)</label>
+                    <input type="text" id="ev-img" placeholder="../assests/images/football.avif">
+                </div>
+                <button class="btn-submit" onclick="saveEvent()">Publish Event</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Event Title</th>
+                        <th>Description</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-events"></tbody>
+            </table>
+        </div>
+
+        <!-- RESOURCES SECTION -->
+        <div id="view-resources" class="workspace">
+            <div class="workspace-header">
+                <h2>Listed Resources</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-resources')">+ Add Resource</button>
+                    <button class="btn-reset" onclick="resetToExample('resources')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-resources" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="res-category">
+                        <option value="academic">Academic</option>
+                        <option value="tools">Tools</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Resource Title</label>
+                    <input type="text" id="res-title" placeholder="e.g. Online Library">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="res-desc" placeholder="e.g. Access to digital books">
+                </div>
+                <div class="form-group">
+                    <label>Link</label>
+                    <input type="text" id="res-link" placeholder="https://example.com">
+                </div>
+                <button class="btn-submit" onclick="saveResource()">Add Resource</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Resource Title</th>
+                        <th>Description</th>
+                        <th>Link</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-resources"></tbody>
+            </table>
+        </div>
+
+        <!-- GUIDES SECTION -->
+        <div id="view-guides" class="workspace">
+            <div class="workspace-header">
+                <h2>Listed Guides</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-guides')">+ Add Guide</button>
+                    <button class="btn-reset" onclick="resetToExample('guides')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-guides" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="guide-category">
+                        <option value="freshman">Freshman</option>
+                        <option value="study">Study Tips</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Guide Title</label>
+                    <input type="text" id="guide-title" placeholder="e.g. Time Management">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="guide-desc" placeholder="e.g. Tips for balancing studies">
+                </div>
+                <div class="form-group">
+                    <label>Image Path (Optional)</label>
+                    <input type="text" id="guide-img" placeholder="../assests/images/guide.avif">
+                </div>
+                <button class="btn-submit" onclick="saveGuide()">Add Guide</button>
+            </div>
+
+            <tr>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Guide Title</th>
+                        <th>Description</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-guides"></tbody>
+            </table>
+        </div>
+
+        <!-- AI SECTION -->
+        <div id="view-ai" class="workspace">
+            <div class="workspace-header">
+                <h2>Listed AI Features</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-ai')">+ Add AI Feature</button>
+                    <button class="btn-reset" onclick="resetToExample('ai')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-ai" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="ai-category">
+                        <option value="chatbot">Chatbot</option>
+                        <option value="tools">Tools</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Feature Title</label>
+                    <input type="text" id="ai-title" placeholder="e.g. Study Assistant">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="ai-desc" placeholder="e.g. AI-powered study help">
+                </div>
+                <div class="form-group">
+                    <label>Link or Image Path</label>
+                    <input type="text" id="ai-link" placeholder="https://ai.example.com">
+                </div>
+                <button class="btn-submit" onclick="saveAI()">Add AI Feature</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Feature Title</th>
+                        <th>Description</th>
+                        <th>Link/Image</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-ai"></tbody>
+            </table>
+        </div>
+
+        <!-- EDUGATE SECTION -->
+        <div id="view-edugate" class="workspace">
+            <div class="workspace-header">
+                <h2>Listed EduGate Items</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-edugate')">+ Add EduGate Item</button>
+                    <button class="btn-reset" onclick="resetToExample('edugate')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-edugate" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="edugate-category">
+                        <option value="courses">Courses</option>
+                        <option value="tutorials">Tutorials</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Item Title</label>
+                    <input type="text" id="edugate-title" placeholder="e.g. Math Course">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="edugate-desc" placeholder="e.g. Advanced calculus">
+                </div>
+                <div class="form-group">
+                    <label>Image Path (Optional)</label>
+                    <input type="text" id="edugate-img" placeholder="../assests/images/course.avif">
+                </div>
+                <button class="btn-submit" onclick="saveEduGate()">Add EduGate Item</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Item Title</th>
+                        <th>Description</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-edugate"></tbody>
+            </table>
+        </div>
+
+        <!-- GAMES SECTION -->
+        <div id="view-games" class="workspace">
+            <div class="workspace-header">
+                <h2>Listed Games</h2>
+                <div class="button-group">
+                    <button class="btn-add" onclick="toggleForm('form-games')">+ Add Game</button>
+                    <button class="btn-reset" onclick="resetToExample('games')">⟳ Reset Example</button>
+                </div>
+            </div>
+            
+            <div id="form-games" class="form-box">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="game-category">
+                        <option value="puzzle">Puzzle</option>
+                        <option value="quiz">Quiz</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Game Title</label>
+                    <input type="text" id="game-title" placeholder="e.g. Block Puzzle">
+                </div>
+                <div class="form-group">
+                    <label>Short Description</label>
+                    <input type="text" id="game-desc" placeholder="e.g. Fun block puzzle game">
+                </div>
+                <div class="form-group">
+                    <label>Link</label>
+                    <input type="text" id="game-link" placeholder="Game.html">
+                </div>
+                <button class="btn-submit" onclick="saveGame()">Add Game</button>
+            </div>
+
+            <tr>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Game Title</th>
+                        <th>Description</th>
+                        <th>Link</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-games"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../javaScript/admin.js"></script>
+</body>
+</html>
