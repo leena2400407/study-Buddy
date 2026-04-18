@@ -96,5 +96,5 @@
         .content-set.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; }
+        .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; color: #000000; }
     
