@@ -17,14 +17,21 @@ let selectedIndex = 0;
 const cellCount = 6; 
 let isCylinderOpen = false;
 
-const bgColors = ["#0a3622", "#2b0a3d", "#0b132b", "#310000", "#1c1c1c", "#002b36"];
+    const bgImages = [
+            'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1920', // Events (Stadium)
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920', // Game (Gaming)
+            'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920', // Resources (Library)
+            'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1920', // Match (Friends)
+            'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1920', // AI Chat (Tech)
+            'https://images.unsplash.com/flagged/photo-1554473675-d0904f3cbf38?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8dW5pdmVyc2l0eSUyMGNhbXB1c3xlbnwwfHwwfHx8MA%3D%3D'  // Guide (Campus)
+        ]
 const emojisDict = {
-    0: ['⚽️', '🏀', '🎉', '🎆', '🎾'], 
+    /*0: ['⚽️', '🏀', '🎉', '🎆', '🎾'], 
     1: ['🧱', '🕹️', '👾', '💥'],      
     2: ['📚', '📖', '📝', '🧠'],      
     3: ['🔥', '🤝', '👯‍♂️', '⚡'],      
     4: ['🤖', '✨', '⚙️', '💬'],      
-    5: ['📌', '🗒️']                  
+    5: ['📌', '🗒️'] */                 
 };
 
 
@@ -81,9 +88,11 @@ function updateCylinder() {
         }
     });
     
-    // Pause the animated CSS gradient and apply the matching solid/radial background
-    document.body.style.animation = 'none'; 
-    document.body.style.background = `radial-gradient(circle at center, ${bgColors[activeIdx]} 40%, #e5e3e3 95%) center / cover no-repeat`;
+    document.body.style.animation = 'none';
+    const activeImage = bgImages[activeIdx] || bgImages[0];
+    
+    // Flipped to make the center clear and the edges dark (Vignette)
+    document.body.style.background = `radial-gradient(circle at center, rgba(10, 18, 34, 0) 30%, rgba(5, 10, 20, 0.95) 80%), url('${activeImage}') center/cover no-repeat`;
 }
 
 // Navigation Listeners

@@ -29,14 +29,6 @@ body {
     100% { transform: translateY(100vh) rotate(360deg) scale(1.2); opacity: 0; }
 }
 
-.floating-emoji { position: absolute; font-size: 3rem; animation: floatUp linear infinite; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-.sticky-note {
-    position: absolute; width: 100px; height: 100px;
-    background: #ffeb3b; color: black; padding: 10px;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
-    animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;
-}
-
 #home-page {
     text-align: center; width: 100%; max-width: 900px;
     position: absolute; z-index: 10;
@@ -115,14 +107,6 @@ button.main-btn:hover { background: #00F2FE; border-color: #00F2FE; color: #1a0b
 .control-btn:hover { background: white; color: black; box-shadow: 0 0 20px white; }
 
 h3 { font-size: 2.5rem; margin-bottom: 15px; text-transform: uppercase; }
-
-.floating-emoji { position: absolute; font-size: 3rem; animation: floatUp linear infinite; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-.sticky-note {
-    position: absolute; width: 100px; height: 100px;
-    background: #ffeb3b; color: black; padding: 10px;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 0.8rem;
-    animation: floatUp linear infinite; text-align: center; border-bottom-right-radius: 20px 5px;      
- }
 
 
 /* The 3D Lid (START Button) */
