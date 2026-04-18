@@ -14,9 +14,7 @@
             <li><a class="active" id="nav-events">🎟️ Manage Events</a></li>
             <li><a id="nav-resources">📚 Manage Resources</a></li>
             <li><a id="nav-guides">🗒️ Manage Guides</a></li>
-            <li><a id="nav-ai">🤖 Manage AI</a></li>
             <li><a id="nav-edugate">🎓 Manage EduGate</a></li>
-            <li><a id="nav-games">🎮 Manage Games</a></li>
         </ul>
         <a href="index.html" class="exit-btn">Exit to Site</a>
     </div>
@@ -168,54 +166,6 @@
             </table>
         </div>
 
-        <!-- AI SECTION -->
-        <div id="view-ai" class="workspace">
-            <div class="workspace-header">
-                <h2>Listed AI Features</h2>
-                <div class="button-group">
-                    <button class="btn-add" onclick="toggleForm('form-ai')">+ Add AI Feature</button>
-                    <button class="btn-reset" onclick="resetToExample('ai')">⟳ Reset Example</button>
-                </div>
-            </div>
-            
-            <div id="form-ai" class="form-box">
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="ai-category">
-                        <option value="chatbot">Chatbot</option>
-                        <option value="tools">Tools</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Feature Title</label>
-                    <input type="text" id="ai-title" placeholder="e.g. Study Assistant">
-                </div>
-                <div class="form-group">
-                    <label>Short Description</label>
-                    <input type="text" id="ai-desc" placeholder="e.g. AI-powered study help">
-                </div>
-                <div class="form-group">
-                    <label>Link or Image Path</label>
-                    <input type="text" id="ai-link" placeholder="https://ai.example.com">
-                </div>
-                <button class="btn-submit" onclick="saveAI()">Add AI Feature</button>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Feature Title</th>
-                        <th>Description</th>
-                        <th>Link/Image</th>
-                        <th style="width: 120px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="table-ai"></tbody>
-            </table>
-        </div>
-
         <!-- EDUGATE SECTION -->
         <div id="view-edugate" class="workspace">
             <div class="workspace-header">
@@ -262,56 +212,6 @@
                 <tbody id="table-edugate"></tbody>
             </table>
         </div>
-
-        <!-- GAMES SECTION -->
-        <div id="view-games" class="workspace">
-            <div class="workspace-header">
-                <h2>Listed Games</h2>
-                <div class="button-group">
-                    <button class="btn-add" onclick="toggleForm('form-games')">+ Add Game</button>
-                    <button class="btn-reset" onclick="resetToExample('games')">⟳ Reset Example</button>
-                </div>
-            </div>
-            
-            <div id="form-games" class="form-box">
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="game-category">
-                        <option value="puzzle">Puzzle</option>
-                        <option value="quiz">Quiz</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Game Title</label>
-                    <input type="text" id="game-title" placeholder="e.g. Block Puzzle">
-                </div>
-                <div class="form-group">
-                    <label>Short Description</label>
-                    <input type="text" id="game-desc" placeholder="e.g. Fun block puzzle game">
-                </div>
-                <div class="form-group">
-                    <label>Link</label>
-                    <input type="text" id="game-link" placeholder="Game.html">
-                </div>
-                <button class="btn-submit" onclick="saveGame()">Add Game</button>
-            </div>
-
-            <tr>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>Game Title</th>
-                        <th>Description</th>
-                        <th>Link</th>
-                        <th style="width: 120px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="table-games"></tbody>
-            </table>
-        </div>
-    </div>
-
     <script src="../javaScript/admin.js"></script>
 </body>
 </html>
