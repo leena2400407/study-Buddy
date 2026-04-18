@@ -1,0 +1,336 @@
+/* --- CORE STYLES --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: #0f172a;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background-color: #020617;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    padding: 30px 20px;
+    color: #00e5ff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 20px 0;
+    flex-grow: 1;
+}
+
+.nav-links li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 25px;
+    color: #94a3b8;
+    text-decoration: none;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.nav-links li a:hover,
+.nav-links li a.active {
+    color: #fff;
+    border-left-color: #00e5ff;
+    background-color: rgba(0, 229, 255, 0.05);
+}
+
+.exit-btn {
+    margin: 20px;
+    padding: 15px;
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.exit-btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+    background: linear-gradient(to bottom, #0f172a, #020617);
+}
+
+.header {
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 2.2rem;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+/* --- WORKSPACE & FORMS --- */
+.workspace {
+    display: none;
+}
+
+.workspace.active {
+    display: block;
+}
+
+.workspace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-add {
+    background-color: #00e5ff;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 229, 255, 0.4);
+}
+
+.form-box {
+    display: none;
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 30px;
+    gap: 15px;
+    flex-wrap: wrap;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-group {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-box input,
+.form-box select {
+    padding: 12px 15px;
+    background-color: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.form-box input:focus,
+.form-box select:focus {
+    border-color: #00e5ff;
+}
+
+.btn-submit {
+    flex: 1 1 100%;
+    background-color: #10b981;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #059669;
+}
+
+/* --- TABLES --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th,
+td {
+    padding: 18px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+th {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+td {
+    color: #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.badge-sports {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.badge-entertainment {
+    background: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.btn-del {
+    background-color: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-del:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Button group styling */
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-reset {
+    background-color: #f59e0b;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-reset:hover {
+    transform: translateY(-2px);
+    background-color: #d97706;
+}
+
+/* Links */
+a[style*="color: #00e5ff"] {
+    color: #00e5ff !important;
+    text-decoration: none;
+}
+
+a[style*="color: #00e5ff"]:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 220px;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+    
+    th, td {
+        padding: 12px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .workspace-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
