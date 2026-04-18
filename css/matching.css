@@ -193,3 +193,4 @@
     }
 
         .btn-match:hover { background: var(--primary); }
+         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; color: #ffffff; }
