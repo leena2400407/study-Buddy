@@ -18,6 +18,9 @@
         <div class="profile-avatar"> 
             <img src="../assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
         </div>
+        <div id="admin-profile-note" class="profile-info" style="display:none; color: #f1c40f; margin-bottom: 20px;">
+            Admin profile details are not available.
+        </div>
         <div class="profile-details">
             <div class="input-group">
                 <label>Full Name</label>
@@ -58,6 +61,9 @@
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
     if (!currentUser) {
         window.location.href = 'LogIn.html';
+    } else if (currentUser.role === 'admin') {
+        document.getElementById('admin-profile-note').style.display = 'block';
+        document.querySelector('.profile-details').style.display = 'none';
     } else {
         document.getElementById('profile-name').textContent = currentUser.name || '-';
         document.getElementById('profile-username').textContent = currentUser.username || '-';

@@ -28,6 +28,9 @@
                             <p class="profile-info"><strong>University:</strong> <span id="dropdown-university">N/A</span></p>
                             <p class="profile-info"><strong>Major:</strong> <span id="dropdown-major">N/A</span></p>
                             <p class="profile-info"><strong>Email:</strong> <span id="dropdown-email">N/A</span></p>
+                            <div id="admin-dropdown-note" class="profile-info" style="display:none; color: #f1c40f; margin-top: 10px;">
+                                Admin profile details are not available.
+                            </div>
                             <a href="profile.html#info" class="full-profile-btn">View Full Profile</a>
                             <button onclick="logout()" class="logout-btn">Logout</button>
                         </div>
@@ -100,12 +103,18 @@
         }
 
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-        if (currentUser && currentUser.role !== 'admin') {
-            document.getElementById('dropdown-name').textContent = currentUser.name || 'N/A';
-            document.getElementById('dropdown-gender').textContent = currentUser.gender || 'N/A';
-            document.getElementById('dropdown-university').textContent = currentUser.university || 'N/A';
-            document.getElementById('dropdown-major').textContent = currentUser.major || 'N/A';
-            document.getElementById('dropdown-email').textContent = currentUser.email || 'N/A';
+        if (currentUser) {
+            if (currentUser.role === 'admin') {
+                document.querySelectorAll('#profileCard .profile-info:not(#admin-dropdown-note)').forEach(el => el.style.display = 'none');
+                document.getElementById('admin-dropdown-note').style.display = 'block';
+                document.querySelector('.full-profile-btn').style.display = 'none';
+            } else {
+                document.getElementById('dropdown-name').textContent = currentUser.name || 'N/A';
+                document.getElementById('dropdown-gender').textContent = currentUser.gender || 'N/A';
+                document.getElementById('dropdown-university').textContent = currentUser.university || 'N/A';
+                document.getElementById('dropdown-major').textContent = currentUser.major || 'N/A';
+                document.getElementById('dropdown-email').textContent = currentUser.email || 'N/A';
+            }
         }
     </script>
 </body>
