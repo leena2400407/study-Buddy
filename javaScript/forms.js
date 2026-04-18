@@ -1,4 +1,15 @@
 //====================================================
+// Utility function for redirect
+function getRedirectUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    const page = urlParams.get('page');
+    if (redirect) {
+        return redirect + (page ? '?page=' + page : '');
+    }
+    return 'profile.html';
+}
+
 //login 
 const loginForm = document.getElementById('login-form');
 
@@ -25,7 +36,7 @@ if (loginForm) {
                 university: 'Study Buddy',
                 major: 'System Administration'
             }));
-            window.location.href = 'profile.html';
+            window.location.href = getRedirectUrl();
         } else if ((username === 'student' || username === 'Student') && password === 'Student123') {
             localStorage.setItem('currentUser', JSON.stringify({
                 username: 'student',
@@ -36,10 +47,10 @@ if (loginForm) {
                 university: 'Demo University',
                 major: 'Computer Science'
             }));
-            window.location.href = 'profile.html';
+            window.location.href = getRedirectUrl();
         } else if (matchedUser) {
             localStorage.setItem('currentUser', JSON.stringify(matchedUser));
-            window.location.href = 'profile.html';
+            window.location.href = getRedirectUrl();
         } else {
             errorMessage.style.display = 'block';
         }
@@ -105,13 +116,13 @@ if (signupForm) {
         localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
         localStorage.setItem('currentUser', JSON.stringify(newUser));
 
-        messageBox.textContent = "Account created successfully! Redirecting to login...";
+        messageBox.textContent = "Account created successfully! Redirecting...";
         messageBox.style.color = "green";
         messageBox.style.display = "block";
 
-        // Wait 1 seconds so they can read the message, then redirect to login
+        // Wait 1 seconds so they can read the message, then redirect
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = getRedirectUrl();
         }, 1000);
     });
 
