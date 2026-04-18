@@ -14,39 +14,58 @@
  <div class="container auth-page">   
 <div id="info">
     <div class="login-box signup-box">
-    <h2>Full Profile Info</h2>
-    <div class="profile-avatar"> 
-         <img src="../assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
-</div>
-    <from id="signup-form">
-        <div class="input-group">
-                    <label for="fullName">Full Name : student student student</label>
-                </div>
-
-                <div class="input-group" >
-                    <label for="gender">gender: Female</label>
-                </div>
-
-                <div class="input-group">
-                    <label for="university">university: miu</label>
-                </div>
-
-                <div class="input-group">
-                    <label for="major">major: computer science</label>
-                </div>
-
-
-                <div class="input-group">
-                    <label for="email">Email Address: student@example.edu.eg</label>
-                </div>
-
-
+        <h2>Full Profile Info</h2>
+        <div class="profile-avatar"> 
+            <img src="../assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
+        </div>
+        <div class="profile-details">
+            <div class="input-group">
+                <label>Full Name</label>
+                <div id="profile-name" class="profile-value">-</div>
+            </div>
+            <div class="input-group">
+                <label>Username</label>
+                <div id="profile-username" class="profile-value">-</div>
+            </div>
+            <div class="input-group">
+                <label>Gender</label>
+                <div id="profile-gender" class="profile-value">-</div>
+            </div>
+            <div class="input-group">
+                <label>University</label>
+                <div id="profile-university" class="profile-value">-</div>
+            </div>
+            <div class="input-group">
+                <label>Major</label>
+                <div id="profile-major" class="profile-value">-</div>
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <div id="profile-email" class="profile-value">-</div>
+            </div>
+        </div>
+        <button onclick="logout()" class="logout-btn">Logout</button>
     </div>
-    
+</div>
 </div>
 
+<script>
+    function logout() {
+        localStorage.removeItem('currentUser');
+        window.location.href = '../index.html';
+    }
 
-</div>
-
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!currentUser) {
+        window.location.href = 'LogIn.html';
+    } else {
+        document.getElementById('profile-name').textContent = currentUser.name || '-';
+        document.getElementById('profile-username').textContent = currentUser.username || '-';
+        document.getElementById('profile-gender').textContent = currentUser.gender || '-';
+        document.getElementById('profile-university').textContent = currentUser.university || '-';
+        document.getElementById('profile-major').textContent = currentUser.major || '-';
+        document.getElementById('profile-email').textContent = currentUser.email || '-';
+    }
+</script>
 </body>
 </html>

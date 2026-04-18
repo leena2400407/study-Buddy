@@ -23,12 +23,13 @@
                         </button>
                         <div id="profileCard" class="profile-card">
                             <img src="../assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
-                            <h3 class="profile-name">Student</h3>
-                            <p class="profile-info"><strong>Gender:</strong> Female</p>
-                            <p class="profile-info"><strong>University:</strong> MIU</p>
-                            <p class="profile-info"><strong>Major:</strong> Computer Science</p>
-                            <p class="profile-info"><strong>Email:</strong>student@example.edu.eg</p>
+                            <h3 id="dropdown-name" class="profile-name">N/A</h3>
+                            <p class="profile-info"><strong>Gender:</strong> <span id="dropdown-gender">N/A</span></p>
+                            <p class="profile-info"><strong>University:</strong> <span id="dropdown-university">N/A</span></p>
+                            <p class="profile-info"><strong>Major:</strong> <span id="dropdown-major">N/A</span></p>
+                            <p class="profile-info"><strong>Email:</strong> <span id="dropdown-email">N/A</span></p>
                             <a href="profile.html#info" class="full-profile-btn">View Full Profile</a>
+                            <button onclick="logout()" class="logout-btn">Logout</button>
                         </div>
 </div>
                 
@@ -92,5 +93,20 @@
     </div>
 
     <script src="../javaScript/home.js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '../index.html';
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (currentUser && currentUser.role !== 'admin') {
+            document.getElementById('dropdown-name').textContent = currentUser.name || 'N/A';
+            document.getElementById('dropdown-gender').textContent = currentUser.gender || 'N/A';
+            document.getElementById('dropdown-university').textContent = currentUser.university || 'N/A';
+            document.getElementById('dropdown-major').textContent = currentUser.major || 'N/A';
+            document.getElementById('dropdown-email').textContent = currentUser.email || 'N/A';
+        }
+    </script>
 </body>
 </html>

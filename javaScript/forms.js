@@ -10,12 +10,36 @@ if (loginForm) {
         const password = document.getElementById('password').value;
         const errorMessage = document.getElementById('login-error');
         
-        if (username === 'admin' || username === 'Admin' && password === 'Admin123') {
-            window.location.href = 'Admin.html'; 
-            
-        } else if (username === 'student' || username === 'Student' && password === 'Student123') {
-            window.location.href = '../index.html'; 
-            
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const matchedUser = registeredUsers.find(user =>
+            (user.username === username || user.email === username) && user.password === password
+        );
+
+        if ((username === 'admin' || username === 'Admin') && password === 'Admin123') {
+            localStorage.setItem('currentUser', JSON.stringify({
+                username: 'admin',
+                name: 'Administrator',
+                email: 'admin@studybuddy.com',
+                role: 'admin',
+                gender: 'N/A',
+                university: 'Study Buddy',
+                major: 'System Administration'
+            }));
+            window.location.href = 'profile.html';
+        } else if ((username === 'student' || username === 'Student') && password === 'Student123') {
+            localStorage.setItem('currentUser', JSON.stringify({
+                username: 'student',
+                name: 'Demo Student',
+                email: 'student@studybuddy.com',
+                role: 'student',
+                gender: 'Female',
+                university: 'Demo University',
+                major: 'Computer Science'
+            }));
+            window.location.href = 'profile.html';
+        } else if (matchedUser) {
+            localStorage.setItem('currentUser', JSON.stringify(matchedUser));
+            window.location.href = 'profile.html';
         } else {
             errorMessage.style.display = 'block';
         }
@@ -29,6 +53,7 @@ if (signupForm) {
     signupForm.addEventListener('submit', function(event) {
         event.preventDefault();
         
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('new-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const messageBox = document.getElementById('signup-message');
@@ -60,10 +85,13 @@ if (signupForm) {
         document.getElementById("confirmError").innerText = "";}
 
         if(!valid){
-        e.preventDefault();}
+        event.preventDefault();
+        return;
+        }
         
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const newUser = {
+            username: username,
             name: document.getElementById('fullName').value,
             gender: gender,
             university: document.getElementById('university').value,
@@ -72,7 +100,9 @@ if (signupForm) {
             password: password,
             role: 'user' 
         };
-        
+        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        existingUsers.push(newUser);
+        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
         localStorage.setItem('currentUser', JSON.stringify(newUser));
 
         messageBox.textContent = "Account created successfully! Redirecting to login...";

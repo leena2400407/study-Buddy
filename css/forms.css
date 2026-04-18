@@ -176,3 +176,23 @@ body {
 .close-btn:hover {
     color: #ffffff;
 }
+
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 20px;
+}
+
+.logout-btn:hover {
+    box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
