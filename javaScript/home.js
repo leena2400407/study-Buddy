@@ -19,20 +19,13 @@ let isCylinderOpen = false;
 
     const bgImages = [
             'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1920', // Events (Stadium)
-            'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920', // Game (Gaming)
+            'https://cdn.myportfolio.com/c2e5958b-5aac-4a8a-bed5-9d2137009a24/411d6573-e0c4-468a-b0ef-c2946aa0690f_rw_1920.jpg?h=81b148fafb0fe16cfeccd2daa4847015', // Game (Gaming)
             'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920', // Resources (Library)
             'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1920', // Match (Friends)
-            'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1920', // AI Chat (Tech)
-            'https://images.unsplash.com/flagged/photo-1554473675-d0904f3cbf38?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8dW5pdmVyc2l0eSUyMGNhbXB1c3xlbnwwfHwwfHx8MA%3D%3D'  // Guide (Campus)
+            'https://www.imec.be/_next/image?url=https%3A%2F%2Fdrupal.imec.be%2Fsites%2Fdefault%2Ffiles%2F2020-01%2FHoe-zal-artificie%25CC%2588le-intelligentie-ons-leven-bei%25CC%2588nvloeden.jpg&w=3840&q=75', // AI Chat (Tech)
+            'https://media.istockphoto.com/id/1312191637/photo/businessman-inside-a-maze.jpg?b=1&s=1024x1024&w=0&k=20&c=kD8fm9e_rhLfeOyHW-Rbs1l8-JLB-UHY1uZifbGaF2E='  // Guide (Campus)
         ]
-const emojisDict = {
-    /*0: ['⚽️', '🏀', '🎉', '🎆', '🎾'], 
-    1: ['🧱', '🕹️', '👾', '💥'],      
-    2: ['📚', '📖', '📝', '🧠'],      
-    3: ['🔥', '🤝', '👯‍♂️', '⚡'],      
-    4: ['🤖', '✨', '⚙️', '💬'],      
-    5: ['📌', '🗒️'] */                 
-};
+
 
 
 // Transition from Home to Features Page
@@ -154,34 +147,6 @@ if (eduGAte) {
     });
 }
 
-// Spawn Floating Emojis & Sticky Notes
-function startEffects() {
-    if (!bgEffects) return;
-    setInterval(() => {
-        let activeIdx = ((selectedIndex % cellCount) + cellCount) % cellCount;
-        let el = document.createElement('div');
-        
-        // If on the "Guide/Tips" card, spawn sticky notes. Otherwise, emojis.
-        if (activeIdx === 5) {
-            el.className = 'sticky-note';
-            el.innerText = "Tip " + Math.floor(Math.random() * 100);
-            el.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
-        } else {
-            el.className = 'floating-emoji';
-            let currentEmojis = emojisDict[activeIdx];
-            el.innerText = currentEmojis[Math.floor(Math.random() * currentEmojis.length)];
-        }
-        
-        // Randomize spawn position and animation speed
-        el.style.left = Math.random() * 100 + 'vw';
-        el.style.animationDuration = (Math.random() * 3 + 4) + 's'; 
-        
-        bgEffects.appendChild(el);
-        
-        // Clean up elements from DOM after they float up
-        setTimeout(() => { el.remove(); }, 7000);
-    }, 400); 
-}
 window.addEventListener('DOMContentLoaded', () => {
     
     if (window.location.hash === '#cylinder') {
