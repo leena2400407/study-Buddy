@@ -265,3 +265,258 @@
                 }
             }
         }
+
+          function cursorToGridCell(cx, cy) {
+            const rect  = gridEl.getBoundingClientRect();
+            const cellW = rect.width  / SIZE;
+            const cellH = rect.height / SIZE;
+            const cols  = dragMatrix[0].length;
+            const rows  = dragMatrix.length;
+            const GAP   = 3;
+            const ax    = cx - (cols * SHAPE_CELL + (cols - 1) * GAP) / 2;
+            const ay    = cy - (rows * SHAPE_CELL + (rows - 1) * GAP) / 2 - 12;
+
+            const col = Math.round((ax - rect.left) / cellW);
+            const row = Math.round((ay - rect.top)  / cellH);
+
+            if (col < -1 || row < -1 || col > SIZE || row > SIZE) return { row: null, col: null };
+            return { row, col };
+        }
+
+        function onPointerUp(e) {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup',   onPointerUp);
+            clearPreview();
+
+            if (!cloneEl || !activeShapeDiv) { cleanup(); return; }
+
+            const { row, col } = cursorToGridCell(e.clientX, e.clientY);
+            let placed = false;
+
+            if (row !== null && canPlaceShape(dragMatrix, row, col)) {
+                placeShape(dragMatrix, row, col, dragColor);
+                activeShapeDiv.closest('.shape-slot').remove();
+                placed = true;
+                checkLines();
+                if (shapesEl.children.length === 0) spawnShapes();
+                checkGameOver();
+            }
+
+            cleanup(placed);
+        }
+
+        function cleanup(placed) {
+            if (cloneEl) { cloneEl.remove(); cloneEl = null; }
+            if (!placed && activeShapeDiv) activeShapeDiv.style.opacity = '1';
+            activeShapeDiv = null;
+            dragMatrix     = null;
+            dragColor      = null;
+        }
+
+        /* ============================================================
+           GAME LOGIC
+        ============================================================ */
+        function canPlaceShape(matrix, r, c) {
+            for (let sr = 0; sr < matrix.length; sr++) {
+                for (let sc = 0; sc < matrix[0].length; sc++) {
+                    if (matrix[sr][sc] !== 1) continue;
+                    const tr = r + sr, tc = c + sc;
+                    if (tr < 0 || tr >= SIZE || tc < 0 || tc >= SIZE) return false;
+                    if (gridMap[tr][tc] === 1) return false;
+                }
+            }
+            return true;
+        }
+
+        function placeShape(matrix, r, c, color) {
+            let count = 0;
+            for (let sr = 0; sr < matrix.length; sr++) {
+                for (let sc = 0; sc < matrix[0].length; sc++) {
+                    if (matrix[sr][sc] !== 1) continue;
+                    gridMap[r+sr][c+sc] = 1;
+                    const el = cellEl(r+sr, c+sc);
+                    el.classList.add('filled');
+                    el.style.backgroundColor = color;
+                    count++;
+                }
+            }
+            updateScore(count * 10);
+        }
+
+        function checkLines() {
+            const rowsToClear = [], colsToClear = [];
+            for (let r = 0; r < SIZE; r++) {
+                if (gridMap[r].every(v => v === 1)) rowsToClear.push(r);
+            }
+            for (let c = 0; c < SIZE; c++) {
+                if (Array.from({length: SIZE}, (_, r) => gridMap[r][c]).every(v => v === 1)) colsToClear.push(c);
+            }
+
+            const linesCleared = rowsToClear.length + colsToClear.length;
+            if (!linesCleared) {
+                streak = 0;
+                return;
+            }
+
+            streak++;
+            if (streak > bestStreak) bestStreak = streak;
+
+            const toAnim = new Set();
+            rowsToClear.forEach(r => { for (let c = 0; c < SIZE; c++) toAnim.add(r*SIZE+c); });
+            colsToClear.forEach(c => { for (let r = 0; r < SIZE; r++) toAnim.add(r*SIZE+c); });
+            toAnim.forEach(i => gridEl.children[i].classList.add('clearing'));
+
+            setTimeout(() => {
+                rowsToClear.forEach(r => { for (let c = 0; c < SIZE; c++) gridMap[r][c] = 0; });
+                colsToClear.forEach(c => { for (let r = 0; r < SIZE; r++) gridMap[r][c] = 0; });
+                toAnim.forEach(i => {
+                    const el = gridEl.children[i];
+                    el.classList.remove('filled', 'clearing');
+                    el.style.backgroundColor = '';
+                });
+
+                const baseLinePts = linesCleared * 100;
+                const comboBonus  = linesCleared > 1 ? Math.floor(baseLinePts * (linesCleared - 1) * 0.5) : 0;
+                const streakBonus = streak > 1 ? Math.floor(baseLinePts * (streak - 1) * 0.1) : 0;
+                let pts = baseLinePts + comboBonus + streakBonus;
+
+                const boardEmpty = gridMap.every(row => row.every(v => v === 0));
+                if (boardEmpty) pts += 1000;
+
+                updateScore(pts);
+
+                if (boardEmpty) {
+                    spawnFloatingText('BOARD CLEAR! +1000', 'combo-quad');
+                    triggerFlash('var(--cyan)');
+                    mainContainer.classList.add('shake-effect');
+                    setTimeout(() => mainContainer.classList.remove('shake-effect'), 400);
+                } else if (linesCleared >= 5) {
+                    spawnFloatingText(`PENTA CLEAR! +${pts}`, 'combo-penta');
+                    triggerFlash('var(--magenta)');
+                    mainContainer.classList.add('shake-effect');
+                    setTimeout(() => mainContainer.classList.remove('shake-effect'), 400);
+                } else if (linesCleared === 4) {
+                    spawnFloatingText(`QUAD! +${pts}`, 'combo-quad');
+                    triggerFlash('var(--gold)');
+                } else if (linesCleared === 3) {
+                    spawnFloatingText(`TRIPLE! +${pts}`, 'combo-triple');
+                    triggerFlash('var(--cyan)');
+                } else if (linesCleared === 2) {
+                    spawnFloatingText(`DOUBLE! +${pts}`, 'combo-double');
+                } else if (streak >= 3) {
+                    spawnFloatingText(`STREAK x${streak}! +${pts}`, 'combo-triple');
+                }
+
+                checkGameOver();
+            }, 300);
+        }
+
+        function triggerFlash(color) {
+            screenFlash.style.background = color;
+            screenFlash.classList.remove('fire');
+            void screenFlash.offsetWidth;
+            screenFlash.classList.add('fire');
+        }
+
+        function spawnFloatingText(msg, cls) {
+            const el = document.createElement('div');
+            el.className = 'floating-text' + (cls ? ' ' + cls : '');
+            el.textContent = msg;
+            const rect = gridEl.getBoundingClientRect();
+            el.style.top = (rect.top + rect.height / 2) + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        function updateScore(pts) {
+            score += pts;
+            scoreEl.textContent = score.toLocaleString();
+            scoreEl.classList.remove('score-pop');
+            void scoreEl.offsetWidth;
+            scoreEl.classList.add('score-pop');
+
+            if (score > highScore) {
+                highScore = score;
+                highScoreEl.textContent = highScore.toLocaleString();
+                localStorage.setItem('bphs_v5', highScore);
+            }
+
+            leaderboard.forEach(e => e.isYou = false);
+            let you = leaderboard.find(e => e.name === 'You');
+            if (you) { you.score = score; you.isYou = true; }
+            else { leaderboard.push({ name: 'You', score, isYou: true }); }
+            leaderboard.find(e => e.name === 'You').isYou = true;
+            leaderboard.sort((a, b) => b.score - a.score);
+            renderLeaderboard();
+        }
+
+        function checkGameOver() {
+            if (!gameActive) return;
+            const slots = Array.from(shapesEl.children);
+            if (slots.length === 0) return;
+
+            let canPlace = false;
+            for (const slot of slots) {
+                const shapeDiv = slot.querySelector('.shape');
+                if (!shapeDiv) continue;
+                const matrix = shapeDiv._matrix;
+                outer:
+                for (let r = 0; r < SIZE; r++) {
+                    for (let c = 0; c < SIZE; c++) {
+                        if (canPlaceShape(matrix, r, c)) { canPlace = true; break outer; }
+                    }
+                }
+                if (canPlace) break;
+            }
+
+            if (!canPlace) {
+                gameActive = false;
+                goTimeout = setTimeout(() => showGameOver(), 400);
+            }
+        }
+
+        function showGameOver() {
+            leaderboard.forEach(e => e.isYou = false);
+            let you = leaderboard.find(e => e.name === 'You');
+            if (you) { you.score = score; you.isYou = true; }
+            else { leaderboard.push({ name: 'You', score, isYou: true }); leaderboard.find(e => e.name === 'You').isYou = true; }
+            leaderboard.sort((a, b) => b.score - a.score);
+            localStorage.setItem('bplb_v5', JSON.stringify(leaderboard));
+            renderLeaderboard();
+
+            const myRank = leaderboard.findIndex(e => e.name === 'You') + 1;
+            rankTextEl.textContent = myRank === 1 ? 'YOU ARE THE CHAMPION!' : `You ranked #${myRank} of ${leaderboard.length} players`;
+            goStreakEl.textContent = bestStreak > 0 ? `Best streak this game: x${bestStreak + 1}` : '';
+            finalScoreEl.textContent     = score.toLocaleString();
+            finalBestEl.textContent      = highScore.toLocaleString();
+            finalTopPlayerEl.textContent = leaderboard[0].name;
+            finalTopScoreEl.textContent  = leaderboard[0].score.toLocaleString();
+            gameOverScreen.classList.add('active');
+        }
+
+        /* ============================================================
+           RESTART
+        ============================================================ */
+        function restartGame() {
+            if (goTimeout) { clearTimeout(goTimeout); goTimeout = null; }
+            gameOverScreen.classList.remove('active');
+
+            score      = 0;
+            streak     = 0;
+            bestStreak = 0;
+            scoreEl.textContent = '0';
+
+            leaderboard = leaderboard.filter(e => e.name !== 'You');
+
+            createGrid();
+            spawnShapes();
+            gameActive = true;
+        }
+
+        /* ============================================================
+           BOOT
+        ============================================================ */
+        createBackgroundShapes();
+        createGrid();
+        spawnShapes();
+        gameActive = true;
