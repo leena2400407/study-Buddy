@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Matching</title>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="hero">
+            <h1>Find Your<br>Study Buddy</h1>
+            <p class="warning-text">Connect with students and grow together.</p>
+
+            <div class="action-group">
+                <button class="btn btn-primary" onclick="toggleModal(true)">My list</button>
+                <button class="btn btn-outline" onclick="openWaitOnly()">add request</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="modal">
+            <span class="close" onclick="toggleModal(false)">&times;</span>
+            
+            <div id="formPart">
+                <h2 style="margin-bottom: 10px; font-weight: 900; color: var(--primary);">My Study List</h2>
+                <p class="glowing-text"> remember that we only connect people to study⚠️</p>
+                
+                <label>Weak Subjects</label>
+                <div class="tag-box" id="weakContainer">
+                    <input type="text" class="tag-input" placeholder="e.g. Math" onkeydown="handleTag(event, 'weakContainer')">
+                </div>
+
+                <label>Strong Subjects</label>
+                <div class="tag-box" id="strongContainer">
+                    <input type="text" class="tag-input" placeholder="e.g. Physics" onkeydown="handleTag(event, 'strongContainer')">
+                </div>
+                <button class="btn-primary" style="width: 100%; padding: 15px; border-radius: 12px;" onclick="saveList()">Save & Continue</button>
+            </div>
+
+            <div id="waitPart" class="wait">
+                <h3 style="color: var(--primary); font-weight: 900;">Request addede! 🚀</h3>
+                <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">Your request is now visible to others.</p>
+
+                <div class="request-card">
+                    <p style="font-size: 10px; font-weight: 900; color: #64748b; margin-bottom: 8px;">YOUR POST:</p>
+                    <div id="summaryWeak" style="display:flex; gap:5px; margin-bottom:8px; flex-wrap:wrap;"></div>
+                    <div id="summaryStrong" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+                </div>
+
+                <div class="buddy-feed">
+                    <h4 style="text-align: left; font-size: 14px; margin-bottom: 15px; color: #334155;">People matching your criteria:</h4>
+                    <div id="othersList">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
