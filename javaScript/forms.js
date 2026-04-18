@@ -21,22 +21,8 @@ if (loginForm) {
         const password = document.getElementById('password').value;
         const errorMessage = document.getElementById('login-error');
         
-        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const matchedUser = registeredUsers.find(user =>
-            (user.username === username || user.email === username) && user.password === password
-        );
-
         if ((username === 'admin' || username === 'Admin') && password === 'Admin123') {
-            localStorage.setItem('currentUser', JSON.stringify({
-                username: 'admin',
-                name: 'Administrator',
-                email: 'admin@studybuddy.com',
-                role: 'admin',
-                gender: 'N/A',
-                university: 'Study Buddy',
-                major: 'System Administration'
-            }));
-            window.location.href = getRedirectUrl();
+            window.location.href = '../pages/Admin.html';
         } else if ((username === 'student' || username === 'Student') && password === 'Student123') {
             localStorage.setItem('currentUser', JSON.stringify({
                 username: 'student',
@@ -48,10 +34,8 @@ if (loginForm) {
                 major: 'Computer Science'
             }));
             window.location.href = getRedirectUrl();
-        } else if (matchedUser) {
-            localStorage.setItem('currentUser', JSON.stringify(matchedUser));
-            window.location.href = getRedirectUrl();
-        } else {
+        }
+        else {
             errorMessage.style.display = 'block';
         }
     });
@@ -111,10 +95,6 @@ if (signupForm) {
             password: password,
             role: 'user' 
         };
-        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        existingUsers.push(newUser);
-        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
 
         messageBox.textContent = "Account created successfully! Redirecting...";
         messageBox.style.color = "green";

@@ -54,7 +54,7 @@
                             <a href="FreshmanGuid.html" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Guide </a>
                         </div>
                     </div>
-                    <div class="home-link" onclick="window.location.href='../index.html'">Home</div>
+                    <div class="home-link" onclick="window.location.href='index.html'">Home</div>
                     <div class="login-link" onclick="window.location.href='login.html'">Login</div>
                 </div>
             </nav>
@@ -99,7 +99,7 @@
     <script>
         function logout() {
             localStorage.removeItem('currentUser');
-            window.location.href = '../index.html';
+            window.location.href = 'index.html';
         }
 
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');

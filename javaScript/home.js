@@ -152,13 +152,13 @@ if (ai) {
 
 if (eduGAte) {
     eduGAte.addEventListener('click', () => {
-        window.location.href = 'pages/eduGAte.html'; 
+        window.location.href = 'eduGate.html'; 
     });
 }
 
 if (matching) {
     matching.addEventListener('click', () => {
-        window.location.href = '../pages/Matching.html'; 
+        window.location.href = 'Matching.html'; 
     });
 }
 window.addEventListener('DOMContentLoaded', () => {
