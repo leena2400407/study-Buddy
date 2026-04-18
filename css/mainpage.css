@@ -6,11 +6,11 @@
     }
 
     body {
-      background: #0c0b0f;  /* deep dark, not pure black */
+      background: #1a1520;  /* lighter dark background */
       color: #e2dfe7;
-      font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      line-height: 1.7;
-      font-weight: 300;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+      font-weight: 500;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -39,20 +39,22 @@
 
     .logo-area {
       display: flex;
-      align-items: baseline;
-      gap: 6px;
+      align-items: center;
+      gap: 8px;
     }
 
     .logo-icon {
-      font-size: 2rem;
-      line-height: 1;
+      height: 50px;
+      width: auto;
+      max-width: 60px;
+      object-fit: contain;
       filter: drop-shadow(0 0 6px #b47aff55);
     }
 
     .logo-text {
       font-size: 1.9rem;
-      font-weight: 350;
-      letter-spacing: -0.02em;
+      font-weight: 700;
+      letter-spacing: -1px;
       color: #f0eaff;
     }
 
@@ -76,9 +78,9 @@
 
     h1 {
       font-size: 3.4rem;
-      font-weight: 350;
+      font-weight: 700;
       line-height: 1.2;
-      letter-spacing: -0.02em;
+      letter-spacing: -1px;
       color: #f3ecff;
       margin-bottom: 1.8rem;
       max-width: 900px;
@@ -102,6 +104,7 @@
 
     .story-block p {
       font-size: 1.25rem;
+      font-weight: 500;
       color: #cfc8e0;
       margin-bottom: 1.5rem;
     }
