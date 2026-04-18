@@ -2,7 +2,12 @@
         let myStrongSubjects = [];
 
         // Realistic Mock Data
-        const templist = [];
+        const templist = [
+             { name: "Ahmed Salem", weak: ["Physics", "Mechanics"], strong: ["Math", "Calculus"], time: "2m ago" },
+            { name: "Sara Kamel", weak: ["English", "History"], strong: ["Biology", "Chemistry"], time: "5m ago" },
+            { name: "Omar Yassin", weak: ["Calculus", "Coding"], strong: ["Physics", "English"], time: "10m ago" }
+
+        ];
 
         function toggleModal(show) {
             document.getElementById('overlay').classList.toggle('active', show);
