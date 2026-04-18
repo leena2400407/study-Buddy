@@ -9,15 +9,9 @@ const exampleData = {
     guides: [
         { category: "freshman", title: "Welcome to College", desc: "Starting college can feel overwhelming, but everyone is new like you.", img: "../assests/images/orientation.avif" }
     ],
-    ai: [
-        { category: "chatbot", title: "Study Buddy AI Chatbot", desc: "AI-powered study assistant for answering questions", link: "ai.html" }
-    ],
     edugate: [
         { category: "courses", title: "Misr International University (MIU)", desc: "Overview of MIU: faculties, partnerships, student life", img: "../assests/images/miu.avif" }
     ],
-    games: [
-        { category: "puzzle", title: "Block Puzzle", desc: "Fun block puzzle game with scoring and leaderboard", link: "Game.html" }
-    ]
 };
 
 // Load or initialize data from localStorage (front-end only)
@@ -69,9 +63,7 @@ function resetToExample(section) {
         if(section === 'events') renderEventsTable();
         else if(section === 'resources') renderResourcesTable();
         else if(section === 'guides') renderGuidesTable();
-        else if(section === 'ai') renderAITable();
         else if(section === 'edugate') renderEduGateTable();
-        else if(section === 'games') renderGamesTable();
         
         alert(`✅ ${section} reset to example!`);
     }
@@ -143,26 +135,6 @@ function saveGuide()
     renderGuidesTable();
 }
 
-function saveAI() {
-    const category = document.getElementById('ai-category').value;
-    const title = document.getElementById('ai-title').value.trim();
-    const desc = document.getElementById('ai-desc').value.trim();
-    const link = document.getElementById('ai-link').value.trim();
-
-    if (!title || !desc || !link) {
-        alert("Please provide all fields.");
-        return;
-    }
-
-    adminData.ai.push({ category, title, desc, link });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('ai-title').value = "";
-    document.getElementById('ai-desc').value = "";
-    document.getElementById('ai-link').value = "";
-    toggleForm('form-ai');
-    renderAITable();
-}
 
 function saveEduGate() {
     const category = document.getElementById('edugate-category').value;
@@ -183,28 +155,6 @@ function saveEduGate() {
     document.getElementById('edugate-img').value = "";
     toggleForm('form-edugate');
     renderEduGateTable();
-}
-
-function saveGame() {
-    const category = document.getElementById('game-category').value;
-    const title = document.getElementById('game-title').value.trim();
-    const desc = document.getElementById('game-desc').value.trim();
-    const link = document.getElementById('game-link').value.trim();
-
-    if (!title || !desc || !link) {
-        alert("Please provide all fields.");
-        return;
-    }
-   
-
-    adminData.games.push({ category, title, desc, link });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('game-title').value = "";
-    document.getElementById('game-desc').value = "";
-    document.getElementById('game-link').value = "";
-    toggleForm('form-games');
-    renderGamesTable();
 }
 
 
@@ -233,14 +183,6 @@ function deleteGuide(index) {
     }
 }
 
-function deleteAI(index) {
-    if(confirm(`Remove "${adminData.ai[index].title}"?`)) {
-        adminData.ai.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderAITable();
-    }
-}
-
 
 function deleteEduGate(index) {
     if(confirm(`Remove "${adminData.edugate[index].title}"?`)) {
@@ -250,13 +192,6 @@ function deleteEduGate(index) {
     }
 }
 
-function deleteGame(index) {
-    if(confirm(`Remove "${adminData.games[index].title}"?`)) {
-        adminData.games.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderGamesTable();
-    }
-}
 
 
 // RENDER FUNCTIONS
@@ -321,27 +256,6 @@ function renderGuidesTable() {
 }
 
 
-function renderAITable() {
-    const tbody = document.getElementById('table-ai');
-    if (adminData.ai.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No AI features available. Click "+ Add AI Feature" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.ai.map((a, i) => {
-        const badgeClass = a.category === 'chatbot' ? 'badge-sports' : a.category === 'tools' ? 'badge-entertainment' : 'badge-sports';
-        const badgeText = a.category === 'chatbot' ? '💬 Chatbot' : a.category === 'tools' ? '🛠️ Tools' : '🤖 Other';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(a.title)}</strong></td>
-            <td>${escapeHtml(a.desc)}</td>
-            <td><a href="${escapeHtml(a.link)}" target="_blank" style="color: #00e5ff;">Link</a></td>
-            <td><button class="btn-del" onclick="deleteAI(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
-
 function renderEduGateTable() {
     const tbody = document.getElementById('table-edugate');
     if (adminData.edugate.length === 0) {
@@ -363,26 +277,6 @@ function renderEduGateTable() {
 }
 
 
-function renderGamesTable() {
-    const tbody = document.getElementById('table-games');
-    if (adminData.games.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games available. Click "+ Add Game" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.games.map((g, i) => {
-        const badgeClass = g.category === 'puzzle' ? 'badge-sports' : g.category === 'quiz' ? 'badge-entertainment' : 'badge-sports';
-        const badgeText = g.category === 'puzzle' ? '🧩 Puzzle' : g.category === 'quiz' ? '❓ Quiz' : '🎮 Other';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(g.title)}</strong></td>
-            <td>${escapeHtml(g.desc)}</td>
-            <td><a href="${escapeHtml(g.link)}" target="_blank" style="color: #00e5ff;">Play</a></td>
-            <td><button class="btn-del" onclick="deleteGame(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
 
 // Security: Escape HTML to prevent XSS
 function escapeHtml(str) {
@@ -401,7 +295,5 @@ document.addEventListener('DOMContentLoaded', function() {
     renderEventsTable();
     renderResourcesTable();
     renderGuidesTable();
-    renderAITable();
     renderEduGateTable();
-    renderGamesTable();
 });
