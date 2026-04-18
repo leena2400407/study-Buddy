@@ -105,3 +105,74 @@
     font-size: 12px;
 }
 .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; }
+
+.profile-avatar-img {
+    width: 80px; 
+    height: 80px; 
+    object-fit: cover; 
+    border-radius: 50%; 
+    margin-bottom: 15px;
+}
+
+.profile-avatar {
+    text-align: center;
+}
+
+body {
+    background: linear-gradient(135deg, #0f0a1f, #1e1b3a);
+    color: #e9e5ff;
+}
+
+.login-box, .signup-box {
+    background: rgba(40, 25, 80, 0.7);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.login-box h2 {
+    color: #f5f3ff;
+}
+
+.login-box p {
+    color: #b8b5d6;
+}
+
+.input-group label {
+    color: #d8ccff;
+}
+
+.input-group input,
+.input-group select {
+    background: #140f2e;
+    border: 1px solid #3b2f6b;
+    color: #eee9ff;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #a855f7;
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+}
+
+.login-btn {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+
+.login-btn:hover {
+    box-shadow: 0 6px 15px rgba(168, 85, 247, 0.4);
+}
+
+.profile-avatar-img {
+    border: 2px solid rgba(168, 85, 247, 0.3);
+}
+
+.error {
+    color: #f472b6;
+}
+
+.close-btn {
+    color: #b8b5d6;
+}
+
+.close-btn:hover {
+    color: #ffffff;
+}
