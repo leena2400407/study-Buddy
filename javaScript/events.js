@@ -1,3 +1,8 @@
+ const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page');
+        if (page === 'sports') {
+            showPage('tournaments-page', 'bg-sports');
+        }
 function showPage(pageId, bgClass) {
        
         document.getElementById('landing-page').classList.add('hidden');
