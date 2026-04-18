@@ -18,13 +18,13 @@ const cellCount = 6;
 let isCylinderOpen = false;
 
     const bgImages = [
-            'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1920', // Events (Stadium)
-            'https://cdn.myportfolio.com/c2e5958b-5aac-4a8a-bed5-9d2137009a24/411d6573-e0c4-468a-b0ef-c2946aa0690f_rw_1920.jpg?h=81b148fafb0fe16cfeccd2daa4847015', // Game (Gaming)
-            'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920', // Resources (Library)
-            'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1920', // Match (Friends)
-            'https://www.imec.be/_next/image?url=https%3A%2F%2Fdrupal.imec.be%2Fsites%2Fdefault%2Ffiles%2F2020-01%2FHoe-zal-artificie%25CC%2588le-intelligentie-ons-leven-bei%25CC%2588nvloeden.jpg&w=3840&q=75', // AI Chat (Tech)
-            'https://media.istockphoto.com/id/1312191637/photo/businessman-inside-a-maze.jpg?b=1&s=1024x1024&w=0&k=20&c=kD8fm9e_rhLfeOyHW-Rbs1l8-JLB-UHY1uZifbGaF2E='  // Guide (Campus)
-        ]
+    '../assests/images/new-event-bg-cy.avif',     // Events (Stadium)
+    '../assests/images/game-GB-CYlinder.jpg',      // Game (Gaming)
+    '../assests/images/resources-bg-cyl.avif', // Resources (Library)
+    '../assests/images/matching.jpg.jpeg',     // Match (Friends)
+    '../assests/images/AI-GB-cy.webp',        // AI Chat (Tech)
+    '../assests/images/guid.jpg.jpeg'      // Guide (Campus)
+];
 
 
 
