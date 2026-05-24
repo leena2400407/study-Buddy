@@ -3,6 +3,7 @@ const path = require("path");
 const session = require("express-session");
 const flash = require("connect-flash");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 require("dotenv").config();
@@ -10,6 +11,33 @@ require("dotenv").config();
 const app = express();
 
 connectDB();
+
+const sendSignupEmail = async (userEmail, fullName) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: "Welcome to Study Buddy",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>Welcome to Study Buddy!</h2>
+        <p>Hello ${fullName},</p>
+        <p>Thank you for signing up to Study Buddy.</p>
+        <p>You can now log in and start finding study partners.</p>
+        <br>
+        <p>Best regards,</p>
+        <p><strong>Study Buddy Team</strong></p>
+      </div>
+    `
+  });
+};
 
 // EJS setup
 app.set("view engine", "ejs");
@@ -49,6 +77,7 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login");
 });
+
 app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -88,6 +117,7 @@ app.post("/login", async (req, res) => {
 app.get("/signup", (req, res) => {
   res.render("signup");
 });
+
 app.post("/signup", async (req, res) => {
   try {
     const {
@@ -129,20 +159,26 @@ app.post("/signup", async (req, res) => {
       return res.redirect("/signup");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({
-      fullName,
-      username,
-      gender,
-      university,
-      major,
-      email,
-      password: hashedPassword
-    });
+await User.create({
+  fullName,
+  username,
+  gender,
+  university,
+  major,
+  email,
+  password: hashedPassword
+});
 
-    req.flash("success", "Account created successfully. Please log in.");
-    res.redirect("/login");
+try {
+  await sendSignupEmail(email, fullName);
+} catch (emailError) {
+  console.error("Email sending error:", emailError);
+}
+
+req.flash("success", "Account created successfully. Please log in.");
+res.redirect("/login");
   } catch (error) {
     console.error("Signup error:", error);
     req.flash("error", "Something went wrong.");
