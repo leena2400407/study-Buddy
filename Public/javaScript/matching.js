@@ -383,7 +383,7 @@ function renderMatches() {
                     </div>
                 </div>
 
-                <button class="btn-match" onclick="sendMatch('${escapeJS(name)}')">
+                <button class="btn-match" onclick="sendMatch('${escapeJS(student._id)}', '${escapeJS(name)}')">
                     Match With ${escapeHTML(firstName)}
                 </button>
             </div>
@@ -391,7 +391,7 @@ function renderMatches() {
     }).join("");
 }
 
-function sendMatch(name) {
+async function sendMatch(matchedProfileId, name) {
     if (!requireLogin("Please login before sending a match request.")) {
         return;
     }
@@ -401,7 +401,31 @@ function sendMatch(name) {
         return;
     }
 
-    showToast(`Match request sent to ${name}!`, "success");
+    try {
+        showToast(`Creating video room with ${name}...`, "info");
+
+        const response = await fetch("/api/matching/send-room", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                matchedProfileId
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showToast(data.message || "Could not send video room.", "error");
+            return;
+        }
+
+        showToast(data.message || `Video room sent to you and ${name}.`, "success");
+    } catch (error) {
+        console.error("Send match room error:", error);
+        showToast("Server error while creating the video room.", "error");
+    }
 }
 
 function showToast(message, type = "info") {

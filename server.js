@@ -13,14 +13,18 @@ const app = express();
 
 connectDB();
 
-const sendSignupEmail = async (userEmail, fullName) => {
-  const transporter = nodemailer.createTransport({
+const createEmailTransporter = () => {
+  return nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     }
   });
+};
+
+const sendSignupEmail = async (userEmail, fullName) => {
+  const transporter = createEmailTransporter();
 
   await transporter.sendMail({
     from: `Study Buddy <${process.env.EMAIL_USER}>`,
@@ -35,6 +39,80 @@ const sendSignupEmail = async (userEmail, fullName) => {
         <br>
         <p>Best regards,</p>
         <p><strong>Study Buddy Team</strong></p>
+      </div>
+    `
+  });
+};
+
+const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, roomId, meetingLink }) => {
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Your Study Buddy Video Room",
+    html: `
+
+      <div style="margin-top: 22px; background: #fff1f2; padding: 24px; border-radius: 14px; border: 1px solid #fecdd3;">
+          <h2 style="margin-top: 0; color: #991b1b;">Study Room Rules</h2>
+
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
+            <strong style="color: #b91c1c;">01</strong>
+            <p style="margin: 6px 0 0;">We only connect people for studying purposes.</p>
+          </div>
+
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
+            <strong style="color: #b91c1c;">02</strong>
+            <p style="margin: 6px 0 0;">Respect your colleagues in the meet.</p>
+          </div>
+
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
+            <strong style="color: #b91c1c;">03</strong>
+            <p style="margin: 6px 0 0;">
+              If you joined the call and no one entered after 5 minutes, you have the right to leave the meet.
+            </p>
+          </div>
+
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; border: 1px solid #fecdd3;">
+            <strong style="color: #b91c1c;">04</strong>
+            <p style="margin: 6px 0 0;">
+              You must be logged in to the website for the meet to start.
+            </p>
+          </div>
+        </div>
+
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222; max-width: 650px; margin: auto; padding: 20px;">
+        <div style="background: #f7f9fc; padding: 24px; border-radius: 14px; border: 1px solid #e5e7eb;">
+          <h2 style="margin-top: 0; color: #1f2937;">Your Study Buddy Room is Ready</h2>
+
+          <p>Hello ${receiverName},</p>
+
+          <p>
+            A study match has been created between
+            <strong>${senderName}</strong> and <strong>${matchedName}</strong>.
+          </p>
+
+          <p>
+            <strong>Room ID:</strong><br>
+            ${roomId}
+          </p>
+
+          <p>
+            <strong>Video Room Link:</strong><br>
+            <a href="${meetingLink}" target="_blank" style="color: #2563eb;">
+              ${meetingLink}
+            </a>
+          </p>
+
+          <p>
+            Click the link above to join the meeting.
+          </p>
+        </div>
+
+        <p style="margin-top: 22px;">
+          Best regards,<br>
+          <strong>Study Buddy Team</strong>
+        </p>
       </div>
     `
   });
@@ -100,14 +178,6 @@ const cleanSubjects = (subjects) => {
   )];
 };
 
-const hasCommonSubject = (firstList, secondList) => {
-  return firstList.some(firstSubject =>
-    secondList.some(secondSubject =>
-      firstSubject.toLowerCase() === secondSubject.toLowerCase()
-    )
-  );
-};
-
 const getCommonSubjects = (firstList, secondList) => {
   return firstList.filter(firstSubject =>
     secondList.some(secondSubject =>
@@ -115,7 +185,6 @@ const getCommonSubjects = (firstList, secondList) => {
     )
   );
 };
-
 
 // Routes
 app.get("/", (req, res) => {
@@ -417,6 +486,97 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not load matches."
+    });
+  }
+});
+
+app.post("/api/matching/send-room", requireAuth, async (req, res) => {
+  try {
+    const { matchedProfileId } = req.body;
+
+    if (!matchedProfileId) {
+      return res.status(400).json({
+        success: false,
+        message: "Matched student was not selected."
+      });
+    }
+
+    const myProfile = await StudyProfile.findOne({
+      user: req.session.user.id
+    });
+
+    if (!myProfile) {
+      return res.status(400).json({
+        success: false,
+        message: "Build and save your list first."
+      });
+    }
+
+    const matchedProfile = await StudyProfile.findById(matchedProfileId);
+
+    if (!matchedProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Matched student was not found."
+      });
+    }
+
+    if (String(matchedProfile.user) === String(req.session.user.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot match with yourself."
+      });
+    }
+
+    const myWeakSubjects = myProfile.weakSubjects || [];
+    const myStrongSubjects = myProfile.strongSubjects || [];
+    const otherWeakSubjects = matchedProfile.weakSubjects || [];
+    const otherStrongSubjects = matchedProfile.strongSubjects || [];
+
+    const canTeachMe = getCommonSubjects(myWeakSubjects, otherStrongSubjects);
+    const iCanTeachThem = getCommonSubjects(myStrongSubjects, otherWeakSubjects);
+
+    if (canTeachMe.length === 0 && iCanTeachThem.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "This student is not a valid match anymore."
+      });
+    }
+
+    const randomCode = Math.floor(100000 + Math.random() * 900000);
+    const roomId = `studybuddy-${Date.now()}-${randomCode}`;
+    const meetingLink = `https://meet.jit.si/${roomId}#config.startWithVideoMuted=true&config.toolbarButtons=["microphone","chat","hangup"]`;
+
+    await sendMatchRoomEmail({
+      to: myProfile.email,
+      receiverName: myProfile.fullName,
+      senderName: myProfile.fullName,
+      matchedName: matchedProfile.fullName,
+      roomId,
+      meetingLink
+    });
+
+    await sendMatchRoomEmail({
+      to: matchedProfile.email,
+      receiverName: matchedProfile.fullName,
+      senderName: myProfile.fullName,
+      matchedName: matchedProfile.fullName,
+      roomId,
+      meetingLink
+    });
+
+    res.json({
+      success: true,
+      message: `Video room sent to you and ${matchedProfile.fullName}.`,
+      roomId,
+      meetingLink
+    });
+  } catch (error) {
+    console.error("Send matching room error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not create or send the video room."
     });
   }
 });
