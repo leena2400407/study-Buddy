@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const connectDB = require("./config/db");
 const User = require("./models/User");
+const StudyProfile = require("./models/StudyProfile");
 require("dotenv").config();
 
 const app = express();
@@ -68,6 +69,53 @@ app.use((req, res, next) => {
   res.locals.error = req.flash("error");
   next();
 });
+
+const requireAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Please login first."
+    });
+  }
+
+  next();
+};
+
+const cleanSubjects = (subjects) => {
+  if (!Array.isArray(subjects)) {
+    return [];
+  }
+
+  return [...new Set(
+    subjects
+      .map(subject => String(subject).trim().replace(/\s+/g, " "))
+      .filter(Boolean)
+      .map(subject =>
+        subject
+          .toLowerCase()
+          .split(" ")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      )
+  )];
+};
+
+const hasCommonSubject = (firstList, secondList) => {
+  return firstList.some(firstSubject =>
+    secondList.some(secondSubject =>
+      firstSubject.toLowerCase() === secondSubject.toLowerCase()
+    )
+  );
+};
+
+const getCommonSubjects = (firstList, secondList) => {
+  return firstList.filter(firstSubject =>
+    secondList.some(secondSubject =>
+      firstSubject.toLowerCase() === secondSubject.toLowerCase()
+    )
+  );
+};
+
 
 // Routes
 app.get("/", (req, res) => {
@@ -187,7 +235,7 @@ res.redirect("/login");
 });
 
 app.get("/mainpage", (req, res) => {
-  res.render("mainpage");
+  res.render("index");
 });
 
 app.get("/profile", (req, res) => {
@@ -196,6 +244,176 @@ app.get("/profile", (req, res) => {
 
 app.get("/events", (req, res) => {
   res.render("events");
+});
+
+app.get("/api/matching/profile", requireAuth, async (req, res) => {
+  try {
+    const profile = await StudyProfile.findOne({
+      user: req.session.user.id
+    });
+
+    res.json({
+      success: true,
+      profile
+    });
+  } catch (error) {
+    console.error("Get matching profile error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load your study profile."
+    });
+  }
+});
+
+app.post("/api/matching/profile", requireAuth, async (req, res) => {
+  try {
+    const weakSubjects = cleanSubjects(req.body.weakSubjects);
+    const strongSubjects = cleanSubjects(req.body.strongSubjects);
+
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Add at least one weak subject or one strong subject."
+      });
+    }
+
+    const profile = await StudyProfile.findOneAndUpdate(
+      {
+        user: req.session.user.id
+      },
+      {
+        user: req.session.user.id,
+        fullName: req.session.user.fullName,
+        username: req.session.user.username,
+        email: req.session.user.email,
+        university: req.session.user.university || "",
+        major: req.session.user.major || "",
+        weakSubjects,
+        strongSubjects
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
+    );
+
+    res.json({
+      success: true,
+      profile
+    });
+  } catch (error) {
+    console.error("Save matching profile error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not save your study list."
+    });
+  }
+});
+
+app.get("/api/matching/matches", requireAuth, async (req, res) => {
+  try {
+    const myProfile = await StudyProfile.findOne({
+      user: req.session.user.id
+    });
+
+    if (!myProfile) {
+      return res.status(400).json({
+        success: false,
+        message: "Build and save your list first."
+      });
+    }
+
+    const myWeakSubjects = myProfile.weakSubjects || [];
+    const myStrongSubjects = myProfile.strongSubjects || [];
+
+    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Add at least one weak subject or one strong subject."
+      });
+    }
+
+    const allProfiles = await StudyProfile.find({
+      user: {
+        $ne: req.session.user.id
+      }
+    }).lean();
+
+    const matches = allProfiles
+      .map(profile => {
+        const otherWeakSubjects = profile.weakSubjects || [];
+        const otherStrongSubjects = profile.strongSubjects || [];
+
+        const sameWeakSubjects = getCommonSubjects(myWeakSubjects, otherWeakSubjects);
+
+        if (sameWeakSubjects.length > 0) {
+          return null;
+        }
+
+        const canTeachMe = getCommonSubjects(myWeakSubjects, otherStrongSubjects);
+        const iCanTeachThem = getCommonSubjects(myStrongSubjects, otherWeakSubjects);
+
+        if (canTeachMe.length === 0 && iCanTeachThem.length === 0) {
+          return null;
+        }
+
+        let score = 0;
+        let reason = "";
+
+        if (canTeachMe.length > 0) {
+          score += canTeachMe.length * 70;
+          reason += `${profile.fullName} can help you with ${canTeachMe.join(", ")}. `;
+        }
+
+        if (iCanTeachThem.length > 0) {
+          score += iCanTeachThem.length * 30;
+          reason += `You can help ${profile.fullName} with ${iCanTeachThem.join(", ")}.`;
+        }
+
+        if (score > 100) {
+          score = 100;
+        }
+
+        return {
+          _id: profile._id,
+          user: profile.user,
+          fullName: profile.fullName,
+          username: profile.username,
+          email: profile.email,
+          university: profile.university,
+          major: profile.major,
+          weakSubjects: otherWeakSubjects,
+          strongSubjects: otherStrongSubjects,
+          canTeachMe,
+          iCanTeachThem,
+          score,
+          reason: reason.trim()
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (b.canTeachMe.length !== a.canTeachMe.length) {
+          return b.canTeachMe.length - a.canTeachMe.length;
+        }
+
+        return b.score - a.score;
+      });
+
+    res.json({
+      success: true,
+      matches
+    });
+  } catch (error) {
+    console.error("Get matches error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load matches."
+    });
+  }
 });
 
 app.get("/matching", (req, res) => {

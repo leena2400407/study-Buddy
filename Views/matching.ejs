@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Study Buddy Matching</title>
+
+<link rel="stylesheet" href="/css/matching.css" /></head>
+
+<body class="matching-experience">
+    <div class="match-bg-grid"></div>
+
+    <div class="close-btn" onclick="window.location.href='/cylinder'">✖</div>
+
+    <section class="page-wrapper">
+
+        <section class="hero-section reveal-on-scroll">
+            <div class="hero-content">
+                <p class="small-title">STUDY BUDDY MATCHING</p>
+
+                <h1>
+                    Find Your Perfect<br>
+                    Study Partner
+                </h1>
+
+                <p class="hero-text">
+                    Build your study list, save it to the database, then find students who can help you
+                    in your weak subjects or students you can help in your strong subjects.
+                </p>
+
+                <div class="hero-buttons">
+                    <button class="main-btn" onclick="openModal()">Build My List</button>
+                    <button class="secondary-btn" onclick="startSearchFlow()">Add Request</button>
+                </div>
+
+                <% if (!user) { %>
+                    <p class="login-warning">
+                        You must be logged in before building a list or adding a request.
+                    </p>
+                <% } %>
+            </div>
+        </section>
+
+        <section class="match-flow reveal-on-scroll">
+            <div class="flow-card">
+                <span>01</span>
+                <strong>Add subjects</strong>
+                <p>Add at least one weak subject or one strong subject. You do not need both.</p>
+            </div>
+
+            <div class="flow-card">
+                <span>02</span>
+                <strong>Save to database</strong>
+                <p>Your weak and strong subjects are saved under your account in MongoDB.</p>
+            </div>
+
+            <div class="flow-card">
+                <span>03</span>
+                <strong>Find matches</strong>
+                <p>The system finds students whose strong subjects match your weak subjects.</p>
+            </div>
+        </section>
+
+        <section class="dashboard reveal-on-scroll">
+
+            <div class="left-panel">
+                <div class="panel-card my-profile">
+                    <div class="card-header">
+                        <div>
+                            <p class="section-label">MY STUDY PROFILE</p>
+                            <h2>Your Study List</h2>
+                        </div>
+
+                        <button class="edit-btn" onclick="openModal()">Edit</button>
+                    </div>
+
+                    <div class="profile-section">
+                        <h4>I need help with</h4>
+                        <div id="profileWeak" class="subject-list empty-list">
+                            No weak subjects added yet.
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <h4>I can teach</h4>
+                        <div id="profileStrong" class="subject-list empty-list">
+                            No strong subjects added yet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-card matches-panel" id="matches-section">
+                    <div class="card-header">
+                        <div>
+                            <p class="section-label">AVAILABLE STUDENTS</p>
+                            <h2>People Matching You</h2>
+                        </div>
+                    </div>
+
+                    <div class="search-box">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search available students..."
+                            oninput="renderMatches()"
+                        />
+                    </div>
+
+                    <div id="matchesGrid" class="matches-grid">
+                        <div class="empty-state-card">
+                            <div class="empty-icon">🔎</div>
+                            <h3>No request yet</h3>
+                            <p>Click Add Request after saving your list to find available students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </section>
+
+    <div class="overlay" id="overlay">
+        <div class="modal">
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <p class="section-label">EDIT YOUR LIST</p>
+            <h2>My Study List</h2>
+
+            <p class="glowing-text">
+                Add at least one weak subject or one strong subject. You do not need both.
+            </p>
+
+            <label>Weak Subjects</label>
+            <div class="tag-box" id="weakContainer">
+                <input
+                    type="text"
+                    class="tag-input"
+                    id="weakInput"
+                    placeholder="Example: Math"
+                    onkeydown="handleTag(event, 'weak')"
+                />
+                <button class="add-tag-btn" type="button" onclick="addSubject('weak')">Add</button>
+            </div>
+
+            <label>Strong Subjects</label>
+            <div class="tag-box" id="strongContainer">
+                <input
+                    type="text"
+                    class="tag-input"
+                    id="strongInput"
+                    placeholder="Example: Data Structure"
+                    onkeydown="handleTag(event, 'strong')"
+                />
+                <button class="add-tag-btn" type="button" onclick="addSubject('strong')">Add</button>
+            </div>
+
+            <button class="save-btn" type="button" onclick="saveList()">Save Changes</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        window.STUDY_BUDDY_IS_LOGGED_IN = <%= user ? "true" : "false" %>;
+    </script>
+
+    <script src="/javaScript/matching.js"></script>
+</body>
+</html>

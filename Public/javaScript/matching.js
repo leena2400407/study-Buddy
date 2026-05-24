@@ -1,94 +1,453 @@
- let myWeakSubjects = [];
-        let myStrongSubjects = [];
+let myWeakSubjects = [];
+let myStrongSubjects = [];
+let students = [];
+let requestPublished = false;
 
-        // Realistic Mock Data
-        const templist = [
-             { name: "Ahmed Salem", weak: ["Physics", "Mechanics"], strong: ["Math", "Calculus"], time: "2m ago" },
-            { name: "Sara Kamel", weak: ["English", "History"], strong: ["Biology", "Chemistry"], time: "5m ago" },
-            { name: "Omar Yassin", weak: ["Calculus", "Coding"], strong: ["Physics", "English"], time: "10m ago" }
+function isLoggedIn() {
+    return Boolean(window.STUDY_BUDDY_IS_LOGGED_IN);
+}
 
-        ];
+function requireLogin(message = "Please login first.") {
+    if (isLoggedIn()) {
+        return true;
+    }
 
-        function toggleModal(show) {
-            document.getElementById('overlay').classList.toggle('active', show);
-            if(show) {
-                document.getElementById('formPart').style.display = 'block';
-                document.getElementById('waitPart').style.display = 'none';
-                refreshUI();
-            }
+    showToast(message, "error");
+
+    setTimeout(() => {
+        window.location.href = "/login";
+    }, 1200);
+
+    return false;
+}
+
+async function fetchMyProfile() {
+    try {
+        const response = await fetch("/api/matching/profile");
+
+        if (response.status === 401) {
+            renderAll();
+            return;
         }
 
-        function handleTag(e, containerId) {
-            if (e.key === 'Enter' && e.target.value.trim() !== '') {
-                const val = e.target.value.trim();
-                if (containerId === 'weakContainer') myWeakSubjects.push(val);
-                else myStrongSubjects.push(val);
-                e.target.value = '';
-                refreshUI();
-            }
+        const data = await response.json();
+
+        if (data.success && data.profile) {
+            myWeakSubjects = data.profile.weakSubjects || [];
+            myStrongSubjects = data.profile.strongSubjects || [];
         }
 
-        function removeTag(val, containerId) {
-            if (containerId === 'weakContainer') myWeakSubjects = myWeakSubjects.filter(i => i !== val);
-            else myStrongSubjects = myStrongSubjects.filter(i => i !== val);
-            refreshUI();
+        renderAll();
+    } catch (error) {
+        console.error("Fetch profile error:", error);
+        renderAll();
+    }
+}
+
+function openModal() {
+    if (!requireLogin("Please login before building your study list.")) {
+        return;
+    }
+
+    const overlay = document.getElementById("overlay");
+    if (!overlay) return;
+
+    overlay.classList.add("active");
+    renderTags();
+}
+
+function closeModal() {
+    const overlay = document.getElementById("overlay");
+    if (!overlay) return;
+
+    overlay.classList.remove("active");
+}
+
+function handleTag(event, type) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addSubject(type);
+    }
+}
+
+function normalizeSubject(value) {
+    return value
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase()
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
+function addSubject(type) {
+    const input = type === "weak"
+        ? document.getElementById("weakInput")
+        : document.getElementById("strongInput");
+
+    if (!input) return;
+
+    const value = normalizeSubject(input.value);
+
+    if (!value) return;
+
+    if (type === "weak") {
+        if (!myWeakSubjects.includes(value)) {
+            myWeakSubjects.push(value);
+        }
+    } else {
+        if (!myStrongSubjects.includes(value)) {
+            myStrongSubjects.push(value);
+        }
+    }
+
+    input.value = "";
+    renderAll();
+}
+
+function removeSubject(subject, type) {
+    if (type === "weak") {
+        myWeakSubjects = myWeakSubjects.filter(item => item !== subject);
+    } else {
+        myStrongSubjects = myStrongSubjects.filter(item => item !== subject);
+    }
+
+    renderAll();
+}
+
+async function saveList() {
+    if (!requireLogin("Please login before saving your study list.")) {
+        return;
+    }
+
+    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
+        showToast("Add at least one weak subject or one strong subject.", "warning");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/matching/profile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                weakSubjects: myWeakSubjects,
+                strongSubjects: myStrongSubjects
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showToast(data.message || "Could not save your study list.", "error");
+            return;
         }
 
-        function refreshUI() {
-            const wContainer = document.getElementById('weakContainer');
-            const sContainer = document.getElementById('strongContainer');
-            const wInput = wContainer.querySelector('.tag-input');
-            const sInput = sContainer.querySelector('.tag-input');
-            
-            wContainer.innerHTML = '';
-            myWeakSubjects.forEach(s => {
-                wContainer.innerHTML += `<div class="tag">${s} <span onclick="removeTag('${s}', 'weakContainer')">&times;</span></div>`;
-            });
-            wContainer.appendChild(wInput);
+        myWeakSubjects = data.profile.weakSubjects || [];
+        myStrongSubjects = data.profile.strongSubjects || [];
 
-            sContainer.innerHTML = '';
-            myStrongSubjects.forEach(s => {
-                sContainer.innerHTML += `<div class="tag">${s} <span onclick="removeTag('${s}', 'strongContainer')">&times;</span></div>`;
-            });
-            sContainer.appendChild(sInput);
+        closeModal();
+        showToast("Your study list has been saved.", "success");
+        renderAll();
+    } catch (error) {
+        console.error("Save list error:", error);
+        showToast("Server error while saving your list.", "error");
+    }
+}
+
+async function startSearchFlow() {
+    if (!requireLogin("Please login before adding a match request.")) {
+        return;
+    }
+
+    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
+        showToast("Build and save your list first.", "warning");
+        openModal();
+        return;
+    }
+
+    requestPublished = true;
+
+    const matchesSection = document.getElementById("matches-section");
+
+    if (matchesSection) {
+        matchesSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+
+    await loadMatches();
+
+    if (students.length === 0) {
+        showToast("No matching students found yet.", "warning");
+    } else {
+        showToast("Available students loaded.", "success");
+    }
+}
+
+async function loadMatches() {
+    try {
+        const response = await fetch("/api/matching/matches");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showToast(data.message || "Could not load matches.", "error");
+            students = [];
+            renderMatches();
+            return;
         }
 
-        function saveList() {
-            if(myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
-                alert("Please add at least one subject in both sections.");
-                return;
-            }
-            toggleModal(false);
-        }
+        students = data.matches || [];
+        renderMatches();
+    } catch (error) {
+        console.error("Load matches error:", error);
+        showToast("Server error while loading matches.", "error");
+        students = [];
+        renderMatches();
+    }
+}
 
-        function openWaitOnly() {
-            if(myWeakSubjects.length === 0) {
-                alert("Please fill your list first!");
-                toggleModal(true);
-                return;
-            }
+function renderTags() {
+    const weakContainer = document.getElementById("weakContainer");
+    const strongContainer = document.getElementById("strongContainer");
 
-            document.getElementById('overlay').classList.add('active');
-            document.getElementById('formPart').style.display = 'none';
-            document.getElementById('waitPart').style.display = 'block';
+    if (!weakContainer || !strongContainer) return;
 
-            // 1. Show My Summary
-            document.getElementById('summaryWeak').innerHTML = myWeakSubjects.map(s => `<span style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:5px; font-size:11px; font-weight:700;">Need: ${s}</span>`).join('');
-            document.getElementById('summaryStrong').innerHTML = myStrongSubjects.map(s => `<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:5px; font-size:11px; font-weight:700;">Teach: ${s}</span>`).join('');
+    weakContainer.innerHTML = "";
 
-            // 2. Show Others Feed
-            const listDiv = document.getElementById('othersList');
-            listDiv.innerHTML = templist.map(person => `
-                <div class="buddy-item">
-                    <div class="buddy-info">
-                        <h5>${person.name}</h5>
-                        <p>${person.time}</p>
-                        <div class="buddy-tags">
-                            <span class="b-tag">Strong in: ${person.strong[0]}</span>
-                            <span class="b-tag">Needs: ${person.weak[0]}</span>
+    myWeakSubjects.forEach(subject => {
+        weakContainer.innerHTML += `
+            <div class="tag">
+                ${escapeHTML(subject)}
+                <span onclick="removeSubject('${escapeJS(subject)}', 'weak')">&times;</span>
+            </div>
+        `;
+    });
+
+    weakContainer.innerHTML += `
+        <input
+            type="text"
+            class="tag-input"
+            id="weakInput"
+            placeholder="Example: Math"
+            onkeydown="handleTag(event, 'weak')"
+        />
+        <button class="add-tag-btn" type="button" onclick="addSubject('weak')">Add</button>
+    `;
+
+    strongContainer.innerHTML = "";
+
+    myStrongSubjects.forEach(subject => {
+        strongContainer.innerHTML += `
+            <div class="tag">
+                ${escapeHTML(subject)}
+                <span onclick="removeSubject('${escapeJS(subject)}', 'strong')">&times;</span>
+            </div>
+        `;
+    });
+
+    strongContainer.innerHTML += `
+        <input
+            type="text"
+            class="tag-input"
+            id="strongInput"
+            placeholder="Example: Data Structure"
+            onkeydown="handleTag(event, 'strong')"
+        />
+        <button class="add-tag-btn" type="button" onclick="addSubject('strong')">Add</button>
+    `;
+}
+
+function renderProfile() {
+    const profileWeak = document.getElementById("profileWeak");
+    const profileStrong = document.getElementById("profileStrong");
+
+    if (!profileWeak || !profileStrong) return;
+
+    if (myWeakSubjects.length === 0) {
+        profileWeak.className = "subject-list empty-list";
+        profileWeak.innerHTML = "No weak subjects added yet.";
+    } else {
+        profileWeak.className = "subject-list";
+        profileWeak.innerHTML = myWeakSubjects.map(subject => `
+            <span class="subject-pill weak-pill">Need: ${escapeHTML(subject)}</span>
+        `).join("");
+    }
+
+    if (myStrongSubjects.length === 0) {
+        profileStrong.className = "subject-list empty-list";
+        profileStrong.innerHTML = "No strong subjects added yet.";
+    } else {
+        profileStrong.className = "subject-list";
+        profileStrong.innerHTML = myStrongSubjects.map(subject => `
+            <span class="subject-pill strong-pill">Teach: ${escapeHTML(subject)}</span>
+        `).join("");
+    }
+}
+
+function renderMatches() {
+    const matchesGrid = document.getElementById("matchesGrid");
+    const searchInput = document.getElementById("searchInput");
+
+    if (!matchesGrid) return;
+
+    if (!requestPublished) {
+        matchesGrid.innerHTML = `
+            <div class="empty-state-card">
+                <div class="empty-icon">🔎</div>
+                <h3>No request yet</h3>
+                <p>Click Add Request after saving your list to find available students.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const searchValue = searchInput
+        ? searchInput.value.toLowerCase().trim()
+        : "";
+
+    let filteredStudents = students.filter(student => {
+        const allText = [
+            student.fullName || "",
+            student.username || "",
+            student.email || "",
+            student.university || "",
+            student.major || "",
+            ...(student.weakSubjects || []),
+            ...(student.strongSubjects || [])
+        ].join(" ").toLowerCase();
+
+        return allText.includes(searchValue);
+    });
+
+    if (filteredStudents.length === 0) {
+        matchesGrid.innerHTML = `
+            <div class="empty-state-card">
+                <div class="empty-icon">🔎</div>
+                <h3>No students found</h3>
+                <p>No available students match your saved list right now.</p>
+            </div>
+        `;
+        return;
+    }
+
+    matchesGrid.innerHTML = filteredStudents.map(student => {
+        const name = student.fullName || student.username || "Student";
+        const firstName = name.split(" ")[0];
+        const avatarLetter = name.charAt(0).toUpperCase();
+
+        return `
+            <div class="buddy-card">
+                <div class="buddy-top">
+                    <div class="buddy-avatar">${escapeHTML(avatarLetter)}</div>
+
+                    <div class="buddy-name">
+                        <h3>${escapeHTML(name)}</h3>
+                        <p>${escapeHTML(student.major || "Study Buddy Student")}</p>
+                    </div>
+
+                    <div class="match-score">${student.score || 0}%</div>
+                </div>
+
+                <div class="match-reason">
+                    ${escapeHTML(student.reason || "Possible study match")}
+                </div>
+
+                <div class="buddy-subjects">
+                    <div class="subject-row">
+                        <h5>Strong Subjects</h5>
+                        <div class="small-tags">
+                            ${
+                                student.strongSubjects && student.strongSubjects.length
+                                    ? student.strongSubjects.map(subject => `
+                                        <span class="small-tag">${escapeHTML(subject)}</span>
+                                    `).join("")
+                                    : `<span class="small-tag empty-tag">No strong subjects</span>`
+                            }
                         </div>
                     </div>
-                    <button class="btn-match" onclick="alert('Match Request Sent to ${person.name}!')">Match</button>
+
+                    <div class="subject-row">
+                        <h5>Needs Help With</h5>
+                        <div class="small-tags">
+                            ${
+                                student.weakSubjects && student.weakSubjects.length
+                                    ? student.weakSubjects.map(subject => `
+                                        <span class="small-tag">${escapeHTML(subject)}</span>
+                                    `).join("")
+                                    : `<span class="small-tag empty-tag">No weak subjects</span>`
+                            }
+                        </div>
+                    </div>
                 </div>
-            `).join('');
-        }
+
+                <button class="btn-match" onclick="sendMatch('${escapeJS(name)}')">
+                    Match With ${escapeHTML(firstName)}
+                </button>
+            </div>
+        `;
+    }).join("");
+}
+
+function sendMatch(name) {
+    if (!requireLogin("Please login before sending a match request.")) {
+        return;
+    }
+
+    if (!requestPublished) {
+        showToast("Click Add Request before matching.", "warning");
+        return;
+    }
+
+    showToast(`Match request sent to ${name}!`, "success");
+}
+
+function showToast(message, type = "info") {
+    const toast = document.getElementById("toast");
+
+    if (!toast) {
+        alert(message);
+        return;
+    }
+
+    toast.textContent = message;
+    toast.className = "toast show";
+
+    if (type) {
+        toast.classList.add(type);
+    }
+
+    clearTimeout(window.studyBuddyToastTimer);
+
+    window.studyBuddyToastTimer = setTimeout(() => {
+        toast.className = "toast";
+    }, 2800);
+}
+
+function escapeHTML(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function escapeJS(value) {
+    return String(value)
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '\\"');
+}
+
+function renderAll() {
+    renderTags();
+    renderProfile();
+    renderMatches();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    fetchMyProfile();
+});
