@@ -2,9 +2,14 @@ const express = require("express");
 const path = require("path");
 const session = require("express-session");
 const flash = require("connect-flash");
+const bcrypt = require("bcryptjs");
+const connectDB = require("./config/db");
+const User = require("./models/User");
 require("dotenv").config();
 
 const app = express();
+
+connectDB();
 
 // EJS setup
 app.set("view engine", "ejs");
@@ -44,9 +49,105 @@ app.get("/", (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login");
 });
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      req.flash("error", "Invalid username or password.");
+      return res.redirect("/login");
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      req.flash("error", "Invalid username or password.");
+      return res.redirect("/login");
+    }
+
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      fullName: user.fullName,
+      email: user.email,
+      university: user.university,
+      major: user.major,
+      gender: user.gender
+    };
+
+    res.redirect("/mainpage");
+  } catch (error) {
+    console.error("Login error:", error);
+    req.flash("error", "Something went wrong.");
+    res.redirect("/login");
+  }
+});
 
 app.get("/signup", (req, res) => {
   res.render("signup");
+});
+app.post("/signup", async (req, res) => {
+  try {
+    const {
+      fullName,
+      username,
+      gender,
+      university,
+      major,
+      email,
+      password,
+      confirmPassword
+    } = req.body;
+
+    if (
+      !fullName ||
+      !username ||
+      !gender ||
+      !university ||
+      !major ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
+      req.flash("error", "Please fill in all fields.");
+      return res.redirect("/signup");
+    }
+
+    if (password !== confirmPassword) {
+      req.flash("error", "Passwords do not match.");
+      return res.redirect("/signup");
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      req.flash("error", "Email or username already exists.");
+      return res.redirect("/signup");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+      fullName,
+      username,
+      gender,
+      university,
+      major,
+      email,
+      password: hashedPassword
+    });
+
+    req.flash("success", "Account created successfully. Please log in.");
+    res.redirect("/login");
+  } catch (error) {
+    console.error("Signup error:", error);
+    req.flash("error", "Something went wrong.");
+    res.redirect("/signup");
+  }
 });
 
 app.get("/mainpage", (req, res) => {

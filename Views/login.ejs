@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+
+  <link rel="stylesheet" href="/css/forms.css">
+</head>
+
+<body>
+  <div class="close-btn" onclick="window.location.href='/cylinder#trigger-logo'" style="color: azure;">
+    ✖
+  </div>
+
+  <div class="container login-page">
+    <div class="login-box">
+      <h2>Welcome Back</h2>
+      <p>Please log in to continue.</p>
+
+      <% if (error && error.length > 0) { %>
+        <p style="color: red; margin-top: 10px;"><%= error %></p>
+      <% } %>
+
+      <% if (success && success.length > 0) { %>
+        <p style="color: green; margin-top: 10px;"><%= success %></p>
+      <% } %>
+
+      <form id="login-form" action="/login" method="POST">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            placeholder="Enter username" 
+            required
+          >
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="Enter password" 
+            required
+          >
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <p style="margin-top: 15px; font-size: 14px;">
+        Don't have an account?
+        <a href="/signup" style="color: #3498db; text-decoration: none; font-weight: bold;">
+          Sign up here
+        </a>
+      </p>
+
+      <p id="login-error" style="color: red; display: none; margin-top: 10px;">
+        Invalid username or password. Try again or create an account.
+      </p>
+    </div>
+  </div>
+
+  <!-- <script src="../javaScript/forms.js"></script> -->
+</body>
+</html>
