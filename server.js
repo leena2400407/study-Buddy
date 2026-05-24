@@ -179,6 +179,8 @@ app.post("/signup", async (req, res) => {
       confirmPassword
     } = req.body;
 
+    console.log("Signup body received:", req.body);
+
     if (
       !fullName ||
       !username ||
@@ -207,26 +209,29 @@ app.post("/signup", async (req, res) => {
       return res.redirect("/signup");
     }
 
-const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-await User.create({
-  fullName,
-  username,
-  gender,
-  university,
-  major,
-  email,
-  password: hashedPassword
-});
+    const newUser = await User.create({
+      fullName,
+      username,
+      gender,
+      university,
+      major,
+      email,
+      password: hashedPassword
+    });
 
-try {
-  await sendSignupEmail(email, fullName);
-} catch (emailError) {
-  console.error("Email sending error:", emailError);
-}
+    console.log("User saved successfully:", newUser._id);
 
-req.flash("success", "Account created successfully. Please log in.");
-res.redirect("/login");
+    try {
+      await sendSignupEmail(email, fullName);
+      console.log("Signup email sent successfully.");
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+    }
+
+    req.flash("success", "Account created successfully. Please log in.");
+    res.redirect("/login");
   } catch (error) {
     console.error("Signup error:", error);
     req.flash("error", "Something went wrong.");
