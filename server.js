@@ -74,12 +74,20 @@ const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, r
             </p>
           </div>
 
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; border: 1px solid #fecdd3;">
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
             <strong style="color: #b91c1c;">04</strong>
             <p style="margin: 6px 0 0;">
               You must be logged in to the website for the meet to start.
             </p>
           </div>
+
+          <div style="background: white; padding: 14px 16px; border-radius: 10px; border: 1px solid #fecdd3;">
+            <strong style="color: #b91c1c;">05</strong>
+            <p style="margin: 6px 0 0;">
+              You must enter using a laptop.
+            </p>
+          </div>
+
         </div>
 
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222; max-width: 650px; margin: auto; padding: 20px;">
