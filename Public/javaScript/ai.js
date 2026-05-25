@@ -1,135 +1,229 @@
-const startBtn = document.getElementById('startBtn');
-const startScreen = document.getElementById('startScreen');
-const chatUi = document.getElementById('chatUi');
-const chatBox = document.getElementById('chatBox');
-const chatForm = document.getElementById('chatForm');
-const messageInput = document.getElementById('messageInput');
+const startBtn = document.getElementById("startBtn");
+const startScreen = document.getElementById("startScreen");
+const chatUi = document.getElementById("chatUi");
+const chatBox = document.getElementById("chatBox");
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const clearBtn = document.getElementById("clearBtn");
+const chatStatus = document.getElementById("chatStatus");
+const charCount = document.getElementById("charCount");
 
-const suggestions = ['Algorithms', 'C++ Basics', 'Data Structures', 'Exam Tips', 'Code Help'];
-const welcomeMessage = "🎓 Hey! I'm Study Buddy AI, your personal learning companion. What's on your mind?";
+const welcomeMessage = "Hey, I'm Study Buddy AI. Ask me anything.";
+const chatHistory = [];
 
-startBtn.addEventListener('click', () => {
-    startScreen.classList.add('hidden');
-    chatUi.classList.remove('hidden');
-    typeBotMessage(welcomeMessage);
-    setTimeout(showSuggestions, 1500);
+startBtn.addEventListener("click", () => {
+  startScreen.classList.add("hidden");
+  chatUi.classList.remove("hidden");
+
+  if (chatBox.children.length === 0) {
+    addBotMessage(welcomeMessage);
+  }
+
+  messageInput.focus();
+});
+
+clearBtn.addEventListener("click", () => {
+  chatHistory.length = 0;
+  chatBox.innerHTML = "";
+
+  if (startScreen.classList.contains("hidden")) {
+    addBotMessage("Chat cleared. Ask me anything new.");
     messageInput.focus();
+  }
 });
 
-messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        chatForm.dispatchEvent(new Event('submit'));
-    }
+messageInput.addEventListener("input", () => {
+  autoResizeTextarea();
+  updateCharCount();
 });
 
-chatForm.addEventListener('submit', (event) => {
+messageInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    const userMessage = messageInput.value.trim();
-    if (!userMessage) return;
-
-    typeUserMessage(userMessage);
-    messageInput.value = '';
-    removeSuggestions();
-
-    setTimeout(() => {
-        const reply = generateReply(userMessage);
-        typeBotMessage(reply);
-        setTimeout(showSuggestions, 1500);
-    }, 600);
+    chatForm.dispatchEvent(new Event("submit", { cancelable: true }));
+  }
 });
 
-function typeUserMessage(text) {
-    const messageElement = document.createElement('div');
-    messageElement.className = 'chat-message user';
-    chatBox.appendChild(messageElement);
+chatForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-    const words = text.split(' ');
-    let i = 0;
-    const interval = setInterval(() => {
-        if (i >= words.length) return clearInterval(interval);
-        messageElement.textContent += (i ? ' ' : '') + words[i++];
-        scrollDown();
-    }, 35);
-}
+  const userMessage = messageInput.value.trim();
 
-function typeBotMessage(text) {
-    const row = document.createElement('div');
-    row.className = 'bot-message-row';
+  if (!userMessage) {
+    return;
+  }
 
-    const avatar = document.createElement('img');
-    avatar.className = 'bot-avatar';
-    avatar.src = '../assests/images/WhatsApp_Image_2026-03-19_at_11.23.23_PM-removebg-preview.png';
+  addUserMessage(userMessage);
 
-    const messageElement = document.createElement('div');
-    messageElement.className = 'chat-message bot';
+  messageInput.value = "";
+  autoResizeTextarea();
+  updateCharCount();
 
-    row.appendChild(avatar);
-    row.appendChild(messageElement);
-    chatBox.appendChild(row);
+  setLoading(true);
 
-    const words = text.split(' ');
-    let i = 0;
-    const interval = setInterval(() => {
-        if (i >= words.length) return clearInterval(interval);
-        messageElement.textContent += (i ? ' ' : '') + words[i++];
-        scrollDown();
-    }, 50);
-}
+  const typingMessage = addTypingMessage();
 
-function generateReply(input) {
-    const lower = input.toLowerCase();
+  try {
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: userMessage,
+        history: chatHistory
+      })
+    });
 
-    const replies = {
-        algorithm: ['🔄 Algorithms:\n- Sorting: Quick/Merge/Bubble\n- Searching: Binary/Linear\n- Complexity: O(n), O(log n)\n\n💡 Ask me: "How does binary search work?"'],
-        'c++': ['⚙️ C++ Essentials:\n- STL: Vectors, Maps, Sets\n- Pointers: * and &\n- OOP: Classes & Inheritance\n\n🎯 Try: "Explain pointers"'],
-        data: ['📊 Data Structures:\n- Arrays, Linked Lists\n- Stacks, Queues\n- Trees, Graphs, Hash Tables\n\n✨ Ask: "Difference between array and linked list?"'],
-        exam: ['🔥 Exam Success:\n1️⃣ Active recall practice\n2️⃣ Spaced repetition\n3️⃣ Time management\n4️⃣ Sleep well!\n\n💪 You got this!'],
-        hello: ['👋 Welcome back! Ready to level up? 🚀\n\n📚 Topics: Algorithms, C++, Data Structures, or DSA?'],
-        help: ['🆘 I can help with:\n✅ Explanations\n✅ Examples\n✅ Tips & Tricks\n✅ Problem Solving\n\nWhat would you like?'],
-        recursi: ['🔁 Recursion Basics:\n- Base case (stop condition)\n- Recursive case (call itself)\n- Stack: Each call uses memory\n\nExample: Factorial, Fibonacci'],
-        sort: ['🔀 Sorting Algorithms:\n- Bubble: Simple, O(n²)\n- Quick: Fast, O(n log n)\n- Merge: Stable, O(n log n)\n\n🎮 Which one interests you?']
-    };
+    const data = await response.json();
 
-    for (const [key, msgs] of Object.entries(replies)) {
-        if (lower.includes(key)) {
-            return msgs[Math.floor(Math.random() * msgs.length)];
-        }
+    if (!response.ok) {
+      throw new Error(data.error || "Gemini request failed.");
     }
 
-    return '🎓 Tell me more!\n\nTopics: Algorithms, C++, Data Structures, Recursion, Sorting, Exams, or ask anything!';
-}
+    typingMessage.remove();
 
-function showSuggestions() {
-    if (document.getElementById('suggestionsBox')) return;
-    
-    const sugBox = document.createElement('div');
-    sugBox.id = 'suggestionsBox';
-    sugBox.className = 'suggestions-box';
-    
-    suggestions.forEach(sug => {
-        const btn = document.createElement('button');
-        btn.className = 'suggestion-btn';
-        btn.textContent = sug;
-        btn.onclick = () => {
-            messageInput.value = sug;
-            chatForm.dispatchEvent(new Event('submit'));
-        };
-        sugBox.appendChild(btn);
+    const reply = data.reply || "Gemini did not send a reply.";
+    addBotMessage(reply);
+
+    chatHistory.push({
+      role: "user",
+      text: userMessage
     });
-    
-    chatBox.appendChild(sugBox);
-    scrollDown();
+
+    chatHistory.push({
+      role: "model",
+      text: reply
+    });
+
+    while (chatHistory.length > 12) {
+      chatHistory.shift();
+    }
+  } catch (error) {
+    typingMessage.remove();
+    addBotMessage(`⚠️ ${error.message}`);
+    console.error("AI frontend error:", error);
+  } finally {
+    setLoading(false);
+    messageInput.focus();
+  }
+});
+
+function setLoading(isLoading) {
+  messageInput.disabled = isLoading;
+  sendBtn.disabled = isLoading;
+
+  if (isLoading) {
+    sendBtn.innerHTML = "<span>Wait</span><span>…</span>";
+    chatStatus.textContent = "Thinking...";
+  } else {
+    sendBtn.innerHTML = "<span>Send</span><span>➜</span>";
+    chatStatus.textContent = "Online • Ask me anything";
+  }
 }
 
-function removeSuggestions() {
-    const sugBox = document.getElementById('suggestionsBox');
-    if (sugBox) sugBox.remove();
+function addUserMessage(text) {
+  const row = document.createElement("div");
+  row.className = "message-row user-row";
+
+  const messageElement = document.createElement("div");
+  messageElement.className = "chat-message user";
+  messageElement.textContent = text;
+
+  row.appendChild(messageElement);
+  chatBox.appendChild(row);
+
+  scrollDown();
+}
+
+function addBotMessage(text) {
+  const row = document.createElement("div");
+  row.className = "message-row bot-row";
+
+  const avatar = document.createElement("div");
+  avatar.className = "bot-avatar-small";
+  avatar.textContent = "✦";
+
+  const messageElement = document.createElement("div");
+  messageElement.className = "chat-message bot";
+  messageElement.innerHTML = formatReply(text);
+
+  row.appendChild(avatar);
+  row.appendChild(messageElement);
+  chatBox.appendChild(row);
+
+  scrollDown();
+
+  return row;
+}
+
+function addTypingMessage() {
+  const row = document.createElement("div");
+  row.className = "message-row bot-row";
+
+  const avatar = document.createElement("div");
+  avatar.className = "bot-avatar-small";
+  avatar.textContent = "✦";
+
+  const messageElement = document.createElement("div");
+  messageElement.className = "chat-message bot";
+  messageElement.innerHTML = `
+    <div class="typing">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  `;
+
+  row.appendChild(avatar);
+  row.appendChild(messageElement);
+  chatBox.appendChild(row);
+
+  scrollDown();
+
+  return row;
+}
+
+function formatReply(text) {
+  let safe = escapeHtml(String(text));
+
+  safe = safe.replace(/```([\s\S]*?)```/g, function (_, code) {
+    return `<pre><code>${code.trim()}</code></pre>`;
+  });
+
+  safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
+  safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  safe = safe.replace(/\n{2,}/g, "</p><p>");
+  safe = safe.replace(/\n/g, "<br>");
+
+  return `<p>${safe}</p>`;
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function autoResizeTextarea() {
+  messageInput.style.height = "auto";
+  messageInput.style.height = `${messageInput.scrollHeight}px`;
+}
+
+function updateCharCount() {
+  const count = messageInput.value.length;
+  charCount.textContent = `${count} character${count === 1 ? "" : "s"}`;
 }
 
 function scrollDown() {
-    chatBox.scrollTo({
-        top: chatBox.scrollHeight,
-        behavior: 'smooth'
-    });
+  chatBox.scrollTo({
+    top: chatBox.scrollHeight,
+    behavior: "smooth"
+  });
 }
+
+updateCharCount();

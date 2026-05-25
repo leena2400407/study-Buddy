@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/leena2400407/study-Buddy#readme",
   "dependencies": {
+    "@google/genai": "^2.6.0",
     "bcryptjs": "^3.0.3",
     "connect-flash": "^0.1.1",
     "dotenv": "^17.4.2",
