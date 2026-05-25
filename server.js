@@ -437,6 +437,47 @@ app.post("/api/matching/profile", requireAuth, async (req, res) => {
   }
 });
 
+app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
+  try {
+    const profile = await StudyProfile.findOneAndUpdate(
+      {
+        user: req.session.user.id
+      },
+      {
+        weakSubjects: [],
+        strongSubjects: []
+      },
+      {
+        new: true
+      }
+    );
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        message: "Study profile was not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Study list cleared.",
+      profile
+    });
+
+  } catch (error) {
+    console.error("Clear study profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not clear your study list."
+    });
+  }
+});
+
+
+
+
 app.get("/api/matching/matches", requireAuth, async (req, res) => {
   try {
     const myProfile = await StudyProfile.findOne({
