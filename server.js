@@ -627,6 +627,139 @@ app.get("/cylinder", (req, res) => {
   res.render("cyinder");
 });
 
+app.get("/events", async (req, res) => {
+  try {
+    const events = await Event.find().sort({ createdAt: -1 });
+
+    res.render("events", {
+      isLoggedIn: !!req.session.user,
+      events
+    });
+  } catch (error) {
+    console.error("Events page error:", error);
+
+    res.render("events", {
+      isLoggedIn: !!req.session.user,
+      events: []
+    });
+  }
+});
+
+app.get("/seed-events", async (req, res) => {
+  try {
+    await Event.deleteMany({});
+
+    await Event.insertMany([
+      {
+        title: "University Football Cup 2026",
+        category: "sports",
+        description: "Team registration, competitive bracket, and prize pool.",
+        imagePath: "/assests/images/football.avif",
+        buttonType: "register",
+        maxPlayers: 10
+      },
+      {
+        title: "University Padel Cup 2026",
+        category: "padel",
+        description: "Fast matches, student teams, and court vibes.",
+        imagePath: "/assests/images/padel.jpg",
+        buttonType: "register",
+        maxPlayers: 2
+      },
+      {
+        title: "Disco Misr X Reiki Beach",
+        category: "music",
+        description: "Entertainment night with premium ticket flow.",
+        imagePath: "/assests/images/disco msar.png",
+        buttonType: "details",
+        detailsLink: "https://tazkarti.com/#/events/category/96",
+        maxPlayers: 0
+      },
+      {
+        title: "Cairokee Empire Stadium",
+        category: "concert",
+        description: "Big stadium energy for campus friends.",
+        imagePath: "/assests/images/cairokee.jpg",
+        buttonType: "details",
+        detailsLink: "https://tazkarti.com/#/events/category/96",
+        maxPlayers: 0
+      },
+      {
+        title: "Amr Diab AUC",
+        category: "concert",
+        description: "Premium night, premium cards, no broken images.",
+        imagePath: "/assests/images/amr diab.jpeg",
+        buttonType: "details",
+        detailsLink: "https://tazkarti.com/#/events/category/96",
+        maxPlayers: 0
+      }
+    ]);
+
+    res.send("Events added successfully.");
+  } catch (error) {
+    console.error("Seed events error:", error);
+    res.status(500).send("Could not seed events.");
+  }
+});
+
+app.post("/events/register", requireAuth, async (req, res) => {
+  try {
+    const { tournamentName, teamName, players } = req.body;
+
+    if (!tournamentName || !teamName || !Array.isArray(players) || players.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill in team name and player details."
+      });
+    }
+
+    const maxPlayers = tournamentName.toLowerCase().includes("padel") ? 2 : 10;
+
+    if (players.length > maxPlayers) {
+      return res.status(400).json({
+        success: false,
+        message: `This tournament allows maximum ${maxPlayers} players.`
+      });
+    }
+
+    const cleanedPlayers = players
+      .map(player => ({
+        name: String(player.name || "").trim(),
+        email: String(player.email || "").trim().toLowerCase()
+      }))
+      .filter(player => player.name && player.email);
+
+    if (cleanedPlayers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please add at least one valid player."
+      });
+    }
+
+    await EventRegistration.create({
+      user: req.session.user.id,
+      fullName: req.session.user.fullName,
+      email: req.session.user.email,
+      university: req.session.user.university,
+      tournamentName,
+      teamName,
+      players: cleanedPlayers
+    });
+
+    res.json({
+      success: true,
+      message: "Tournament registration completed successfully."
+    });
+  } catch (error) {
+    console.error("Event registration error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not complete registration."
+    });
+  }
+});
+
 // Server start
 const PORT = process.env.PORT || 5000;
 

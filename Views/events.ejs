@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Activity Command Center</title>
+
+  <link rel="stylesheet" href="/css/events.css">
+</head>
+
+<body>
+
+  <div class="dashboard-wrapper">
+
+    <div class="hero-command-center reveal-item fx-zoom-in">
+      <span class="hero-badge">Events + Game Hub</span>
+      <h1 class="hero-main-title">Campus Activity<br>Command Center</h1>
+      <p class="hero-description">
+        Events, tournaments, concerts, and games now live inside one bigger connected experience instead of separated mini pages.
+      </p>
+    </div>
+
+    <div class="header-title-area reveal-item fx-slide-right delay-100">
+      <span class="discover-badge">Discover</span>
+      <h1 class="main-dashboard-title">Events & Tournaments</h1>
+    </div>
+
+    <div class="grid-layout">
+
+      <div class="custom-dashboard-card card-large-item reveal-item fx-slide-right delay-100" style="background-image: url('/assests/images/football.avif');">
+        <div class="card-top-badges">
+          <span class="inner-pill-badge">sports</span>
+          <span class="inner-pill-badge admin-live">Admin Live</span>
+        </div>
+
+        <div class="card-dark-gradient-layer"></div>
+
+        <div class="card-inner-content">
+          <h2 class="card-main-heading">University Football Cup 2026</h2>
+          <p class="card-brief-desc">Team registration, competitive bracket, and prize pool.</p>
+          <button class="action-gradient-btn" onclick="openRegistration(event, 'University Football Cup 2026')">Register</button>
+        </div>
+      </div>
+
+      <div class="custom-dashboard-card card-regular-item reveal-item fx-slide-up-scale delay-200" style="background-image: url('/assests/images/padel.jpg');">
+        <div class="card-top-badges">
+          <span class="inner-pill-badge">padel</span>
+          <span class="inner-pill-badge admin-live">Admin Live</span>
+        </div>
+
+        <div class="card-dark-gradient-layer"></div>
+
+        <div class="card-inner-content">
+          <h2 class="card-main-heading">University Padel Cup</h2>
+          <p class="card-brief-desc">Fast matches, student teams, and court vibes.</p>
+          <button class="action-gradient-btn" onclick="openRegistration(event, 'University Padel Cup 2026')">Register</button>
+        </div>
+      </div>
+
+      <div class="custom-dashboard-card card-regular-item reveal-item fx-slide-left delay-300" style="background-image: url('/assests/images/disco msar.png');">
+        <div class="card-top-badges">
+          <span class="inner-pill-badge">music</span>
+          <span class="inner-pill-badge admin-live">Admin Live</span>
+        </div>
+
+        <div class="card-dark-gradient-layer"></div>
+
+        <div class="card-inner-content">
+          <h2 class="card-main-heading">Disco Misr X Reiki Beach</h2>
+          <p class="card-brief-desc">Entertainment night with premium ticket flow.</p>
+          <button class="action-gradient-btn" onclick="window.open('https://tazkarti.com/#/events/category/96','_blank')">View Details</button>
+        </div>
+      </div>
+
+      <div class="custom-dashboard-card card-regular-item reveal-item fx-slide-up-scale delay-300" style="background-image: url('/assests/images/cairokee.jpg');">
+        <div class="card-top-badges">
+          <span class="inner-pill-badge">concert</span>
+          <span class="inner-pill-badge admin-live">Admin Live</span>
+        </div>
+
+        <div class="card-dark-gradient-layer"></div>
+
+        <div class="card-inner-content">
+          <h2 class="card-main-heading">Cairokee Empire Stadium</h2>
+          <p class="card-brief-desc">Big stadium energy for campus friends.</p>
+          <button class="action-gradient-btn" onclick="window.open('https://tazkarti.com/#/events/category/96','_blank')">View Details</button>
+        </div>
+      </div>
+
+      <div class="custom-dashboard-card card-regular-item reveal-item fx-slide-left delay-400" style="background-image: url('/assests/images/amr diab.jpeg');">
+        <div class="card-top-badges">
+          <span class="inner-pill-badge">concert</span>
+          <span class="inner-pill-badge admin-live">Admin Live</span>
+        </div>
+
+        <div class="card-dark-gradient-layer"></div>
+
+        <div class="card-inner-content">
+          <h2 class="card-main-heading">Amr Diab AUC</h2>
+          <p class="card-brief-desc">Premium night, premium cards, no broken images.</p>
+          <button class="action-gradient-btn" onclick="window.open('https://tazkarti.com/#/events/category/96','_blank')">View Details</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="registration-modal" class="hidden modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title-row">
+        <h2 id="modal-tournament-name">Tournament Name</h2>
+        <button class="close-modal-x" onclick="closeRegistration()">&times;</button>
+      </div>
+
+      <form id="team-form" onsubmit="submitTeam(event)">
+        <div class="form-group">
+          <label>Team Name *</label>
+          <input type="text" id="team-name" required placeholder="Enter team name">
+        </div>
+
+        <div id="players-container"></div>
+
+        <button type="button" class="add-player-btn" onclick="addPlayer()">+ Add Another Player</button>
+        <button type="submit" class="submit-btn">Complete Registration</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="auth-modal" class="hidden modal-overlay">
+    <div class="modal-content auth-content">
+      <h2>Join the Game!</h2>
+
+      <p>You need to have an account to register in tournaments.</p>
+
+      <div class="auth-buttons">
+        <button class="submit-btn" onclick="window.location.href='/login'">Login</button>
+
+        <button class="add-player-btn signup-auth-btn" onclick="window.location.href='/signup'">
+          Sign Up
+        </button>
+
+        <button class="close-modal-x maybe-later-btn" onclick="closeAuthModal()">
+          Maybe Later
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.EVENTS_PAGE_DATA = {
+      isLoggedIn: <%= user ? "true" : "false" %>
+    };
+  </script>
+
+  <script src="/javaScript/events.js"></script>
+</body>
+</html>

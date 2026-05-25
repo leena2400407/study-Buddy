@@ -1,125 +1,125 @@
- const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('page');
-        if (page === 'sports') {
-            showPage('tournaments-page', 'bg-sports');
-        }
-function showPage(pageId, bgClass) {
-       
-        document.getElementById('landing-page').classList.add('hidden');
-        document.getElementById('tournaments-page').classList.add('hidden');
-        document.getElementById('entertainment-page').classList.add('hidden');
-        
-       
-        document.getElementById(pageId).classList.remove('hidden');
-        document.body.className = bgClass;
-    }
+document.addEventListener("DOMContentLoaded", function () {
+  const observerOptions = {
+    root: null,
+    rootMargin: "0px 0px -10% 0px",
+    threshold: 0.1
+  };
 
-     function goBack() {
-        showPage('landing-page', 'bg-landing');
-    }   
-    function openRegistration(event, name) {
-            event.preventDefault();
-            document.getElementById('modal-tournament-name').innerText = name;
-            document.getElementById('registration-modal').classList.remove('hidden');
-        }
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("active");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
 
-        function closeRegistration() {
-            document.getElementById('registration-modal').classList.add('hidden');
-        }
+  const elementsToReveal = document.querySelectorAll(".reveal-item");
+  elementsToReveal.forEach(el => observer.observe(el));
+});
 
-       
+let maxP = 10;
+let pendingTournamentName = "";
 
-        function submitTeam(event) {
-            event.preventDefault();
-            alert('Registration Successful!');
-            closeRegistration();
-            document.getElementById('team-form').reset();
-        }
+const isLoggedIn =
+  window.EVENTS_PAGE_DATA && window.EVENTS_PAGE_DATA.isLoggedIn === true;
 
-     let maxP = 10; 
+function openRegistration(e, name,maxPlayersFromDatabase) {
+  e.preventDefault();
 
-     function openRegistration(e, name) {
-           e.preventDefault();
-    
-    
-     maxP = name.toLowerCase().includes('padel') ? 2 : 10; 
+  pendingTournamentName = name;
+  if (!isLoggedIn) {
+    document.getElementById("auth-modal").classList.remove("hidden");
+    return;
+  }
 
-     document.getElementById('modal-tournament-name').innerText = name;
-    
-    
-     document.getElementById('players-container').innerHTML = `
-        <div class="form-group">
-            <label>Player 1 (Captain) *</label>
-            <div class="player-inputs">
-                <input type="text" placeholder="Full Name" required>
-                <input type="email" placeholder="Email Address" required>
-            </div>
-        </div>`;
+  maxP = Number(maxPlayersFromDatabase) || 10;
 
-     document.querySelector('.add-player-btn').style.display = 'block';
-     document.getElementById('registration-modal').classList.remove('hidden');
-     }
+  document.getElementById("modal-tournament-name").innerText = name;
 
-    function addPlayer() {
-         const container = document.getElementById('players-container');
-         const num = container.children.length + 1;
-    
-    if (num > maxP) return; // Stop if over max limit
+  document.getElementById("players-container").innerHTML = `
+    <div class="form-group">
+      <label>Player 1 (Captain) *</label>
+      <div class="player-inputs">
+        <input type="text" placeholder="Full Name" required>
+        <input type="email" placeholder="Email Address" required>
+      </div>
+    </div>
+  `;
 
-    
-    container.insertAdjacentHTML('beforeend', `
-        <div class="form-group">
-            <label>Player ${num}</label>
-            <div class="player-inputs">
-                <input type="text" placeholder="Full Name" required>
-                <input type="email" placeholder="Email Address" required>
-            </div>
-        </div>`);
+  document.querySelector(".add-player-btn").style.display = maxP === 2 ? "none" : "block";
+  document.getElementById("registration-modal").classList.remove("hidden");
+}
 
-    
-    if (num === maxP) document.querySelector('.add-player-btn').style.display = 'none';
+function addPlayer() {
+  const container = document.getElementById("players-container");
+  const num = container.children.length + 1;
+
+  if (num > maxP) return;
+
+  container.insertAdjacentHTML("beforeend", `
+    <div class="form-group">
+      <label>Player ${num}</label>
+      <div class="player-inputs">
+        <input type="text" placeholder="Full Name" required>
+        <input type="email" placeholder="Email Address" required>
+      </div>
+    </div>
+  `);
+
+  if (num === maxP) {
+    document.querySelector(".add-player-btn").style.display = "none";
+  }
 }
 
 function closeRegistration() {
-    document.getElementById('registration-modal').classList.add('hidden');
+  document.getElementById("registration-modal").classList.add("hidden");
 }
-
-let isLoggedIn = false; 
-let pendingTournamentName = "";
-
-function openRegistration(e, name) {
-    e.preventDefault();
-    
-    
-    if (!isLoggedIn) {
-        pendingTournamentName = name; 
-        document.getElementById('auth-modal').classList.remove('hidden');
-        return; 
-    }
-
-    
-    maxP = name.toLowerCase().includes('padel') ? 2 : 10; 
-    document.getElementById('modal-tournament-name').innerText = name;
-    
-    document.getElementById('players-container').innerHTML = `
-        <div class="form-group">
-            <label>Player 1 (Captain) *</label>
-            <div class="player-inputs">
-                <input type="text" placeholder="Full Name" required>
-                <input type="email" placeholder="Email Address" required>
-            </div>
-        </div>`;
-
-    document.querySelector('.add-player-btn').style.display = 'block';
-    document.getElementById('registration-modal').classList.remove('hidden');
-}
-
 
 function closeAuthModal() {
-    document.getElementById('auth-modal').classList.add('hidden');
+  document.getElementById("auth-modal").classList.add("hidden");
 }
 
-function simulateLogin() {
-    isLoggedIn = true; 
-    closeAuthModal();
+async function submitTeam(event) {
+  event.preventDefault();
+
+  const teamName = document.getElementById("team-name").value.trim();
+  const playerRows = document.querySelectorAll("#players-container .player-inputs");
+
+  const players = Array.from(playerRows).map(row => {
+    const inputs = row.querySelectorAll("input");
+
+    return {
+      name: inputs[0].value.trim(),
+      email: inputs[1].value.trim()
+    };
+  });
+
+  try {
+    const response = await fetch("/events/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        tournamentName: pendingTournamentName,
+        teamName,
+        players
+      })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      alert(data.message || "Registration failed.");
+      return;
     }
+
+    alert(data.message);
+    closeRegistration();
+    document.getElementById("team-form").reset();
+  } catch (error) {
+    console.error("Registration error:", error);
+    alert("Something went wrong. Please try again.");
+  }
+}
