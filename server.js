@@ -586,6 +586,7 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
     });
   }
 });
+
 app.post("/api/matching/send-room", requireAuth, async (req, res) => {
   try {
     const { matchedProfileId } = req.body;
@@ -598,7 +599,7 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
     }
 
     const myProfile = await StudyProfile.findOne({
-      user: req.session.user.id 
+      user: req.session.user.id
     });
 
     if (!myProfile) {
@@ -607,16 +608,6 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
         message: "Build and save your list first."
       });
     }
-
-    if (
-  myProfile.university !== matchedProfile.university ||
-  myProfile.major !== matchedProfile.major
-) {
-  return res.status(403).json({
-    success: false,
-    message: "You can only match with students from your same university and major."
-  });
-}
 
     const matchedProfile = await StudyProfile.findById(matchedProfileId);
 
@@ -631,6 +622,16 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "You cannot match with yourself."
+      });
+    }
+
+    if (
+      myProfile.university !== matchedProfile.university ||
+      myProfile.major !== matchedProfile.major
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only match with students from your same university and major."
       });
     }
 
@@ -651,7 +652,13 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
 
     const randomCode = Math.floor(100000 + Math.random() * 900000);
     const roomId = `studybuddy-${Date.now()}-${randomCode}`;
-    const meetingLink = `https://meet.jit.si/${roomId}#config.startWithVideoMuted=true&config.toolbarButtons=["microphone","chat","participants-pane","tileview","hangup"]`;
+
+    const jitsiConfig =
+      "#config.startWithVideoMuted=true" +
+      "&config.startWithAudioMuted=true" +
+      "&config.toolbarButtons=%5B%22microphone%22%2C%22chat%22%2C%22participants-pane%22%2C%22tileview%22%2C%22hangup%22%5D";
+
+    const meetingLink = `https://meet.jit.si/${roomId}${jitsiConfig}`;
 
     await sendMatchRoomEmail({
       to: myProfile.email,
