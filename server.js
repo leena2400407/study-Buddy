@@ -8,6 +8,8 @@ const connectDB = require("./config/db");
 const User = require("./models/User");
 const StudyProfile = require("./models/StudyProfile");
 const GameScore = require("./models/GameScore");
+const Event = require("./models/Events");
+const EventRegistration = require("./models/eventsReg");
 require("dotenv").config();
 
 const app = express();
@@ -743,16 +745,29 @@ app.get("/events", async (req, res) => {
   try {
     const events = await Event.find().sort({ createdAt: -1 });
 
+    const sportsCategories = ["sports", "football", "padel"];
+    const entertainmentCategories = ["music", "concert", "entertainment"];
+
+    const sportsEvents = events.filter(event =>
+      sportsCategories.includes(String(event.category).toLowerCase())
+    );
+
+    const entertainmentEvents = events.filter(event =>
+      entertainmentCategories.includes(String(event.category).toLowerCase())
+    );
+
     res.render("events", {
       isLoggedIn: !!req.session.user,
-      events
+      sportsEvents,
+      entertainmentEvents
     });
   } catch (error) {
     console.error("Events page error:", error);
 
     res.render("events", {
       isLoggedIn: !!req.session.user,
-      events: []
+      sportsEvents: [],
+      entertainmentEvents: []
     });
   }
 });
@@ -825,14 +840,16 @@ app.post("/events/register", requireAuth, async (req, res) => {
       });
     }
 
-    const maxPlayers = tournamentName.toLowerCase().includes("padel") ? 2 : 10;
+    const eventData = await Event.findOne({ title: tournamentName });
 
-    if (players.length > maxPlayers) {
-      return res.status(400).json({
+    if (!eventData) {
+      return res.status(404).json({
         success: false,
-        message: `This tournament allows maximum ${maxPlayers} players.`
+        message: "Event was not found."
       });
     }
+
+    const maxPlayers = Number(eventData.maxPlayers) || 10;
 
     const cleanedPlayers = players
       .map(player => ({
@@ -848,11 +865,18 @@ app.post("/events/register", requireAuth, async (req, res) => {
       });
     }
 
+    if (cleanedPlayers.length > maxPlayers) {
+      return res.status(400).json({
+        success: false,
+        message: `This tournament allows maximum ${maxPlayers} players.`
+      });
+    }
+
     await EventRegistration.create({
       user: req.session.user.id,
-      fullName: req.session.user.fullName,
-      email: req.session.user.email,
-      university: req.session.user.university,
+      fullName: req.session.user.fullName || "Unknown User",
+      email: req.session.user.email || "unknown@email.com",
+      university: req.session.user.university || "Unknown University",
       tournamentName,
       teamName,
       players: cleanedPlayers
@@ -862,6 +886,7 @@ app.post("/events/register", requireAuth, async (req, res) => {
       success: true,
       message: "Tournament registration completed successfully."
     });
+
   } catch (error) {
     console.error("Event registration error:", error);
 

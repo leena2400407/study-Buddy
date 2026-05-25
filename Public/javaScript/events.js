@@ -14,8 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }, observerOptions);
 
-  const elementsToReveal = document.querySelectorAll(".reveal-item");
-  elementsToReveal.forEach(el => observer.observe(el));
+  document.querySelectorAll(".reveal-item").forEach(el => observer.observe(el));
 });
 
 let maxP = 10;
@@ -24,10 +23,11 @@ let pendingTournamentName = "";
 const isLoggedIn =
   window.EVENTS_PAGE_DATA && window.EVENTS_PAGE_DATA.isLoggedIn === true;
 
-function openRegistration(e, name,maxPlayersFromDatabase) {
+function openRegistration(e, name, maxPlayersFromDatabase) {
   e.preventDefault();
 
   pendingTournamentName = name;
+
   if (!isLoggedIn) {
     document.getElementById("auth-modal").classList.remove("hidden");
     return;
@@ -47,7 +47,12 @@ function openRegistration(e, name,maxPlayersFromDatabase) {
     </div>
   `;
 
-  document.querySelector(".add-player-btn").style.display = maxP === 2 ? "none" : "block";
+  const addBtn = document.querySelector(".add-player-btn");
+
+  if (addBtn) {
+    addBtn.style.display = maxP <= 1 ? "none" : "block";
+  }
+
   document.getElementById("registration-modal").classList.remove("hidden");
 }
 
@@ -101,6 +106,7 @@ async function submitTeam(event) {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: "include",
       body: JSON.stringify({
         tournamentName: pendingTournamentName,
         teamName,
@@ -116,10 +122,18 @@ async function submitTeam(event) {
     }
 
     alert(data.message);
+
     closeRegistration();
     document.getElementById("team-form").reset();
+
   } catch (error) {
     console.error("Registration error:", error);
     alert("Something went wrong. Please try again.");
   }
 }
+
+window.openRegistration = openRegistration;
+window.addPlayer = addPlayer;
+window.closeRegistration = closeRegistration;
+window.closeAuthModal = closeAuthModal;
+window.submitTeam = submitTeam;
