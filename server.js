@@ -270,12 +270,12 @@ app.post("/signup", async (req, res) => {
     const allowedUniversityDomains = [
         "miuegypt.edu.eg",
         "giu-uni.de",
-        "aast.edu",
-        "acu.edu.eg",
-        "asu.edu.eg"
+        "ecu.edu.eg",
+        "cis.asu.edu.eg",
+        "student.guc.edu.eg",    
     ];
     const emailDomain = email.split("@")[1]?.toLowerCase();
-    
+
     if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
         req.flash("error", "Please use your official university email.");
         return res.redirect("/signup");
@@ -311,6 +311,7 @@ app.post("/signup", async (req, res) => {
       email,
       password: hashedPassword
     });
+    await sendSignupEmail(email, fullName);
 
     req.flash("success", "Account created successfully. Please log in.");
     res.redirect("/login");

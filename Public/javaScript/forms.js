@@ -41,12 +41,11 @@ if (signupForm) {
     if (confirmError) confirmError.innerText = "";
 
     const allowedUniversityDomains = [
-  "miuegypt.edu.eg",
-  "giu-uni.de",
-  "aast.edu",
-  "acu.edu.eg",
-  "asu.edu.eg"
-];
+        "miuegypt.edu.eg",
+        "ecu.edu.eg",
+        "cis.asu.edu.eg",
+        "student.guc.edu.eg",
+    ];
 
 const emailDomain = email.split("@")[1]?.toLowerCase();
 
