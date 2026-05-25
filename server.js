@@ -651,7 +651,7 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
 
     const randomCode = Math.floor(100000 + Math.random() * 900000);
     const roomId = `studybuddy-${Date.now()}-${randomCode}`;
-    const meetingLink = `https://meet.jit.si/${roomId}#config.startWithVideoMuted=true&config.toolbarButtons=["microphone","chat","hangup"]`;
+    const meetingLink = `https://meet.jit.si/${roomId}#config.startWithVideoMuted=true&config.toolbarButtons=["microphone","chat","participants-pane","tileview","hangup"]`;
 
     await sendMatchRoomEmail({
       to: myProfile.email,
