@@ -864,6 +864,10 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
       meetingLink
     });
 
+    app.get("/freshman-guide", (req, res) => {
+      res.render("freshman-guid");
+    });
+
     res.json({
       success: true,
       message: `Video room sent to you and ${matchedProfile.fullName}.`,

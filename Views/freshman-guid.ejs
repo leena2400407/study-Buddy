@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freshman Guide</title>
+
+    <link rel="stylesheet" href="/css/guid.css">
+</head>
+
+<body>
+
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="paper-grid"></div>
+
+    <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+
+    <main class="guide-page">
+
+        <section class="guide-hero">
+            <p class="mini-title">STUDY BUDDY STARTER PACK</p>
+            <h1>Freshman Guide</h1>
+            <p class="subtitle">
+                Tap the sticky note to reveal your next college survival tip.
+            </p>
+        </section>
+
+        <section class="guide-layout">
+
+            <div class="stack-wrap">
+
+                <div class="stack" id="stack">
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">01</span>
+                        <b>Welcome 🎓</b>
+                        <p>
+                            Starting college can feel overwhelming, but everyone is new like you.
+                            Take your time, explore, and remember that you belong here.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">02</span>
+                        <b>Go to Class 📚</b>
+                        <p>
+                            Showing up is half the success. Even on lazy days, attendance matters.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">03</span>
+                        <b>Make Friends 🤝</b>
+                        <p>
+                            Talk to people around you. A simple conversation can turn into a great friendship.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">04</span>
+                        <b>Ask for Help ❓</b>
+                        <p>
+                            If something is unclear, ask early. It saves time and stress later.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">05</span>
+                        <b>Take Care ❤️</b>
+                        <p>
+                            Sleep well, eat well, and do not ignore your health.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">06</span>
+                        <b>Stay Organized 🗂️</b>
+                        <p>
+                            Keep track of deadlines, notes, and tasks to avoid last-minute pressure.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">07</span>
+                        <b>Manage Time ⏰</b>
+                        <p>
+                            Balance studying, relaxing, and social life. Time management is key.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">08</span>
+                        <b>Try New Things 🌟</b>
+                        <p>
+                            Join clubs, attend events, and explore new experiences.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">09</span>
+                        <b>Don't Fear Mistakes 💡</b>
+                        <p>
+                            Mistakes are part of learning. Focus on improving, not being perfect.
+                        </p>
+                    </div>
+
+                    <div class="note" onclick="next()">
+                        <span class="note-number">10</span>
+                        <b>Enjoy the Journey 🚀</b>
+                        <p>
+                            College is more than grades. Make memories and enjoy every moment.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="guide-nav" id="guideNav">
+                    <div class="nav-top">
+                        <span id="stepText">Tip 1 of 10</span>
+                        <span id="percentText">10%</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+
+                    <div class="dots" id="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <p class="hint">✦ Tap the sticky note to continue</p>
+
+                <div class="final" id="final">
+                    <div class="final-icon">🚀</div>
+                    <h2>You are ready!</h2>
+                    <p>
+                        You finished the freshman guide. Keep going, stay curious,
+                        and make your first year count.
+                    </p>
+                    <button onclick="restart()">Read Again</button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="/javaScript/freshguide.js"></script>
+
+</body>
+</html>
