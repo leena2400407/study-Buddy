@@ -26,25 +26,25 @@
     </div>
 
 
-    <!-- ENTERTAINMENT SECTION -->
-    <section class="events-section entertainment-section">
+    <!-- SPORTS SECTION FIRST -->
+    <section class="events-section sports-section">
 
       <div class="header-title-area reveal-item fx-slide-right delay-100">
-        <span class="discover-badge">Entertainment</span>
-        <h1 class="main-dashboard-title">Entertainment Events</h1>
+        <span class="discover-badge">Sports</span>
+        <h1 class="main-dashboard-title">Sports & Tournaments</h1>
       </div>
 
       <div class="grid-layout">
 
-        <% if (!entertainmentEvents || entertainmentEvents.length === 0) { %>
-          <p style="color: white; font-size: 18px;">No entertainment events added yet.</p>
+        <% if (!sportsEvents || sportsEvents.length === 0) { %>
+          <p style="color: white; font-size: 18px;">No sports events added yet.</p>
         <% } %>
 
-        <% if (entertainmentEvents && entertainmentEvents.length > 0) { %>
-          <% entertainmentEvents.forEach(function(event, index) { %>
+        <% if (sportsEvents && sportsEvents.length > 0) { %>
+          <% sportsEvents.forEach(function(event, index) { %>
 
             <div 
-              class="custom-dashboard-card card-regular-item reveal-item <%= index % 3 === 0 ? 'fx-slide-right' : index % 3 === 1 ? 'fx-slide-up-scale' : 'fx-slide-left' %> delay-100" 
+              class="custom-dashboard-card <%= index === 0 ? 'card-large-item' : 'card-regular-item' %> reveal-item <%= index % 3 === 0 ? 'fx-slide-right' : index % 3 === 1 ? 'fx-slide-up-scale' : 'fx-slide-left' %> delay-100" 
               style="background-image: url('<%= event.imagePath %>');"
             >
 
@@ -88,25 +88,27 @@
     </section>
 
 
-    <!-- SPORTS SECTION -->
-    <section class="events-section sports-section">
+    <br> <br> <br>
+
+    <!-- ENTERTAINMENT SECTION SECOND -->
+    <section class="events-section entertainment-section">
 
       <div class="header-title-area reveal-item fx-slide-right delay-100">
-        <span class="discover-badge">Sports</span>
-        <h1 class="main-dashboard-title">Sports & Tournaments</h1>
+        <span class="discover-badge">Entertainment</span>
+        <h1 class="main-dashboard-title">Entertainment Events</h1>
       </div>
 
       <div class="grid-layout">
 
-        <% if (!sportsEvents || sportsEvents.length === 0) { %>
-          <p style="color: white; font-size: 18px;">No sports events added yet.</p>
+        <% if (!entertainmentEvents || entertainmentEvents.length === 0) { %>
+          <p style="color: white; font-size: 18px;">No entertainment events added yet.</p>
         <% } %>
 
-        <% if (sportsEvents && sportsEvents.length > 0) { %>
-          <% sportsEvents.forEach(function(event, index) { %>
+        <% if (entertainmentEvents && entertainmentEvents.length > 0) { %>
+          <% entertainmentEvents.forEach(function(event, index) { %>
 
             <div 
-              class="custom-dashboard-card <%= index === 0 ? 'card-large-item' : 'card-regular-item' %> reveal-item <%= index % 3 === 0 ? 'fx-slide-right' : index % 3 === 1 ? 'fx-slide-up-scale' : 'fx-slide-left' %> delay-100" 
+              class="custom-dashboard-card card-regular-item reveal-item <%= index % 3 === 0 ? 'fx-slide-right' : index % 3 === 1 ? 'fx-slide-up-scale' : 'fx-slide-left' %> delay-100" 
               style="background-image: url('<%= event.imagePath %>');"
             >
 
