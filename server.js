@@ -366,6 +366,45 @@ app.post("/api/matching/profile", requireAuth, async (req, res) => {
       });
     }
 
+      app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
+  try {
+    const profile = await StudyProfile.findOneAndUpdate(
+      {
+        user: req.session.user.id
+      },
+      {
+        weakSubjects: [],
+        strongSubjects: []
+      },
+      {
+        new: true
+      }
+    );
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        message: "Study profile was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Study list cleared.",
+      profile
+    });
+
+  } catch (error) {
+    console.error("Clear study profile error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not clear your study list."
+    });
+  }
+});
+
+
     const profile = await StudyProfile.findOneAndUpdate(
       {
         user: req.session.user.id
@@ -424,22 +463,25 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
       });
     }
 
+    if (!myProfile.university || !myProfile.major) {
+      return res.status(400).json({
+        success: false,
+        message: "Your profile is missing university or major. Please save your study list again."
+      });
+    }
+
     const allProfiles = await StudyProfile.find({
       user: {
         $ne: req.session.user.id
-      }
+      },
+      university: myProfile.university,
+      major: myProfile.major
     }).lean();
 
     const matches = allProfiles
       .map(profile => {
         const otherWeakSubjects = profile.weakSubjects || [];
         const otherStrongSubjects = profile.strongSubjects || [];
-
-        const sameWeakSubjects = getCommonSubjects(myWeakSubjects, otherWeakSubjects);
-
-        if (sameWeakSubjects.length > 0) {
-          return null;
-        }
 
         const canTeachMe = getCommonSubjects(myWeakSubjects, otherStrongSubjects);
         const iCanTeachThem = getCommonSubjects(myStrongSubjects, otherWeakSubjects);
@@ -458,8 +500,10 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
 
         if (iCanTeachThem.length > 0) {
           score += iCanTeachThem.length * 30;
-          reason += `You can help ${profile.fullName} with ${iCanTeachThem.join(", ")}.`;
+          reason += `You can help ${profile.fullName} with ${iCanTeachThem.join(", ")}. `;
         }
+
+        reason += `Same university and major: ${profile.university} - ${profile.major}.`;
 
         if (score > 100) {
           score = 100;
@@ -494,6 +538,7 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
       success: true,
       matches
     });
+
   } catch (error) {
     console.error("Get matches error:", error);
 
@@ -503,7 +548,6 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
     });
   }
 });
-
 app.post("/api/matching/send-room", requireAuth, async (req, res) => {
   try {
     const { matchedProfileId } = req.body;
@@ -516,7 +560,7 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
     }
 
     const myProfile = await StudyProfile.findOne({
-      user: req.session.user.id
+      user: req.session.user.id 
     });
 
     if (!myProfile) {
@@ -525,6 +569,16 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
         message: "Build and save your list first."
       });
     }
+
+    if (
+  myProfile.university !== matchedProfile.university ||
+  myProfile.major !== matchedProfile.major
+) {
+  return res.status(403).json({
+    success: false,
+    message: "You can only match with students from your same university and major."
+  });
+}
 
     const matchedProfile = await StudyProfile.findById(matchedProfileId);
 

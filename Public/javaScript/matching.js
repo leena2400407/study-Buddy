@@ -156,6 +156,48 @@ async function saveList() {
     }
 }
 
+
+async function clearStudyList() {
+    if (!requireLogin("Please login first.")) {
+        return;
+    }
+
+    const confirmClear = confirm("Are you sure you want to clear your study list?");
+
+    if (!confirmClear) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/matching/profile/clear", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            showToast(data.message || "Could not clear your study list.", "error");
+            return;
+        }
+
+        myWeakSubjects = [];
+        myStrongSubjects = [];
+        students = [];
+        requestPublished = false;
+
+        renderAll();
+
+        showToast("Your study list has been cleared.", "success");
+
+    } catch (error) {
+        console.error("Clear study list error:", error);
+        showToast("Server error while clearing your study list.", "error");
+    }
+}
+
 async function startSearchFlow() {
     if (!requireLogin("Please login before adding a match request.")) {
         return;
@@ -348,7 +390,7 @@ function renderMatches() {
                         <p>${escapeHTML(student.major || "Study Buddy Student")}</p>
                     </div>
 
-                    <div class="match-score">${student.score || 0}%</div>
+                    
                 </div>
 
                 <div class="match-reason">
