@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 const StudyProfile = require("./models/StudyProfile");
+const GameScore = require("./models/GameScore");
 require("dotenv").config();
 
 const app = express();
@@ -328,10 +329,6 @@ app.get("/mainpage", (req, res) => {
 
 app.get("/profile", (req, res) => {
   res.render("profile");
-});
-
-app.get("/events", (req, res) => {
-  res.render("events");
 });
 
 app.get("/api/matching/profile", requireAuth, async (req, res) => {
@@ -670,6 +667,11 @@ app.get("/resources", (req, res) => {
 });
 
 app.get("/game", (req, res) => {
+  if (!req.session.user) {
+    req.flash("error", "Please login first to play the game.");
+    return res.redirect("/login");
+  }
+
   res.render("game");
 });
 
@@ -814,9 +816,94 @@ app.post("/events/register", requireAuth, async (req, res) => {
   }
 });
 
+app.get("/me", requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    id: req.session.user.id,
+    name: req.session.user.fullName || req.session.user.username || "Player",
+    username: req.session.user.username,
+    email: req.session.user.email
+  });
+});
+
+app.get("/leaderboard", async (req, res) => {
+  try {
+    const scores = await GameScore.find()
+      .sort({ score: -1 })
+      .limit(20)
+      .lean();
+
+    res.json(
+      scores.map(score => ({
+        name: score.name,
+        score: score.score
+      }))
+    );
+  } catch (error) {
+    console.error("Leaderboard load error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load leaderboard."
+    });
+  }
+});
+
+app.post("/leaderboard", requireAuth, async (req, res) => {
+  try {
+    const score = Number(req.body.score);
+
+    if (Number.isNaN(score)) {
+      return res.status(400).json({
+        success: false,
+        message: "Score is required."
+      });
+    }
+
+    const playerName =
+      req.session.user.fullName ||
+      req.session.user.username ||
+      "Player";
+
+    await GameScore.findOneAndUpdate(
+      {
+        user: req.session.user.id
+      },
+      {
+        $max: {
+          score: score
+        },
+        $set: {
+          user: req.session.user.id,
+          name: playerName
+        }
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "Score saved."
+    });
+
+  } catch (error) {
+    console.error("Leaderboard save error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not save score."
+    });
+  }
+});
+
 // Server start
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
