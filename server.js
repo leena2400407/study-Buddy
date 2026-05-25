@@ -267,11 +267,18 @@ app.post("/signup", async (req, res) => {
       return res.redirect("/signup");
     }
 
-    const gmailRegex = /^[^\s@]+@gmail\.com$/;
-
-    if (!gmailRegex.test(email)) {
-      req.flash("error", "Please enter a valid Gmail address.");
-      return res.redirect("/signup");
+    const allowedUniversityDomains = [
+        "miuegypt.edu.eg",
+        "giu-uni.de",
+        "aast.edu",
+        "acu.edu.eg",
+        "asu.edu.eg"
+    ];
+    const emailDomain = email.split("@")[1]?.toLowerCase();
+    
+    if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
+        req.flash("error", "Please use your official university email.");
+        return res.redirect("/signup");
     }
 
     if (password.length < 8) {

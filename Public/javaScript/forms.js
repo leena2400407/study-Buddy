@@ -40,7 +40,17 @@ if (signupForm) {
     if (passwordError) passwordError.innerText = "";
     if (confirmError) confirmError.innerText = "";
 
-    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    const allowedUniversityDomains = [
+  "miuegypt.edu.eg",
+  "giu-uni.de",
+  "aast.edu",
+  "acu.edu.eg",
+  "asu.edu.eg"
+];
+
+const emailDomain = email.split("@")[1]?.toLowerCase();
+
+const isAllowedUniversityEmail = allowedUniversityDomains.includes(emailDomain);
     const passwordRegex = /^.{8,}$/;
 
     if (
@@ -62,12 +72,11 @@ if (signupForm) {
       valid = false;
     }
 
-    if (!emailRegex.test(email)) {
-      if (emailError) {
-        emailError.innerText = "Please enter a valid Gmail address.";
-      }
-
-      valid = false;
+    if (!email.includes("@") || !isAllowedUniversityEmail) {
+        if (emailError) {
+            emailError.innerText = "Please use your official university email.";
+        }
+        valid = false;
     }
 
     if (!passwordRegex.test(password)) {
