@@ -134,7 +134,10 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || "studybuddysecret",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 6
+    }
   })
 );
 
@@ -236,6 +239,8 @@ app.get("/signup", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
+    console.log("Signup request received");
+    console.log("req.body");
   try {
     const {
       fullName,
@@ -248,8 +253,6 @@ app.post("/signup", async (req, res) => {
       confirmPassword
     } = req.body;
 
-    console.log("Signup body received:", req.body);
-
     if (
       !fullName ||
       !username ||
@@ -261,6 +264,18 @@ app.post("/signup", async (req, res) => {
       !confirmPassword
     ) {
       req.flash("error", "Please fill in all fields.");
+      return res.redirect("/signup");
+    }
+
+    const gmailRegex = /^[^\s@]+@gmail\.com$/;
+
+    if (!gmailRegex.test(email)) {
+      req.flash("error", "Please enter a valid Gmail address.");
+      return res.redirect("/signup");
+    }
+
+    if (password.length < 8) {
+      req.flash("error", "Password must be at least 8 characters.");
       return res.redirect("/signup");
     }
 
@@ -280,7 +295,7 @@ app.post("/signup", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
+    await User.create({
       fullName,
       username,
       gender,
@@ -289,15 +304,6 @@ app.post("/signup", async (req, res) => {
       email,
       password: hashedPassword
     });
-
-    console.log("User saved successfully:", newUser._id);
-
-    try {
-      await sendSignupEmail(email, fullName);
-      console.log("Signup email sent successfully.");
-    } catch (emailError) {
-      console.error("Email sending error:", emailError);
-    }
 
     req.flash("success", "Account created successfully. Please log in.");
     res.redirect("/login");

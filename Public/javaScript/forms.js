@@ -10,102 +10,91 @@ function getRedirectUrl() {
     return 'profile.html';
 }
 
-//login 
-const loginForm = document.getElementById('login-form');
-
-if (loginForm) {
-    loginForm.addEventListener('submit', function(event) {
-
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const errorMessage = document.getElementById('login-error');
-        
-        if ((username === 'admin' || username === 'Admin') && password === 'Admin123') {
-            window.location.href = '../pages/Admin.html';
-        } else if ((username === 'student' || username === 'Student') && password === 'Student123') {
-            localStorage.setItem('currentUser', JSON.stringify({
-                username: 'student',
-                name: 'Demo Student',
-                email: 'student@studybuddy.com',
-                role: 'student',
-                gender: 'Female',
-                university: 'Demo University',
-                major: 'Computer Science'
-            }));
-            window.location.href = getRedirectUrl();
-        }
-        else {
-            errorMessage.style.display = 'block';
-        }
-    });
-}
 //===============================================================
-//sign up
-const signupForm = document.getElementById('signup-form');
+const signupForm = document.getElementById("signup-form");
 
 if (signupForm) {
-    signupForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('new-password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        const messageBox = document.getElementById('signup-message');
-        let email = document.getElementById("email").value;
-        let valid = true;
-        
-       
-        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        let passwordRegex = /^.{8,}$/;
-       
+  signupForm.addEventListener("submit", function (event) {
+    let valid = true;
 
-        if(!emailRegex.test(email)){
-        document.getElementById("emailError").innerText =
-        "Invalid email format";
-        valid = false;}else{
-        document.getElementById("emailError").innerText = "";}
+    const fullName = document.getElementById("fullName").value.trim();
+    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
+    const genderInput = document.querySelector('input[name="gender"]:checked');
+    const university = document.getElementById("university").value;
+    const major = document.getElementById("major").value;
 
-        if(!passwordRegex.test(password)){
-        document.getElementById("passwordError").innerText =
-        "Password must be at least 8 characters";
-        valid = false;}else{
-        document.getElementById("passwordError").innerText = "";}
+    const messageBox = document.getElementById("signup-message");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
+    const confirmError = document.getElementById("confirmError");
 
-        if(password !== confirmPassword){
-        document.getElementById("confirmError").innerText =
-        "Passwords do not match";
-        valid = false; }
-        else{
-        document.getElementById("confirmError").innerText = "";}
+    if (messageBox) {
+      messageBox.textContent = "";
+      messageBox.style.display = "none";
+    }
 
-        if(!valid){
-        event.preventDefault();
-        return;
-        }
-        
-        const gender = document.querySelector('input[name="gender"]:checked').value;
-        const newUser = {
-            username: username,
-            name: document.getElementById('fullName').value,
-            gender: gender,
-            university: document.getElementById('university').value,
-            major: document.getElementById('major').value,
-            email: document.getElementById('email').value,
-            password: password,
-            role: 'user' 
-        };
+    if (emailError) emailError.innerText = "";
+    if (passwordError) passwordError.innerText = "";
+    if (confirmError) confirmError.innerText = "";
 
-        messageBox.textContent = "Account created successfully! Redirecting...";
-        messageBox.style.color = "green";
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    const passwordRegex = /^.{8,}$/;
+
+    if (
+      !fullName ||
+      !username ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !genderInput ||
+      !university ||
+      !major
+    ) {
+      if (messageBox) {
+        messageBox.textContent = "Please fill in all fields.";
+        messageBox.style.color = "red";
         messageBox.style.display = "block";
+      }
 
-        // Wait 1 seconds so they can read the message, then redirect
-        setTimeout(() => {
-            window.location.href = getRedirectUrl();
-        }, 1000);
-    });
+      valid = false;
+    }
 
+    if (!emailRegex.test(email)) {
+      if (emailError) {
+        emailError.innerText = "Please enter a valid Gmail address.";
+      }
 
+      valid = false;
+    }
+
+    if (!passwordRegex.test(password)) {
+      if (passwordError) {
+        passwordError.innerText = "Password must be at least 8 characters.";
+      }
+
+      valid = false;
+    }
+
+    if (password !== confirmPassword) {
+      if (confirmError) {
+        confirmError.innerText = "Passwords do not match.";
+      }
+
+      valid = false;
+    }
+
+    if (!valid) {
+      event.preventDefault();
+      return;
+    }
+
+    if (messageBox) {
+      messageBox.textContent = "Creating account...";
+      messageBox.style.color = "green";
+      messageBox.style.display = "block";
+    }
+  });
 }
-//==========================================================
