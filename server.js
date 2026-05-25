@@ -1275,6 +1275,10 @@ app.post("/leaderboard", requireAuth, async (req, res) => {
 // Server start
 const PORT = process.env.PORT || 5000;
 
+app.get("/freshman-guid", (req, res) => {
+  res.render("freshman-guid");
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
