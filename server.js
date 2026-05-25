@@ -164,6 +164,147 @@ const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, r
   });
 };
 
+const sendEventRegistrationEmail = async ({
+  to,
+  leaderName,
+  tournamentName,
+  teamName,
+  players,
+  eventDescription,
+  eventCategory
+}) => {
+  const transporter = createEmailTransporter();
+
+  const locationLink = "https://maps.app.goo.gl/1Eayp67KpPmGmCGw7?g_st=iw";
+
+  const cleanedCategory = String(eventCategory || "").toLowerCase();
+
+  const eventType =
+    cleanedCategory.includes("padel")
+      ? "Padel Tournament"
+      : cleanedCategory.includes("football") || cleanedCategory.includes("sports")
+        ? "Football Tournament"
+        : "Sports Tournament";
+
+  const playersList = players
+    .map((player, index) => {
+      return `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${player.name}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `Registration Confirmed - ${tournamentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #111827; color: #f9fafb; padding: 28px; max-width: 720px; margin: auto; border-radius: 18px;">
+
+        <p style="margin: 0 0 12px; color: #86efac; font-size: 14px; font-weight: bold;">
+          Accepted
+        </p>
+
+        <h1 style="margin: 0 0 18px; font-size: 28px; color: #ffffff;">
+          Booking accepted
+        </h1>
+
+        <p style="font-size: 16px; line-height: 1.7; color: #d1d5db;">
+          Hey <strong style="color: #ffffff;">${leaderName}</strong> — your registration request has been accepted.
+          Your team has been registered successfully.
+        </p>
+
+        <div style="margin-top: 26px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
+          <h2 style="margin: 0 0 18px; color: #ffffff; font-size: 22px;">
+            Registered booking
+          </h2>
+
+          <table style="width: 100%; border-collapse: collapse; color: #e5e7eb;">
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af;">Event</td>
+              <td style="padding: 8px 0; font-weight: bold;">${tournamentName}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af;">Type</td>
+              <td style="padding: 8px 0;">${eventType}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af;">Team name</td>
+              <td style="padding: 8px 0;">${teamName}</td>
+            </tr>
+
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af;">Location</td>
+              <td style="padding: 8px 0;">
+                <a href="${locationLink}" target="_blank" style="color: #60a5fa;">
+                  ${locationLink}
+                </a>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="margin-top: 22px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
+          <h2 style="margin: 0 0 14px; color: #ffffff; font-size: 22px;">
+            Event details
+          </h2>
+
+          <p style="margin: 0; color: #d1d5db; font-size: 16px; line-height: 1.7;">
+            ${eventDescription}
+            <br>
+            <b>the event will take place at zone D in the wafaa and ELAMAL</b>
+          </p>
+        </div>
+
+        <div style="margin-top: 22px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
+          <h2 style="margin: 0 0 14px; color: #ffffff; font-size: 22px;">
+            Team players
+          </h2>
+
+          <table style="width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden;">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 10px; background: #374151; color: #ffffff;">#</th>
+                <th style="text-align: left; padding: 10px; background: #374151; color: #ffffff;">Name</th>
+              </tr>
+            </thead>
+
+            <tbody style="color: #e5e7eb;">
+              ${playersList}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 26px;">
+          <p style="margin: 0 0 10px; color: #d1d5db;">
+            Try to arrive early and keep this email with you.
+          </p>
+
+          <a href="${locationLink}" target="_blank" style="display: inline-block; margin-top: 10px; color: #60a5fa; font-size: 16px;">
+            Open location
+          </a>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #374151; margin: 28px 0;">
+
+        <p style="margin: 0; color: #9ca3af; font-size: 14px;">
+          This is a service notification — replies are not monitored.
+        </p>
+
+        <p style="margin: 8px 0 0; color: #86efac; font-size: 14px;">
+          © 2026 Study Buddy
+        </p>
+
+      </div>
+    `
+  });
+};
+
 // EJS setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "Views"));
@@ -1014,9 +1155,23 @@ app.post("/events/register", requireAuth, async (req, res) => {
       players: cleanedPlayers
     });
 
+    try {
+      await sendEventRegistrationEmail({
+        to: req.session.user.email,
+        leaderName: req.session.user.fullName || req.session.user.username || cleanedPlayers[0].name,
+        tournamentName: eventData.title,
+        teamName,
+        players: cleanedPlayers,
+        eventDescription: eventData.description,
+        eventCategory: eventData.category
+      });
+    } catch (emailError) {
+      console.error("Event registration email error:", emailError);
+    }
+
     res.json({
       success: true,
-      message: "Tournament registration completed successfully."
+      message: "Tournament registration completed successfully. Confirmation email sent."
     });
 
   } catch (error) {
