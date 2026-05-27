@@ -10,6 +10,7 @@ const StudyProfile = require("./models/StudyProfile");
 const GameScore = require("./models/GameScore");
 const Event = require("./models/Events");
 const EventRegistration = require("./models/eventsReg");
+const University = require("./models/Universities");
 require("dotenv").config();
 
 const app = express();
@@ -896,8 +897,20 @@ app.get("/ai", (req, res) => {
   res.render("ai");
 });
 
-app.get("/edugate", (req, res) => {
-  res.render("edugate");
+app.get("/edugate", async (req, res) => {
+  try {
+    const universities = await University.find().sort({ createdAt: -1 });
+
+    res.render("edugate", {
+      universities
+    });
+  } catch (error) {
+    console.error("Edugate page error:", error);
+
+    res.render("edugate", {
+      universities: []
+    });
+  }
 });
 
 app.get("/resources", (req, res) => {

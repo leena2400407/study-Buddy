@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Uni Hub</title>
+
+  <link rel="stylesheet" href="/css/edugate.css">
+</head>
+
+<body>
+
+  <div class="page-header">
+    <h1 class="title">🎓 Uni Hub</h1>
+    <p class="subtitle">Click on a university image to view details</p>
+  </div>
+
+  <button class="close-btn" onclick="window.location.href='/mainpage'">
+    ✖
+  </button>
+
+  <main class="accordion-container">
+
+    <% if (!universities || universities.length === 0) { %>
+      <p class="empty-message">
+        No universities added yet.
+      </p>
+    <% } %>
+
+    <% universities.forEach(function(university) { %>
+
+      <section class="accordion-item">
+
+        <button class="accordion-header" type="button">
+          <img 
+            src="<%= university.imagePath %>"  
+            alt="<%= university.shortName %> logo" 
+            class="university-card-image"
+          >
+
+          <div class="card-top">
+            <div class="icon">+</div>
+          </div>
+        </button>
+
+        <div class="accordion-content">
+          <div class="content-inner">
+
+            <div class="info-grid">
+
+              <div class="info-card">
+                <h3>1. General Overview</h3>
+
+                <p>
+                  <%= university.overview %>
+                </p>
+
+                <p>
+                  <strong>Location:</strong>
+                  <%= university.location %>
+                </p>
+              </div>
+
+              <div class="info-card">
+                <h3>2. Academic Hubs</h3>
+
+                <% if (university.academics && university.academics.length > 0) { %>
+                  <ul class="clean-list">
+                    <% university.academics.forEach(function(item) { %>
+                      <li><%= item %></li>
+                    <% }) %>
+                  </ul>
+                <% } else { %>
+                  <p>No academic details added yet.</p>
+                <% } %>
+              </div>
+
+              <div class="info-card">
+                <h3>3. Why <%= university.shortName %>?</h3>
+
+                <% if (university.whyChoose && university.whyChoose.length > 0) { %>
+                  <ul class="clean-list">
+                    <% university.whyChoose.forEach(function(item) { %>
+                      <li><%= item %></li>
+                    <% }) %>
+                  </ul>
+                <% } else { %>
+                  <p>No benefits added yet.</p>
+                <% } %>
+              </div>
+
+              <div class="info-card">
+                <h3>4. Student Life & Culture</h3>
+
+                <% if (university.studentLife && university.studentLife.length > 0) { %>
+                  <ul class="clean-list">
+                    <% university.studentLife.forEach(function(item) { %>
+                      <li><%= item %></li>
+                    <% }) %>
+                  </ul>
+                <% } else { %>
+                  <p>No student life details added yet.</p>
+                <% } %>
+
+                <% if (university.contactInfo) { %>
+                  <p class="contact-info">
+                    <strong>5. Quick Contact Info:</strong><br>
+                    <%= university.contactInfo %>
+                  </p>
+                <% } %>
+              </div>
+
+            </div>
+
+            <button 
+              class="access-btn" 
+              type="button"
+              onclick='window.open(<%- JSON.stringify(university.portalLink) %>, "_blank")'
+            >
+              Access <%= university.shortName %> Portal 🚀
+            </button>
+
+          </div>
+        </div>
+
+      </section>
+
+    <% }) %>
+
+  </main>
+
+  <script src="/javaScript/edugate.js"></script>
+
+</body>
+</html>
