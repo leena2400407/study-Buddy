@@ -150,10 +150,17 @@ const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, r
           </p>
       </div>
 
-        <p>
+          <p>
           <strong>Room ID:</strong><br>
           ${roomId}
-        </p>
+          </p>
+
+          <p>
+            <strong>Video Room Link:</strong><br>
+            <a href="${meetingLink}" target="_blank" style="color: #2563eb; word-break: break-all;">
+            ${meetingLink}
+            </a>
+          </p>
 
           <p>
             Click the link above to join the meeting.
