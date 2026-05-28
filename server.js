@@ -11,11 +11,15 @@ const GameScore = require("./models/GameScore");
 const Event = require("./models/Events");
 const EventRegistration = require("./models/eventsReg");
 const University = require("./models/Universities");
+const { requireAuth, requirePageAuth } = require("./middleware/authMiddleware");
 require("dotenv").config();
 
 const app = express();
 
 connectDB();
+
+const matchCooldowns = new Map();
+const MATCH_COOLDOWN_MS = 8 * 60 * 1000;
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -83,7 +87,7 @@ const sendSignupEmail = async (userEmail, fullName) => {
   });
 };
 
-const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, roomId, meetingLink }) => {
+const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, roomId, meetingLink, helpSubjects }) => {
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
@@ -139,17 +143,17 @@ const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, r
             <strong>${senderName}</strong> and <strong>${matchedName}</strong>.
           </p>
 
-          <p>
-            <strong>Room ID:</strong><br>
-            ${roomId}
+        <div style="margin: 18px 0; padding: 16px; border-radius: 12px; background: #eef2ff; border: 1px solid #c7d2fe;">
+          <p style="margin: 0; color: #1e1b4b; font-size: 15px; line-height: 1.6;">
+            <strong>Helping with:</strong><br>
+            ${helpSubjects && helpSubjects.length > 0 ? helpSubjects.join(", ") : "General study support"}
           </p>
+      </div>
 
-          <p>
-            <strong>Video Room Link:</strong><br>
-            <a href="${meetingLink}" target="_blank" style="color: #2563eb;">
-              ${meetingLink}
-            </a>
-          </p>
+        <p>
+          <strong>Room ID:</strong><br>
+          ${roomId}
+        </p>
 
           <p>
             Click the link above to join the meeting.
@@ -339,28 +343,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const requireAuth = (req, res, next) => {
-  if (!req.session.user) {
-    return res.status(401).json({
-      success: false,
-      message: "Please login first."
-    });
-  }
-
-  next();
-};
-
-
-
-const requirePageAuth = (req, res, next) => {
-  if (!req.session.user) {
-    req.session.returnTo = req.originalUrl;
-    req.flash("error", "Please login first.");
-    return res.redirect("/login");
-  }
-
-  next();
-};
 
 const cleanSubjects = (subjects) => {
   if (!Array.isArray(subjects)) {
@@ -813,8 +795,23 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
     });
 
 app.post("/api/matching/send-room", requireAuth, async (req, res) => {
+
   try {
     const { matchedProfileId } = req.body;
+
+    const userId = String(req.session.user.id);
+    const lastMatchTime = matchCooldowns.get(userId);
+    const now = Date.now();
+
+    if (lastMatchTime && now - lastMatchTime < MATCH_COOLDOWN_MS) {
+      const remainingMs = MATCH_COOLDOWN_MS - (now - lastMatchTime);
+      const remainingMinutes = Math.ceil(remainingMs / 60000);
+
+    return res.status(429).json({
+      success: false,
+      message: `Please wait ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"} before creating another match room.`
+    });
+  }
 
     if (!matchedProfileId) {
       return res.status(400).json({
@@ -891,7 +888,8 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
       senderName: myProfile.fullName,
       matchedName: matchedProfile.fullName,
       roomId,
-      meetingLink
+      meetingLink,
+      helpSubjects: canTeachMe
     });
 
     await sendMatchRoomEmail({
@@ -900,8 +898,11 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
       senderName: myProfile.fullName,
       matchedName: matchedProfile.fullName,
       roomId,
-      meetingLink
+      meetingLink,
+      helpSubjects: canTeachMe
     });
+
+    matchCooldowns.set(userId, Date.now());
 
     res.json({
       success: true,
