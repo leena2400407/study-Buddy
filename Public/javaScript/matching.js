@@ -4,7 +4,9 @@ let students = [];
 let requestPublished = false;
 
 function isLoggedIn() {
-    return Boolean(window.STUDY_BUDDY_IS_LOGGED_IN);
+    return Boolean(
+        window.MATCHING_PAGE_DATA && window.MATCHING_PAGE_DATA.isLoggedIn
+    );
 }
 
 function requireLogin(message = "Please login first.") {
@@ -15,7 +17,7 @@ function requireLogin(message = "Please login first.") {
     showToast(message, "error");
 
     setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = "/login?returnTo=/matching";
     }, 1200);
 
     return false;

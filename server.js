@@ -350,6 +350,18 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
+
+
+const requirePageAuth = (req, res, next) => {
+  if (!req.session.user) {
+    req.session.returnTo = req.originalUrl;
+    req.flash("error", "Please login first.");
+    return res.redirect("/login");
+  }
+
+  next();
+};
+
 const cleanSubjects = (subjects) => {
   if (!Array.isArray(subjects)) {
     return [];
@@ -382,7 +394,15 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
+app.get("/index", (req, res) => {
+  res.render("index");
+});
+
 app.get("/login", (req, res) => {
+  if (req.query.returnTo && req.query.returnTo.startsWith("/")) {
+    req.session.returnTo = req.query.returnTo;
+  }
+
   res.render("login");
 });
 
@@ -414,7 +434,12 @@ app.post("/login", async (req, res) => {
       gender: user.gender
     };
 
-    res.redirect("/mainpage");
+    const redirectTo = req.session.returnTo || "/cylinder";
+delete req.session.returnTo;
+
+req.session.save(() => {
+  res.redirect(redirectTo);
+});
   } catch (error) {
     console.error("Login error:", error);
     req.flash("error", "Something went wrong.");
@@ -514,9 +539,18 @@ app.get("/mainpage", (req, res) => {
   res.render("index");
 });
 
-app.get("/profile", (req, res) => {
-  res.render("profile");
+app.get("/profile", requirePageAuth, (req, res) => {
+  res.render("profile", {
+    user: req.session.user
+  });
 });
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
+});
+
 
 app.get("/api/matching/profile", requireAuth, async (req, res) => {
   try {
@@ -774,6 +808,10 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
   }
 });
 
+ app.get("/freshman-guide", (req, res) => {
+      res.render("freshman-guid");
+    });
+
 app.post("/api/matching/send-room", requireAuth, async (req, res) => {
   try {
     const { matchedProfileId } = req.body;
@@ -865,10 +903,6 @@ app.post("/api/matching/send-room", requireAuth, async (req, res) => {
       meetingLink
     });
 
-    app.get("/freshman-guide", (req, res) => {
-      res.render("freshman-guid");
-    });
-
     res.json({
       success: true,
       message: `Video room sent to you and ${matchedProfile.fullName}.`,
@@ -917,12 +951,7 @@ app.get("/resources", (req, res) => {
   res.render("resources");
 });
 
-app.get("/game", (req, res) => {
-  if (!req.session.user) {
-    req.flash("error", "Please login first to play the game.");
-    return res.redirect("/login");
-  }
-
+app.get("/game", requirePageAuth, (req, res) => {
   res.render("game");
 });
 
@@ -931,8 +960,9 @@ app.get("/game2", (req, res) => {
 });
 
 app.get("/cylinder", (req, res) => {
-  res.render("cyinder");
+  res.render("cylinder");
 });
+
 
 app.get("/events", async (req, res) => {
   try {
@@ -954,6 +984,7 @@ app.get("/events", async (req, res) => {
       sportsEvents,
       entertainmentEvents
     });
+
   } catch (error) {
     console.error("Events page error:", error);
 
@@ -962,63 +993,6 @@ app.get("/events", async (req, res) => {
       sportsEvents: [],
       entertainmentEvents: []
     });
-  }
-});
-
-app.get("/seed-events", async (req, res) => {
-  try {
-    await Event.deleteMany({});
-
-    await Event.insertMany([
-      {
-        title: "University Football Cup 2026",
-        category: "sports",
-        description: "Team registration, competitive bracket, and prize pool.",
-        imagePath: "/assests/images/football.avif",
-        buttonType: "register",
-        maxPlayers: 10
-      },
-      {
-        title: "University Padel Cup 2026",
-        category: "padel",
-        description: "Fast matches, student teams, and court vibes.",
-        imagePath: "/assests/images/padel.jpg",
-        buttonType: "register",
-        maxPlayers: 2
-      },
-      {
-        title: "Disco Misr X Reiki Beach",
-        category: "music",
-        description: "Entertainment night with premium ticket flow.",
-        imagePath: "/assests/images/disco msar.png",
-        buttonType: "details",
-        detailsLink: "https://tazkarti.com/#/events/category/96",
-        maxPlayers: 0
-      },
-      {
-        title: "Cairokee Empire Stadium",
-        category: "concert",
-        description: "Big stadium energy for campus friends.",
-        imagePath: "/assests/images/cairokee.jpg",
-        buttonType: "details",
-        detailsLink: "https://tazkarti.com/#/events/category/96",
-        maxPlayers: 0
-      },
-      {
-        title: "Amr Diab AUC",
-        category: "concert",
-        description: "Premium night, premium cards, no broken images.",
-        imagePath: "/assests/images/amr diab.jpeg",
-        buttonType: "details",
-        detailsLink: "https://tazkarti.com/#/events/category/96",
-        maxPlayers: 0
-      }
-    ]);
-
-    res.send("Events added successfully.");
-  } catch (error) {
-    console.error("Seed events error:", error);
-    res.status(500).send("Could not seed events.");
   }
 });
 

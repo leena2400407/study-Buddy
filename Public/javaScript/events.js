@@ -24,6 +24,10 @@ const isLoggedIn =
   window.EVENTS_PAGE_DATA && window.EVENTS_PAGE_DATA.isLoggedIn === true;
 
 function openRegistration(e, name, maxPlayersFromDatabase) {
+  if (!window.EVENTS_PAGE_DATA || !window.EVENTS_PAGE_DATA.isLoggedIn) {
+  window.location.href = "/login?returnTo=/events";
+  return;
+}
   e.preventDefault();
 
   pendingTournamentName = name;

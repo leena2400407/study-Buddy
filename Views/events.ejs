@@ -9,6 +9,7 @@
 </head>
 
 <body>
+  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
 
   <div class="dashboard-wrapper">
 
@@ -213,10 +214,10 @@
 
 
   <script>
-    window.EVENTS_PAGE_DATA = {
-      isLoggedIn: <%= user ? "true" : "false" %>
-    };
-  </script>
+  window.EVENTS_PAGE_DATA = {
+    isLoggedIn: <%= user ? "true" : "false" %>
+  };
+</script>
 
   <script src="/javaScript/events.js"></script>
 

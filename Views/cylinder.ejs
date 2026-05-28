@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Study Buddy - Cylinder</title>
+
+  <link rel="stylesheet" href="/css/home.css">
+</head>
+
+<body>
+
+  <div id="bg-effects"></div>
+
+  <div id="features-page" style="display: flex;">
+    <div class="scene" id="cylinder-scene" style="display: flex;">
+
+      <nav class="top-nav">
+        <div 
+          class="nav-container" 
+          style="position: fixed; top: 15px; right: 15px; display: flex; gap: 10px; z-index: 1000;"
+        >
+
+          <!-- PROFILE DROPDOWN -->
+          <div class="profile-dropdown">
+            <button class="profile-link" onclick="toggleProfile()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Profile
+            </button>
+
+            <div id="profileCard" class="profile-card">
+              <img 
+                src="/assests/images/profile.png" 
+                alt="Student Profile Avatar" 
+                class="profile-avatar-img"
+              >
+
+              <% if (user) { %>
+                <h3 id="dropdown-name" class="profile-name">
+                  <%= user.fullName || user.username || "N/A" %>
+                </h3>
+
+                <p class="profile-info">
+                  <strong>Gender:</strong>
+                  <span id="dropdown-gender"><%= user.gender || "N/A" %></span>
+                </p>
+
+                <p class="profile-info">
+                  <strong>University:</strong>
+                  <span id="dropdown-university"><%= user.university || "N/A" %></span>
+                </p>
+
+                <p class="profile-info">
+                  <strong>Major:</strong>
+                  <span id="dropdown-major"><%= user.major || "N/A" %></span>
+                </p>
+
+                <p class="profile-info">
+                  <strong>Email:</strong>
+                  <span id="dropdown-email"><%= user.email || "N/A" %></span>
+                </p>
+
+                <a href="/profile#info" class="full-profile-btn">View Full Profile</a>
+
+                <button onclick="logout()" class="logout-btn">
+                  Logout
+                </button>
+              <% } else { %>
+                <h3 class="profile-name">Guest</h3>
+
+                <p class="profile-info">
+                  Please login to view your profile.
+                </p>
+
+                <a href="/login" class="full-profile-btn">
+                  Login
+                </a>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- CYLINDER DROPDOWN -->
+          <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
+                <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
+              </svg>
+              Cylinder ▾
+            </button>
+
+            <div 
+              id="myDropdown" 
+              class="dropdown-content" 
+              style="display: none; position: absolute; background-color: rgba(0,0,0,0.9); min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); border-radius: 8px; margin-top: 5px;"
+            >
+              <a href="/events" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">Events</a>
+              <a href="/game" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Game</a>
+              <a href="/resources" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Resources</a>
+              <a href="/matching" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Match</a>
+              <a href="/ai" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">AI Chat</a>
+              <a href="/freshman-guide" style="color: white; padding: 12px 16px; text-decoration: none; display: block;">Guide</a>
+            </div>
+          </div>
+
+          <div class="home-link" onclick="window.location.href='/'">
+            Home
+          </div>
+
+          <% if (!user) { %>
+            <div class="login-link" onclick="window.location.href='/login'">
+              Login
+            </div>
+          <% } else { %>
+            <div class="login-link" onclick="logout()">
+              Logout
+            </div>
+          <% } %>
+
+        </div>
+      </nav>
+
+      <!-- CYLINDER -->
+      <div class="Cylinder" id="Cylinder">
+
+        <div class="cylinder__lid" id="trigger-logo">
+          START
+        </div>
+
+        <div class="Cylinder__cell" id="event">
+          <h3>EVENTS</h3>
+          <p style="font-size: 1.2rem; margin-top: 10px;">Fun & Sports</p>
+        </div>
+
+        <div class="Cylinder__cell" id="game">
+          <h3>GAME</h3>
+          <p style="font-size: 1.2rem;">Block Blast</p>
+        </div>
+
+        <div class="Cylinder__cell" id="resources-card">
+          <h3>RESOURCES</h3>
+          <p style="font-size: 1.2rem;">Summaries & Materials</p>
+        </div>
+
+        <div class="Cylinder__cell" id="btn-matching">
+          <h3>MATCH</h3>
+          <p style="font-size: 1.2rem;">Find your study buddy</p>
+        </div>
+
+        <div class="Cylinder__cell" id="ai">
+          <h3>AI CHAT</h3>
+          <p style="font-size: 1.2rem;">Your smart assistant</p>
+        </div>
+
+        <div class="Cylinder__cell" id="guid">
+          <h3>GUIDE</h3>
+          <p style="font-size: 1.2rem;">Freshmen Survival Kit</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="controls" id="controls" style="display: none;">
+      <button class="control-btn" id="prev-btn">◀ PREV</button>
+      <button class="control-btn" id="next-btn">NEXT ▶</button>
+    </div>
+  </div>
+
+  <script src="/javaScript/home.js"></script>
+
+  <script>
+    function logout() {
+      window.location.href = "/logout";
+    }
+  </script>
+
+</body>
+</html>

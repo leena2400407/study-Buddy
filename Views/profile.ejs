@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Profile Information</title>
+
+  <link rel="stylesheet" href="/css/forms.css">
+</head>
+
+<body>
+
+  <div class="close-btn" onclick="window.location.href='/cylinder#trigger-logo'" style="color:azure">
+    ✖
+  </div>
+
+  <div class="container auth-page">
+    <div id="info">
+
+      <div class="login-box signup-box">
+
+        <h2>Full Profile Info</h2>
+
+        <div class="profile-avatar">
+          <img 
+            src="/assests/images/profile.png" 
+            alt="Student Profile Avatar" 
+            class="profile-avatar-img"
+          >
+        </div>
+
+        <div class="profile-details">
+
+          <div class="input-group">
+            <label>Full Name</label>
+            <div class="profile-value">
+              <%= user.fullName || "-" %>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Username</label>
+            <div class="profile-value">
+              <%= user.username || "-" %>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Gender</label>
+            <div class="profile-value">
+              <%= user.gender || "-" %>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>University</label>
+            <div class="profile-value">
+              <%= user.university || "-" %>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Major</label>
+            <div class="profile-value">
+              <%= user.major || "-" %>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Email Address</label>
+            <div class="profile-value">
+              <%= user.email || "-" %>
+            </div>
+          </div>
+
+        </div>
+
+        <button onclick="window.location.href='/logout'" class="logout-btn">
+          Logout
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

@@ -12,7 +12,7 @@
 <body class="matching-experience">
     <div class="match-bg-grid"></div>
 
-    <div class="close-btn" onclick="window.location.href='/cylinder'">✖</div>
+    <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
 
     <section class="page-wrapper">
 
@@ -207,7 +207,8 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        window.STUDY_BUDDY_IS_LOGGED_IN = <%= user ? "true" : "false" %>;
+  window.MATCHING_PAGE_DATA = {
+    isLoggedIn: <%= user ? "true" : "false" %>};
     </script>
 
     <script src="/javaScript/matching.js"></script>

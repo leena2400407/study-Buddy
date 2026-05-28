@@ -381,6 +381,29 @@ body::after {
   cursor: pointer;
 }
 
+.close-btn {
+    position: fixed;
+    top: 18px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid var(--border);
+    color: white;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 999;
+    backdrop-filter: blur(14px);
+    transition: 0.3s;
+}
+
+.close-btn:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    transform: rotate(90deg) scale(1.04);
+}
+
 .close-modal-x {
   color: #ef4444;
   background: transparent;

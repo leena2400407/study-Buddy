@@ -122,43 +122,43 @@ if (document.getElementById('next-btn')) {
 // Resources Card Link
 if (resourcesCard) {
     resourcesCard.addEventListener('click', () => {
-        window.location.href = 'Links&Resources.html'; 
+        window.location.href = 'resources'; 
     });
 }
 
 if (events) {
     events.addEventListener('click', () => {
-        window.location.href = 'Events.html'; 
+        window.location.href = 'events'; 
     });
 }
 
 if (gameCell) {
     gameCell.addEventListener('click', () => {
-        window.location.href = 'game-landing-page.html';
+        window.location.href = 'game';
     });
 }
 
 if (guid) {
     guid.addEventListener('click', () => {
-        window.location.href = 'FreshmanGuid.html'; 
+        window.location.href = 'freshman-guid'; 
     });
 }
 
 if (ai) {
     ai.addEventListener('click', () => {
-        window.location.href = 'ai.html'; 
+        window.location.href = 'ai'; 
     });
 }
 
 if (eduGAte) {
     eduGAte.addEventListener('click', () => {
-        window.location.href = '../pages/eduGate.html'; 
+        window.location.href = 'eduGate'; 
     });
 }
 
 if (matching) {
     matching.addEventListener('click', () => {
-        window.location.href = 'Matching.html'; 
+        window.location.href = 'matching'; 
     });
 }
 window.addEventListener('DOMContentLoaded', () => {
