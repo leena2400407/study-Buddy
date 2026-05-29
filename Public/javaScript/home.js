@@ -134,7 +134,7 @@ if (events) {
 
 if (gameCell) {
     gameCell.addEventListener('click', () => {
-        window.location.href = 'game';
+        window.location.href = 'game-landing-page';
     });
 }
 

@@ -379,6 +379,11 @@ const requireAdminApi = (req, res, next) => {
   next();
 };
 
+
+app.get("/game", (req, res) => {
+  res.render("game-landing-page");
+});
+
 app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
   try {
     const usersCount = await User.countDocuments();
