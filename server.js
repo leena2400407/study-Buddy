@@ -2072,6 +2072,10 @@ app.get("/game-landing-page", (req, res) => {
   res.render("game-landing-page");
 });
 
+app.get("/games", (req, res) => {
+  res.render("game-landing-page");
+});
+
 // Old game routes
 app.get("/game", requirePageAuth, (req, res) => {
   res.render("game");
