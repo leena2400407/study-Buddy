@@ -1158,6 +1158,79 @@ app.post("/profile/update-study-list", requirePageAuth, async (req, res) => {
   }
 });
 
+app.post("/profile/competition/:registrationId/update", requirePageAuth, async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+
+    const {
+      captainName,
+      captainEmail,
+      teamName,
+      playersText
+    } = req.body;
+
+    const cleanedCaptainName = String(captainName || "").trim();
+    const cleanedCaptainEmail = String(captainEmail || "").trim().toLowerCase();
+    const cleanedTeamName = String(teamName || "").trim();
+
+    if (!cleanedCaptainName || !cleanedCaptainEmail || !cleanedTeamName) {
+      req.flash("error", "Captain name, captain email, and team name are required.");
+      return res.redirect("/profile");
+    }
+
+    const players = String(playersText || "")
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map((name, index) => {
+        return {
+          role: index === 0 ? "captain" : "player",
+          name,
+          email: index === 0 ? cleanedCaptainEmail : ""
+        };
+      });
+
+    if (players.length === 0) {
+      players.push({
+        role: "captain",
+        name: cleanedCaptainName,
+        email: cleanedCaptainEmail
+      });
+    }
+
+    const updatedRegistration = await EventRegistration.findOneAndUpdate(
+      {
+        _id: registrationId,
+        user: req.session.user.id
+      },
+      {
+        captainName: cleanedCaptainName,
+        captainEmail: cleanedCaptainEmail,
+        teamName: cleanedTeamName,
+        players
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updatedRegistration) {
+      req.flash("error", "Competition registration was not found.");
+      return res.redirect("/profile");
+    }
+
+    req.flash("success", "Competition updated.");
+    res.redirect("/profile");
+
+  } catch (error) {
+    console.error("Update competition error:", error);
+    req.flash("error", "Could not update competition.");
+    res.redirect("/profile");
+  }
+});
+
+
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/");

@@ -35,3 +35,13 @@ if (editStudyBtn && cancelStudyBtn && studyView && studyEditForm) {
     editStudyBtn.classList.remove("hidden");
   });
 }
+
+function toggleCompetitionEdit(id) {
+  const form = document.getElementById(`competitionEditForm-${id}`);
+
+  if (!form) {
+    return;
+  }
+
+  form.classList.toggle("hidden");
+}

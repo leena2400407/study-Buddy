@@ -301,24 +301,32 @@
                   <span class="competition-type"><%= getCompetitionType(item) %></span>
                   <h3><%= item.tournamentName || "Competition" %></h3>
                 </div>
+
+                <button
+                  type="button"
+                  class="competition-edit-btn"
+                   onclick="toggleCompetitionEdit('<%= item._id %>')"
+                    >
+                    Edit
+                    </button>
+
+              </div>
+            <div class="competition-info">
+              <div>
+              <span>Team</span>
+              <strong><%= item.teamName || "-" %></strong>
               </div>
 
-              <div class="competition-info">
-                <div>
-                  <span>Team</span>
-                  <strong><%= item.teamName || "-" %></strong>
-                </div>
+              <div>
+              <span>Captain</span>
+              <strong><%= item.captainName || item.fullName || "-" %></strong>    
+                  </div>
 
                 <div>
-                  <span>Registered</span>
-                  <strong><%= formatDate(item.createdAt) %></strong>
-                </div>
-
-                <div>
-                  <span>Players</span>
-                  <strong><%= item.players ? item.players.length : 0 %></strong>
-                </div>
-              </div>
+                <span>Players</span>
+                <strong><%= item.players ? item.players.length : 0 %></strong>
+                  </div>
+                  </div>
 
               <% if (item.players && item.players.length > 0) { %>
                 <div class="players-box">
@@ -331,6 +339,60 @@
                   </div>
                 </div>
               <% } %>
+                <form
+  class="competition-edit-form hidden"
+  id="competitionEditForm-<%= item._id %>"
+  action="/profile/competition/<%= item._id %>/update"
+  method="POST"
+>
+  <div class="form-group">
+    <label>Captain Name</label>
+    <input
+      type="text"
+      name="captainName"
+      value="<%= item.captainName || item.fullName || '' %>"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Captain Email</label>
+    <input
+      type="email"
+      name="captainEmail"
+      value="<%= item.captainEmail || item.email || '' %>"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Team Name</label>
+    <input
+      type="text"
+      name="teamName"
+      value="<%= item.teamName || '' %>"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Team Players</label>
+    <textarea name="playersText" rows="5"><%= item.players && item.players.length ? item.players.map(player => player.name).join('\n') : '' %></textarea>
+    <small>Write one player name per line. First line is the captain.</small>
+  </div>
+
+  <div class="edit-actions">
+    <button type="submit" class="primary-btn small">Save</button>
+
+    <button
+      type="button"
+      class="ghost-btn small"
+      onclick="toggleCompetitionEdit('<%= item._id %>')"
+    >
+      Cancel
+    </button>
+  </div>
+</form>
             </article>
           <% }) %>
         </div>
