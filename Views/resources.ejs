@@ -6,7 +6,7 @@
 
   <title>The Academic Atlas</title>
 
-  <link rel="stylesheet" href="/css/academic-atlas.css">
+  <link rel="stylesheet" href="/css/resources.css">
 </head>
 
 <body>
@@ -26,8 +26,8 @@
         <h3 class="section-title">📌 Quick Navigation</h3>
 
         <p class="library-text">
-          Welcome to the ultimate resource hub. Here you can find study materials,
-          lecture summaries, YouTube playlists, PDFs, websites, and helpful academic links.
+          Welcome to the ultimate resource hub. Here you can find all your study materials,
+          lecture summaries, and helpful links organized by major.
         </p>
       </div>
 
@@ -52,10 +52,21 @@
 
             <% categories.forEach(function(category, index) { %>
 
+              <%
+                const playlistResources = (category.resources || []).filter(function(resource) {
+                  return resource.type === "playlist";
+                });
+
+                const bookResources = (category.resources || []).filter(function(resource) {
+                  return resource.type === "book" || resource.type === "pdf" || resource.type === "website" || resource.type === "other";
+                });
+              %>
+
               <div 
                 id="category-<%= category._id %>" 
                 class="content-set <%= index === 0 ? 'active' : '' %>"
               >
+
                 <h2 
                   class="subject-title" 
                   style="color: <%= category.color || '#0077b6' %>;"
@@ -63,18 +74,57 @@
                   <%= category.name %>
                 </h2>
 
-                <h3 class="section-title">📚 Resources</h3>
+                <h3 class="section-title">📺 YouTube Playlists</h3>
 
                 <div class="link-grid">
-                  <% if (!category.resources || category.resources.length === 0) { %>
+                  <% if (playlistResources.length === 0) { %>
 
                     <p class="empty-resource-text">
-                      No links added for this category yet.
+                      No playlists added yet.
                     </p>
 
                   <% } else { %>
 
-                    <% category.resources.forEach(function(resource) { %>
+                    <% playlistResources.forEach(function(resource) { %>
+                      <a 
+                        href="<%= resource.url %>" 
+                        target="_blank" 
+                        class="resource-card" 
+                        style="--hover-color: var(--yt-red);"
+                      >
+                        <span><%= resource.title %></span>
+                        <span class="icon-label">PLAYLIST ➔</span>
+                      </a>
+                    <% }) %>
+
+                  <% } %>
+                </div>
+
+                <h3 class="section-title">📚 Books & PDFs</h3>
+
+                <div class="link-grid">
+                  <% if (bookResources.length === 0) { %>
+
+                    <p class="empty-resource-text">
+                      No books, PDFs, or websites added yet.
+                    </p>
+
+                  <% } else { %>
+
+                    <% bookResources.forEach(function(resource) { %>
+
+                      <%
+                        let label = "LINK ➔";
+
+                        if (resource.type === "pdf") {
+                          label = "PDF ⬇";
+                        } else if (resource.type === "book") {
+                          label = "BOOK ➔";
+                        } else if (resource.type === "website") {
+                          label = "WEBSITE ➔";
+                        }
+                      %>
+
                       <a 
                         href="<%= resource.url %>" 
                         target="_blank" 
@@ -82,14 +132,14 @@
                         style="--hover-color: <%= category.color || '#0077b6' %>;"
                       >
                         <span><%= resource.title %></span>
-                        <span class="icon-label">
-                          <%= resource.type ? resource.type.toUpperCase() : 'LINK' %> ➔
-                        </span>
+                        <span class="icon-label"><%= label %></span>
                       </a>
+
                     <% }) %>
 
                   <% } %>
                 </div>
+
               </div>
 
             <% }) %>
@@ -102,7 +152,7 @@
           <div class="tabs-container">
             <% categories.forEach(function(category, index) { %>
               <div 
-                class="tab <%= index === 0 ? 'active' : '' %>" 
+                class="tab <%= index === 0 ? 'active' : '' %>"
                 style="background: <%= category.color || '#0077b6' %>;"
                 onclick="switchTab('category-<%= category._id %>', this)"
               >
@@ -117,6 +167,7 @@
     </div>
   </div>
 
-  <script src="/javaScript/academic-atlas.js"></script>
+  <script src="/javaScript/resources.js"></script>
+
 </body>
 </html>
