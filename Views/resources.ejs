@@ -29,6 +29,8 @@
           Welcome to the ultimate resource hub. Here you can find all your study materials,
           lecture summaries, and helpful links organized by major.
         </p>
+
+        <div id="leftPageBookmarkHolder"></div>
       </div>
 
       <div class="book-half right">
@@ -60,13 +62,15 @@
                 const bookResources = (category.resources || []).filter(function(resource) {
                   return resource.type === "book" || resource.type === "pdf" || resource.type === "website" || resource.type === "other";
                 });
+
+                const tabId = "resource-tab-" + index;
+                const contentId = "resource-content-" + index;
               %>
 
               <div 
-                id="category-<%= category._id %>" 
+                id="<%= contentId %>" 
                 class="content-set <%= index === 0 ? 'active' : '' %>"
               >
-
                 <h2 
                   class="subject-title" 
                   style="color: <%= category.color || '#0077b6' %>;"
@@ -139,7 +143,6 @@
 
                   <% } %>
                 </div>
-
               </div>
 
             <% }) %>
@@ -151,13 +154,24 @@
         <% if (categories && categories.length > 0) { %>
           <div class="tabs-container">
             <% categories.forEach(function(category, index) { %>
+
+              <%
+                const tabId = "resource-tab-" + index;
+                const contentId = "resource-content-" + index;
+              %>
+
               <div 
+                id="<%= tabId %>"
                 class="tab <%= index === 0 ? 'active' : '' %>"
+                data-content-id="<%= contentId %>"
+                data-tab-id="<%= tabId %>"
+                data-tab-index="<%= index %>"
                 style="background: <%= category.color || '#0077b6' %>;"
-                onclick="switchTab('category-<%= category._id %>', this)"
+                onclick="handleBookmark(this)"
               >
-                <%= category.shortName %>
+                <span><%= category.shortName %></span>
               </div>
+
             <% }) %>
           </div>
         <% } %>
@@ -167,7 +181,6 @@
     </div>
   </div>
 
-  <script src="/javaScript/resources.js"></script>
-
+  <script src="/javaScript/resourses.js"></script>
 </body>
 </html>
