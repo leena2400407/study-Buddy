@@ -12,6 +12,7 @@ const Event = require("./models/Events");
 const EventRegistration = require("./models/eventsReg");
 const University = require("./models/Universities");
 const { requireAuth, requirePageAuth } = require("./middleware/authMiddleware");
+const ResourceCategory = require("./models/resources");
 require("dotenv").config();
 
 const app = express();
@@ -1651,8 +1652,41 @@ app.get("/edugate", async (req, res) => {
   }
 });
 
-app.get("/resources", (req, res) => {
-  res.render("resources");
+app.get("/resources", async (req, res) => {
+  try {
+    const categories = await ResourceCategory.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.render("resources", {
+      categories
+    });
+
+  } catch (error) {
+    console.error("Resources page error:", error);
+
+    res.render("resources", {
+      categories: []
+    });
+  }
+});
+app.get("/academic-atlas", async (req, res) => {
+  try {
+    const categories = await ResourceCategory.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.render("academic-atlas", {
+      categories
+    });
+
+  } catch (error) {
+    console.error("Academic Atlas error:", error);
+
+    res.render("academic-atlas", {
+      categories: []
+    });
+  }
 });
 
 app.get("/game", requirePageAuth, (req, res) => {

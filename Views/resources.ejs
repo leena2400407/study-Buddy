@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>The Academic Atlas</title>
+
+  <link rel="stylesheet" href="/css/academic-atlas.css">
+</head>
+
+<body>
+
+  <div class="book-cover">
+    <div class="huge-book">
+
+      <div class="book-half left">
+        <h1 class="library-title">The Library</h1>
+
+        <p class="library-quote">
+          "The more that you read, the more things you will know."
+        </p>
+
+        <hr class="library-line">
+
+        <h3 class="section-title">📌 Quick Navigation</h3>
+
+        <p class="library-text">
+          Welcome to the ultimate resource hub. Here you can find study materials,
+          lecture summaries, YouTube playlists, PDFs, websites, and helpful academic links.
+        </p>
+      </div>
+
+      <div class="book-half right">
+        <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+
+        <div class="flip-sheet">
+          <div class="page-face front"></div>
+          <div class="page-face back"></div>
+        </div>
+
+        <div class="main-content-container">
+
+          <% if (!categories || categories.length === 0) { %>
+
+            <div class="empty-resource-box">
+              <h2>No resources yet</h2>
+              <p>Resources will appear here after they are added to MongoDB.</p>
+            </div>
+
+          <% } else { %>
+
+            <% categories.forEach(function(category, index) { %>
+
+              <div 
+                id="category-<%= category._id %>" 
+                class="content-set <%= index === 0 ? 'active' : '' %>"
+              >
+                <h2 
+                  class="subject-title" 
+                  style="color: <%= category.color || '#0077b6' %>;"
+                >
+                  <%= category.name %>
+                </h2>
+
+                <h3 class="section-title">📚 Resources</h3>
+
+                <div class="link-grid">
+                  <% if (!category.resources || category.resources.length === 0) { %>
+
+                    <p class="empty-resource-text">
+                      No links added for this category yet.
+                    </p>
+
+                  <% } else { %>
+
+                    <% category.resources.forEach(function(resource) { %>
+                      <a 
+                        href="<%= resource.url %>" 
+                        target="_blank" 
+                        class="resource-card" 
+                        style="--hover-color: <%= category.color || '#0077b6' %>;"
+                      >
+                        <span><%= resource.title %></span>
+                        <span class="icon-label">
+                          <%= resource.type ? resource.type.toUpperCase() : 'LINK' %> ➔
+                        </span>
+                      </a>
+                    <% }) %>
+
+                  <% } %>
+                </div>
+              </div>
+
+            <% }) %>
+
+          <% } %>
+
+        </div>
+
+        <% if (categories && categories.length > 0) { %>
+          <div class="tabs-container">
+            <% categories.forEach(function(category, index) { %>
+              <div 
+                class="tab <%= index === 0 ? 'active' : '' %>" 
+                style="background: <%= category.color || '#0077b6' %>;"
+                onclick="switchTab('category-<%= category._id %>', this)"
+              >
+                <%= category.shortName %>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/javaScript/academic-atlas.js"></script>
+</body>
+</html>
