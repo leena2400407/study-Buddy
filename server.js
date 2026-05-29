@@ -183,20 +183,20 @@ const sendEventRegistrationEmail = async ({
   teamName,
   players,
   eventDescription,
-  eventCategory
+  eventCategory,
+  eventDetailsLink
 }) => {
   const transporter = createEmailTransporter();
 
-  const locationLink = "https://maps.app.goo.gl/1Eayp67KpPmGmCGw7?g_st=iw";
+  const locationLink = eventDetailsLink && String(eventDetailsLink).trim() ? String(eventDetailsLink).trim() : "Location link was not added yet.";
+
+  const safeDescription = eventDescription && String(eventDescription).trim() ? String(eventDescription).trim() : "No event description was added.";
 
   const cleanedCategory = String(eventCategory || "").toLowerCase();
+  const cleanedTitle = String(tournamentName || "").toLowerCase();
 
-  const eventType =
-    cleanedCategory.includes("padel")
-      ? "Padel Tournament"
-      : cleanedCategory.includes("football") || cleanedCategory.includes("sports")
-        ? "Football Tournament"
-        : "Sports Tournament";
+  const eventType = cleanedCategory.includes("padel") || cleanedTitle.includes("padel") ? "Padel Tournament" : cleanedCategory.includes("football") ||
+    cleanedCategory.includes("sports") || cleanedTitle.includes("football") ? "Football Tournament" : "Sports Tournament";
 
   const playersList = players
     .map((player, index) => {
@@ -267,9 +267,7 @@ const sendEventRegistrationEmail = async ({
           </h2>
 
           <p style="margin: 0; color: #d1d5db; font-size: 16px; line-height: 1.7;">
-            ${eventDescription}
-            <br>
-            <b>the event will take place at zone D in the wafaa and ELAMAL</b>
+            ${safeDescription}
           </p>
         </div>
 
@@ -1789,7 +1787,8 @@ app.post("/events/register", requireAuth, async (req, res) => {
         teamName,
         players: cleanedPlayers,
         eventDescription: eventData.description,
-        eventCategory: eventData.category
+        eventCategory: eventData.category,
+        eventDetailsLink: eventData.detailsLink
       });
     } catch (emailError) {
       console.error("Event registration email error:", emailError);
