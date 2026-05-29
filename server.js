@@ -1731,7 +1731,7 @@ app.post("/events/register", requireAuth, async (req, res) => {
     if (!tournamentName || !teamName || !Array.isArray(players) || players.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Please fill in team name and player details."
+        message: "Please fill in team name and captain details."
       });
     }
 
@@ -1744,26 +1744,66 @@ app.post("/events/register", requireAuth, async (req, res) => {
       });
     }
 
+    const alreadyRegistered = await EventRegistration.findOne({
+      user: req.session.user.id,
+      tournamentName
+    });
+
+    if (alreadyRegistered) {
+      return res.status(400).json({
+        success: false,
+        message: "You already registered for this tournament."
+      });
+    }
+
     const maxPlayers = Number(eventData.maxPlayers) || 10;
 
+    if (players.length > maxPlayers) {
+      return res.status(400).json({
+        success: false,
+        message: `This tournament allows maximum ${maxPlayers} players.`
+      });
+    }
+
+    const captain = players[0];
+
+    const captainName = String(captain?.name || "").trim();
+    const captainEmail = String(captain?.email || "").trim().toLowerCase();
+
+    if (!captainName || !captainEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Captain name and email are required."
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(captainEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid captain email."
+      });
+    }
+
     const cleanedPlayers = players
-      .map(player => ({
-        name: String(player.name || "").trim(),
-        email: String(player.email || "").trim().toLowerCase()
-      }))
-      .filter(player => player.name && player.email);
+      .map((player, index) => {
+        const playerName = String(player.name || "").trim();
+
+        if (!playerName) return null;
+
+        return {
+          role: index === 0 ? "captain" : "player",
+          name: playerName,
+          email: index === 0 ? captainEmail : ""
+        };
+      })
+      .filter(Boolean);
 
     if (cleanedPlayers.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Please add at least one valid player."
-      });
-    }
-
-    if (cleanedPlayers.length > maxPlayers) {
-      return res.status(400).json({
-        success: false,
-        message: `This tournament allows maximum ${maxPlayers} players.`
+        message: "Please add at least the captain."
       });
     }
 
@@ -1774,13 +1814,15 @@ app.post("/events/register", requireAuth, async (req, res) => {
       university: req.session.user.university || "Unknown University",
       tournamentName,
       teamName,
+      captainName,
+      captainEmail,
       players: cleanedPlayers
     });
 
     try {
       await sendEventRegistrationEmail({
-        to: req.session.user.email,
-        leaderName: req.session.user.fullName || req.session.user.username || cleanedPlayers[0].name,
+        to: captainEmail,
+        leaderName: captainName,
         tournamentName: eventData.title,
         teamName,
         players: cleanedPlayers,
@@ -1794,7 +1836,7 @@ app.post("/events/register", requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      message: "Tournament registration completed successfully. Confirmation email sent."
+      message: "Tournament registration completed successfully. Confirmation email sent to the captain."
     });
 
   } catch (error) {
@@ -1805,16 +1847,6 @@ app.post("/events/register", requireAuth, async (req, res) => {
       message: "Could not complete registration."
     });
   }
-});
-
-app.get("/me", requireAuth, (req, res) => {
-  res.json({
-    success: true,
-    id: req.session.user.id,
-    name: req.session.user.fullName || req.session.user.username || "Player",
-    username: req.session.user.username,
-    email: req.session.user.email
-  });
 });
 
 app.get("/leaderboard", async (req, res) => {

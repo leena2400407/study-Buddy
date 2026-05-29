@@ -24,29 +24,27 @@ const isLoggedIn =
   window.EVENTS_PAGE_DATA && window.EVENTS_PAGE_DATA.isLoggedIn === true;
 
 function openRegistration(e, name, maxPlayersFromDatabase) {
-  if (!window.EVENTS_PAGE_DATA || !window.EVENTS_PAGE_DATA.isLoggedIn) {
-  window.location.href = "/login?returnTo=/events";
-  return;
-}
   e.preventDefault();
 
-  pendingTournamentName = name;
-
-  if (!isLoggedIn) {
-    document.getElementById("auth-modal").classList.remove("hidden");
+  if (!window.EVENTS_PAGE_DATA || !window.EVENTS_PAGE_DATA.isLoggedIn) {
+    window.location.href = "/login?returnTo=/events";
     return;
   }
 
+  pendingTournamentName = name;
   maxP = Number(maxPlayersFromDatabase) || 10;
 
   document.getElementById("modal-tournament-name").innerText = name;
 
+  document.getElementById("team-name").value = "";
+
   document.getElementById("players-container").innerHTML = `
-    <div class="form-group">
-      <label>Player 1 (Captain) *</label>
+    <div class="form-group player-row captain-row">
+      <label>Captain *</label>
+
       <div class="player-inputs">
-        <input type="text" placeholder="Full Name" required>
-        <input type="email" placeholder="Email Address" required>
+        <input type="text" class="player-name" placeholder="Captain Full Name" required>
+        <input type="email" class="player-email" placeholder="Captain Email Address" required>
       </div>
     </div>
   `;
@@ -62,22 +60,27 @@ function openRegistration(e, name, maxPlayersFromDatabase) {
 
 function addPlayer() {
   const container = document.getElementById("players-container");
-  const num = container.children.length + 1;
+  const currentPlayers = container.querySelectorAll(".player-row").length;
+  const nextPlayerNumber = currentPlayers + 1;
 
-  if (num > maxP) return;
+  if (nextPlayerNumber > maxP) return;
 
   container.insertAdjacentHTML("beforeend", `
-    <div class="form-group">
-      <label>Player ${num}</label>
-      <div class="player-inputs">
-        <input type="text" placeholder="Full Name" required>
-        <input type="email" placeholder="Email Address" required>
+    <div class="form-group player-row">
+      <label>Player ${nextPlayerNumber}</label>
+
+      <div class="player-inputs single-player-input">
+        <input type="text" class="player-name" placeholder="Player Full Name" required>
       </div>
     </div>
   `);
 
-  if (num === maxP) {
-    document.querySelector(".add-player-btn").style.display = "none";
+  if (nextPlayerNumber === maxP) {
+    const addBtn = document.querySelector(".add-player-btn");
+
+    if (addBtn) {
+      addBtn.style.display = "none";
+    }
   }
 }
 
@@ -92,19 +95,44 @@ function closeAuthModal() {
 async function submitTeam(event) {
   event.preventDefault();
 
+  const submitBtn = document.querySelector(".submit-btn");
   const teamName = document.getElementById("team-name").value.trim();
-  const playerRows = document.querySelectorAll("#players-container .player-inputs");
+  const playerRows = document.querySelectorAll("#players-container .player-row");
 
-  const players = Array.from(playerRows).map(row => {
-    const inputs = row.querySelectorAll("input");
+  const players = Array.from(playerRows).map((row, index) => {
+    const nameInput = row.querySelector(".player-name");
+    const emailInput = row.querySelector(".player-email");
 
     return {
-      name: inputs[0].value.trim(),
-      email: inputs[1].value.trim()
+      role: index === 0 ? "captain" : "player",
+      name: nameInput ? nameInput.value.trim() : "",
+      email: emailInput ? emailInput.value.trim() : ""
     };
   });
 
+  if (!teamName) {
+    alert("Please enter team name.");
+    return;
+  }
+
+  if (!players[0] || !players[0].name || !players[0].email) {
+    alert("Please enter captain name and email.");
+    return;
+  }
+
+  const emptyPlayer = players.find(player => !player.name);
+
+  if (emptyPlayer) {
+    alert("Please fill all player names.");
+    return;
+  }
+
   try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Registering...";
+    }
+
     const response = await fetch("/events/register", {
       method: "POST",
       headers: {
@@ -133,6 +161,11 @@ async function submitTeam(event) {
   } catch (error) {
     console.error("Registration error:", error);
     alert("Something went wrong. Please try again.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Complete Registration";
+    }
   }
 }
 

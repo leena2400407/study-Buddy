@@ -33,21 +33,31 @@ const eventRegistrationSchema = new mongoose.Schema(
       required: true
     },
 
-    players: [
-      {
-        name: {
-          type: String,
-          required: true
-        },
-        email: {
-          type: String,
-          required: true
-        }
-      }
-    ]
-  },
+   players: [
   {
-    timestamps: true
+    role: {
+      type: String,
+      enum: ["captain", "player"],
+      default: "player"
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    email: {
+      type: String,
+      default: ""
+    }
+  }
+],
+captainName: {
+  type: String,
+  default: ""
+},
+captainEmail: {
+  type: String,
+  default: ""
+}
   }
 );
 
