@@ -1932,6 +1932,28 @@ app.delete("/admin/users/:userId", requireAdminApi, async (req, res) => {  try {
     });
   }
 });
+app.get("/game-landing-page", (req, res) => {
+  res.render("game-landing-page");
+});
+
+// Old game routes
+app.get("/game", requirePageAuth, (req, res) => {
+  res.render("game");
+});
+
+app.get("/game2", (req, res) => {
+  res.render("game2");
+});
+
+// New cleaner game URLs
+app.get("/blockblast", requirePageAuth, (req, res) => {
+  res.render("game");
+});
+
+app.get("/wordle", requirePageAuth, (req, res) => {
+  res.render("game2");
+});
+
 
 // Server start
 const PORT = process.env.PORT || 5000;

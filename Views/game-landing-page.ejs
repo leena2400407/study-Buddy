@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Games | Study Buddy</title>
+
+  <link rel="stylesheet" href="/css/game-landing-page.css" />
+</head>
+
+<body>
+  <div class="game-bg">
+    <div class="soft-glow one"></div>
+    <div class="soft-glow two"></div>
+    <div class="soft-glow three"></div>
+    <div id="bg-container"></div>
+  </div>
+
+  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">x</div>
+
+  <main class="games-page">
+    <div class="top-title">Games</div>
+
+    <section class="game-side block-blast" onclick="goToGame('/blockblast')">
+      <article class="game-card">
+        <div class="card-top">
+          <span class="small-label">Tournament game per week</span>
+        </div>
+
+        <div class="visual">
+          <div class="block-visual">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
+        <div class="game-title">
+          <h1>Block<br>Blast</h1>
+        </div>
+      </article>
+    </section>
+
+    <section class="game-side wordle" onclick="goToGame('/wordle')">
+      <article class="game-card">
+        <div class="card-top">
+          <span class="small-label">Daily game play</span>
+        </div>
+
+        <div class="visual">
+          <div class="word-visual">
+            <span>W</span>
+            <span>O</span>
+            <span>R</span>
+            <span>D</span>
+            <span>?</span>
+          </div>
+        </div>
+
+        <div class="game-title">
+          <h1>Wordle</h1>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/javascript/game-landing-page.js"></script>
+</body>
+</html>
