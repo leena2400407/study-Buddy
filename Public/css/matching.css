@@ -101,13 +101,12 @@ body {
 .hero-content h1 {
     color: white;
     font-size: clamp(52px, 8.8vw, 104px);
-    line-height: 0.9;
+    line-height: 1;
     letter-spacing: -6px;
     margin-bottom: 25px;
+    padding-bottom: 14px;
     background: linear-gradient(120deg, #fff, #bdefff 45%, #dfc8ff 80%);
-    -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .hero-text {
@@ -451,16 +450,7 @@ body {
     border-radius: 999px;
 }
 
-.match-reason {
-    margin: 14px 0;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    color: #dbeafe;
-    font-size: 14px;
-    font-weight: 700;
-}
+
 
 .buddy-subjects {
     display: flex;

@@ -3,6 +3,8 @@ let myStrongSubjects = [];
 let students = [];
 let requestPublished = false;
 
+const REQUEST_STORAGE_KEY = "studyBuddyRequestPublished";
+
 function isLoggedIn() {
     return Boolean(
         window.MATCHING_PAGE_DATA && window.MATCHING_PAGE_DATA.isLoggedIn
@@ -25,7 +27,9 @@ function requireLogin(message = "Please login first.") {
 
 async function fetchMyProfile() {
     try {
-        const response = await fetch("/api/matching/profile");
+      const response = await fetch("/api/matching/profile", {
+        cache: "no-store"
+        }); 
 
         if (response.status === 401) {
             renderAll();
@@ -189,6 +193,7 @@ async function clearStudyList() {
         myStrongSubjects = [];
         students = [];
         requestPublished = false;
+        localStorage.removeItem(REQUEST_STORAGE_KEY);
 
         renderAll();
 
@@ -212,6 +217,7 @@ async function startSearchFlow() {
     }
 
     requestPublished = true;
+    localStorage.setItem(REQUEST_STORAGE_KEY, "true");
 
     const matchesSection = document.getElementById("matches-section");
 
@@ -233,7 +239,9 @@ async function startSearchFlow() {
 
 async function loadMatches() {
     try {
-        const response = await fetch("/api/matching/matches");
+       const response = await fetch("/api/matching/matches", {
+            cache: "no-store"
+            });
         const data = await response.json();
 
         if (!response.ok || !data.success) {
@@ -388,17 +396,13 @@ function renderMatches() {
                     <div class="buddy-avatar">${escapeHTML(avatarLetter)}</div>
 
                     <div class="buddy-name">
-                        <h3>${escapeHTML(name)}</h3>
-                        <p>${escapeHTML(student.major || "Study Buddy Student")}</p>
+                    <h3>${escapeHTML(name)}</h3>
+                    <p>${escapeHTML(student.university || "Unknown University")} - ${escapeHTML(student.major || "Study Buddy Student")}</p>
                     </div>
-
                     
                 </div>
 
-                <div class="match-reason">
-                    ${escapeHTML(student.reason || "Possible study match")}
-                </div>
-
+                
                 <div class="buddy-subjects">
                     <div class="subject-row">
                         <h5>Strong Subjects</h5>
@@ -516,6 +520,22 @@ function renderAll() {
     renderMatches();
 }
 
+async function restoreRequestWhenBack() {
+    await fetchMyProfile();
+
+    const savedRequest = localStorage.getItem(REQUEST_STORAGE_KEY) === "true";
+
+    if (savedRequest && (myWeakSubjects.length > 0 || myStrongSubjects.length > 0)) {
+        requestPublished = true;
+        renderMatches();
+        await loadMatches();
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    fetchMyProfile();
+    restoreRequestWhenBack();
+});
+
+window.addEventListener("pageshow", () => {
+    restoreRequestWhenBack();
 });

@@ -1351,7 +1351,7 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
       major: myProfile.major
     }).lean();
 
-    const matches = allProfiles
+   const matches = allProfiles
       .map(profile => {
         const otherWeakSubjects = profile.weakSubjects || [];
         const otherStrongSubjects = profile.strongSubjects || [];
@@ -1362,25 +1362,19 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
         if (canTeachMe.length === 0 && iCanTeachThem.length === 0) {
           return null;
         }
-
         let score = 0;
-        let reason = "";
 
         if (canTeachMe.length > 0) {
-          score += canTeachMe.length * 70;
-          reason += `${profile.fullName} can help you with ${canTeachMe.join(", ")}. `;
-        }
+        score += canTeachMe.length * 70;
+          }
 
-        if (iCanTeachThem.length > 0) {
+          if (iCanTeachThem.length > 0) {
           score += iCanTeachThem.length * 30;
-          reason += `You can help ${profile.fullName} with ${iCanTeachThem.join(", ")}. `;
-        }
+          }
 
-        reason += `Same university and major: ${profile.university} - ${profile.major}.`;
-
-        if (score > 100) {
+          if (score > 100) {
           score = 100;
-        }
+            }
 
         return {
           _id: profile._id,
@@ -1394,8 +1388,7 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
           strongSubjects: otherStrongSubjects,
           canTeachMe,
           iCanTeachThem,
-          score,
-          reason: reason.trim()
+          score
         };
       })
       .filter(Boolean)
