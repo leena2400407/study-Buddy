@@ -18,11 +18,44 @@ function createFloatingLetters() {
         }
         createFloatingLetters();
 
-        const WORDS = ["DONUT", "STEAK", "APPLE", "HOUSE", "TRAIN", "PLANT", "WATER", "LIGHT", "CHAIR", "TABLE", "BRAIN", "SMART", "SUPER", "HAPPY", "WORLD", "SMILE", "NIGHT", "DREAM", "SPACE", "GALAXY"];
+        const WORDS = [
+            "DONUT", "STEAK", "APPLE", "HOUSE", "TRAIN", "PLANT", "WATER", "LIGHT", "CHAIR", "TABLE",
+            "BRAIN", "SMART", "SUPER", "HAPPY", "WORLD", "SMILE", "NIGHT", "DREAM", "SPACE"
+        ];
+
+        // Offline valid guess list. Add more 5-letter words here if you want a bigger dictionary.
+        const VALID_GUESSES = new Set([
+            ...WORDS,
+            "ABOUT","ABOVE","ABUSE","ACTOR","ACUTE","ADMIT","ADOPT","ADULT","AFTER","AGAIN","AGENT","AGREE","AHEAD","ALARM","ALBUM","ALERT","ALIEN","ALIGN","ALIKE","ALIVE","ALLOW","ALONE","ALONG","ALTER","AMONG","ANGER","ANGLE","ANGRY","APART","APPLY","ARENA","ARGUE","ARISE","ARRAY","ASIDE","ASSET","AUDIO","AUDIT","AVOID","AWARD","AWARE",
+            "BADLY","BAKER","BASES","BASIC","BEACH","BEGAN","BEGIN","BEING","BELOW","BENCH","BILLY","BIRTH","BLACK","BLAME","BLIND","BLOCK","BLOOD","BOARD","BOOST","BOOTH","BOUND","BRAND","BREAD","BREAK","BREED","BRIEF","BRING","BROAD","BROKE","BROWN","BUILD","BUILT","BUYER",
+            "CABLE","CALIF","CARRY","CATCH","CAUSE","CHAIN","CHAIR","CHART","CHASE","CHEAP","CHECK","CHEST","CHIEF","CHILD","CHINA","CHOSE","CIVIL","CLAIM","CLASS","CLEAN","CLEAR","CLICK","CLOCK","CLOSE","COACH","COAST","COULD","COUNT","COURT","COVER","CRAFT","CRASH","CREAM","CRIME","CROSS","CROWD","CROWN","CURVE",
+            "DAILY","DANCE","DATED","DEALT","DEATH","DEBUT","DELAY","DEPTH","DOING","DOUBT","DOZEN","DRAFT","DRAMA","DRAWN","DRESS","DRILL","DRINK","DRIVE","DROVE","DYING",
+            "EAGER","EARLY","EARTH","EIGHT","ELITE","EMPTY","ENEMY","ENJOY","ENTER","ENTRY","EQUAL","ERROR","EVENT","EVERY","EXACT","EXIST","EXTRA",
+            "FAITH","FALSE","FAULT","FIBER","FIELD","FIFTH","FIFTY","FIGHT","FINAL","FIRST","FIXED","FLASH","FLEET","FLOOR","FLUID","FOCUS","FORCE","FORTH","FORTY","FORUM","FOUND","FRAME","FRANK","FRAUD","FRESH","FRONT","FRUIT","FULLY","FUNNY",
+            "GIANT","GIVEN","GLASS","GLOBE","GOING","GRACE","GRADE","GRAND","GRANT","GRASS","GREAT","GREEN","GROSS","GROUP","GROWN","GUARD","GUESS","GUEST","GUIDE",
+            "HAPPY","HARRY","HEART","HEAVY","HENCE","HENRY","HORSE","HOTEL","HOUSE","HUMAN",
+            "IDEAL","IMAGE","INDEX","INNER","INPUT","ISSUE",
+            "JAPAN","JIMMY","JOINT","JONES","JUDGE",
+            "KNOWN",
+            "LABEL","LARGE","LASER","LATER","LAUGH","LAYER","LEARN","LEASE","LEAST","LEAVE","LEGAL","LEVEL","LEWIS","LIGHT","LIMIT","LINKS","LIVES","LOCAL","LOGIC","LOOSE","LOWER","LUCKY","LUNCH",
+            "MAGIC","MAJOR","MAKER","MARCH","MARIA","MATCH","MAYBE","MAYOR","MEANT","MEDIA","METAL","MIGHT","MINOR","MINUS","MIXED","MODEL","MONEY","MONTH","MORAL","MOTOR","MOUNT","MOUSE","MOUTH","MOVIE","MUSIC",
+            "NEEDS","NEVER","NEWLY","NIGHT","NOISE","NORTH","NOTED","NOVEL","NURSE",
+            "OCCUR","OCEAN","OFFER","OFTEN","ORDER","OTHER","OUGHT",
+            "PAINT","PANEL","PAPER","PARTY","PEACE","PETER","PHASE","PHONE","PHOTO","PIECE","PILOT","PITCH","PLACE","PLAIN","PLANE","PLANT","PLATE","POINT","POUND","POWER","PRESS","PRICE","PRIDE","PRIME","PRINT","PRIOR","PRIZE","PROOF","PROUD","PROVE",
+            "QUEEN","QUICK","QUIET","QUITE",
+            "RADIO","RAISE","RANGE","RAPID","RATIO","REACH","READY","REFER","RIGHT","RIVAL","RIVER","ROBIN","ROGER","ROMAN","ROUGH","ROUND","ROUTE","ROYAL","RURAL",
+            "SCALE","SCENE","SCOPE","SCORE","SENSE","SERVE","SEVEN","SHALL","SHAPE","SHARE","SHARP","SHEET","SHELF","SHELL","SHIFT","SHIRT","SHOCK","SHOOT","SHORT","SHOWN","SIGHT","SINCE","SIXTH","SIXTY","SIZED","SKILL","SLEEP","SLIDE","SMALL","SMART","SMILE","SMITH","SMOKE","SOLID","SOLVE","SORRY","SOUND","SOUTH","SPACE","SPARE","SPEAK","SPEED","SPEND","SPENT","SPLIT","SPOKE","SPORT","STAFF","STAGE","STAKE","STAND","START","STATE","STEAM","STEEL","STICK","STILL","STOCK","STONE","STOOD","STORE","STORM","STORY","STRIP","STUCK","STUDY","STYLE","SUGAR","SUITE","SUPER","SWEET",
+            "TABLE","TAKEN","TASTE","TAXES","TEACH","TEETH","TERRY","TEXAS","THANK","THEFT","THEIR","THEME","THERE","THESE","THICK","THING","THINK","THIRD","THOSE","THREE","THREW","THROW","TIGHT","TIMES","TIRED","TITLE","TODAY","TOPIC","TOTAL","TOUCH","TOUGH","TOWER","TRACK","TRADE","TRAIN","TREAT","TREND","TRIAL","TRIED","TRIES","TRUCK","TRULY","TRUST","TRUTH","TWICE",
+            "UNDER","UNDUE","UNION","UNITY","UNTIL","UPPER","UPSET","URBAN","USAGE","USUAL",
+            "VALID","VALUE","VIDEO","VIRUS","VISIT","VITAL","VOICE",
+            "WASTE","WATCH","WATER","WHEEL","WHERE","WHICH","WHILE","WHITE","WHOLE","WHOSE","WOMAN","WOMEN","WORLD","WORRY","WORSE","WORTH","WOULD","WRITE","WRONG","WROTE",
+            "YIELD","YOUNG","YOUTH"
+        ]);
         let targetWord = WORDS[Math.floor(Math.random() * WORDS.length)];
         let currentRow = 0;
         let currentTile = 0;
         let isGameOver = false;
+        let isChecking = false;
 
         const board = document.getElementById("board");
         const keyboard = document.getElementById("keyboard");
@@ -77,13 +110,16 @@ function createFloatingLetters() {
         }
 
         function handleInput(key) {
-            if (isGameOver) return;
-            if (key === "⌫" || key === "Backspace") {
+            if (isGameOver || isChecking) return;
+
+            const normalizedKey = key === "Backspace" ? "⌫" : key.toUpperCase();
+
+            if (normalizedKey === "⌫") {
                 deleteLetter();
-            } else if (key === "ENTER" || key === "Enter") {
-                submitGuess(); 
-            } else if (/^[A-Z]$/.test(key)) {
-                addLetter(key);
+            } else if (normalizedKey === "ENTER") {
+                submitGuess();
+            } else if (/^[A-Z]$/.test(normalizedKey)) {
+                addLetter(normalizedKey);
             }
         }
 
@@ -111,7 +147,9 @@ function createFloatingLetters() {
             setTimeout(() => rowDiv.classList.remove("shake"), 500);
         }
 
-        async function submitGuess() {
+        function submitGuess() {
+            if (isChecking) return;
+
             if (currentTile !== 5) {
                 showMessage("Not enough letters");
                 shakeRow();
@@ -123,19 +161,14 @@ function createFloatingLetters() {
                 guess += document.getElementById(`tile-${currentRow}-${i}`).textContent;
             }
 
-            if (!WORDS.includes(guess)) {
-                try {
-                    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${guess}`);
-                    if (!response.ok) {
-                        showMessage("Not in word list");
-                        shakeRow();
-                        return; 
-                    }
-                } catch (error) {
-                    console.log("Network error, skipping validation");
-                }
+            // Do not accept random letters. This works offline, including when opened with file://
+            if (!VALID_GUESSES.has(guess)) {
+                showMessage("Not in word list");
+                shakeRow();
+                return;
             }
 
+            isChecking = true;
             checkGuess(guess);
         }
 
@@ -181,6 +214,7 @@ function createFloatingLetters() {
                     currentRow++;
                     currentTile = 0;
                 }
+                isChecking = false;
             }, 1500);
         }
 
@@ -217,22 +251,16 @@ function createFloatingLetters() {
             currentRow = 0;
             currentTile = 0;
             isGameOver = false;
+            isChecking = false;
             targetWord = WORDS[Math.floor(Math.random() * WORDS.length)];
 
             initBoard();
             initKeyboard();
         }
 
-          document.addEventListener("keydown", (e) => {
-
-             if(event.key === 'Backspace'){
-                deleteLetter();
-            }
-
-            handleInput(e.key.toUpperCase());
+        document.addEventListener("keydown", (e) => {
+            handleInput(e.key);
         });
-
-
 
         initBoard();
         initKeyboard();
