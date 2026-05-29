@@ -995,9 +995,169 @@ app.get("/mainpage", (req, res) => {
   res.render("index");
 });
 
-app.get("/profile", requirePageAuth, (req, res) => {
-  res.render("profile", {
-    user: req.session.user
+app.get("/mainpage", (req, res) => {
+  res.render("index");
+});
+
+app.get("/profile", requirePageAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    const freshUser = await User.findById(userId).lean();
+
+    const studyProfile = await StudyProfile.findOne({
+      user: userId
+    }).lean();
+
+    const competitionRegistrations = await EventRegistration.find({
+      user: userId
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.render("profile", {
+      user: freshUser || req.session.user,
+      studyProfile,
+      competitionRegistrations
+    });
+
+  } catch (error) {
+    console.error("Profile page error:", error);
+
+    res.render("profile", {
+      user: req.session.user,
+      studyProfile: null,
+      competitionRegistrations: []
+    });
+  }
+});
+
+app.post("/profile/update-info", requirePageAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    const {
+      fullName,
+      username,
+      gender,
+      university,
+      major
+    } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        fullName,
+        username,
+        gender,
+        university,
+        major
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    ).lean();
+
+    if (!updatedUser) {
+      req.flash("error", "User was not found.");
+      return res.redirect("/profile#info");
+    }
+
+    req.session.user = {
+      ...req.session.user,
+      fullName: updatedUser.fullName,
+      username: updatedUser.username,
+      gender: updatedUser.gender,
+      university: updatedUser.university,
+      major: updatedUser.major,
+      role: req.session.user.role || "student"
+    };
+
+    await StudyProfile.findOneAndUpdate(
+      {
+        user: userId
+      },
+      {
+        fullName: updatedUser.fullName,
+        username: updatedUser.username,
+        university: updatedUser.university || "",
+        major: updatedUser.major || ""
+      },
+      {
+        new: true
+      }
+    );
+
+    req.flash("success", "Profile information updated.");
+    res.redirect("/profile#info");
+
+  } catch (error) {
+    console.error("Update profile info error:", error);
+    req.flash("error", "Could not update profile information.");
+    res.redirect("/profile#info");
+  }
+});
+
+app.post("/profile/update-study-list", requirePageAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    const weakSubjects = req.body.weakSubjects
+      ? req.body.weakSubjects
+          .split(",")
+          .map(subject => subject.trim())
+          .filter(Boolean)
+      : [];
+
+    const strongSubjects = req.body.strongSubjects
+      ? req.body.strongSubjects
+          .split(",")
+          .map(subject => subject.trim())
+          .filter(Boolean)
+      : [];
+
+    const user = await User.findById(userId).lean();
+
+    if (!user) {
+      req.flash("error", "User was not found.");
+      return res.redirect("/profile#study");
+    }
+
+    await StudyProfile.findOneAndUpdate(
+      {
+        user: userId
+      },
+      {
+        user: userId,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        university: user.university || "",
+        major: user.major || "",
+        weakSubjects,
+        strongSubjects
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true
+      }
+    );
+
+    req.flash("success", "Study list updated.");
+    res.redirect("/profile#study");
+
+  } catch (error) {
+    console.error("Update study list error:", error);
+    req.flash("error", "Could not update study list.");
+    res.redirect("/profile#study");
+  }
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/");
   });
 });
 

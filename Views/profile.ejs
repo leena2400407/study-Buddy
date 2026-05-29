@@ -1,89 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Profile Information</title>
+  <title>Study Buddy Profile</title>
 
-  <link rel="stylesheet" href="/css/forms.css">
+  <link rel="stylesheet" href="/css/profile.css" />
 </head>
 
 <body>
+  <%
+    const weakSubjects = studyProfile && studyProfile.weakSubjects ? studyProfile.weakSubjects : [];
+    const strongSubjects = studyProfile && studyProfile.strongSubjects ? studyProfile.strongSubjects : [];
+    const competitions = competitionRegistrations || [];
 
-  <div class="close-btn" onclick="window.location.href='/cylinder#trigger-logo'" style="color:azure">
-    ✖
+    const totalSubjects = weakSubjects.length + strongSubjects.length;
+    const totalCompetitions = competitions.length;
+
+    const getInitials = (name) => {
+      if (!name) return "SB";
+
+      return name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0].toUpperCase())
+        .join("");
+    };
+
+    const formatDate = (date) => {
+      if (!date) return "-";
+
+      return new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    };
+
+    const getCompetitionType = (item) => {
+      const text = `${item.category || ""} ${item.tournamentName || ""}`.toLowerCase();
+
+      if (text.includes("football")) return "Football";
+      if (text.includes("padel")) return "Padel";
+      if (text.includes("sports")) return "Sports";
+
+      return "Competition";
+    };
+  %>
+
+  <div class="profile-bg">
+    <div class="grid-layer"></div>
+    <div class="glow glow-one"></div>
+    <div class="glow glow-two"></div>
+    <div class="glow glow-three"></div>
   </div>
 
-  <div class="container auth-page">
-    <div id="info">
+  <a class="close-btn" href="/cylinder#trigger-logo">✕</a>
 
-      <div class="login-box signup-box">
+  <main class="profile-page">
 
-        <h2>Full Profile Info</h2>
+    <section class="profile-hero">
+      <div class="hero-left">
+        <div class="avatar-wrap">
+          <div class="avatar-ring"></div>
 
-        <div class="profile-avatar">
-          <img 
-            src="/assests/images/profile.png" 
-            alt="Student Profile Avatar" 
-            class="profile-avatar-img"
-          >
+          <div class="avatar">
+            <%= getInitials(user.fullName || user.username) %>
+          </div>
         </div>
 
-        <div class="profile-details">
+        <div class="hero-info">
+          <p class="eyebrow">Student Profile</p>
 
-          <div class="input-group">
-            <label>Full Name</label>
-            <div class="profile-value">
-              <%= user.fullName || "-" %>
-            </div>
-          </div>
+          <h1><%= user.fullName || "Study Buddy Student" %></h1>
 
-          <div class="input-group">
-            <label>Username</label>
-            <div class="profile-value">
-              <%= user.username || "-" %>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>Gender</label>
-            <div class="profile-value">
-              <%= user.gender || "-" %>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>University</label>
-            <div class="profile-value">
-              <%= user.university || "-" %>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>Major</label>
-            <div class="profile-value">
-              <%= user.major || "-" %>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>Email Address</label>
-            <div class="profile-value">
-              <%= user.email || "-" %>
-            </div>
-          </div>
-
+          <p class="hero-subtitle">
+            <%= user.major || "Major not added" %> student at
+            <%= user.university || "University not added" %>
+          </p>
         </div>
-
-        <button onclick="window.location.href='/logout'" class="logout-btn">
-          Logout
-        </button>
-
       </div>
 
-    </div>
-  </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span><%= weakSubjects.length %></span>
+          <p>Need Help</p>
+        </div>
 
+        <div class="stat-card">
+          <span><%= strongSubjects.length %></span>
+          <p>Can Teach</p>
+        </div>
+
+        <div class="stat-card">
+          <span><%= totalCompetitions %></span>
+          <p>Competitions</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-grid">
+
+      <div class="profile-card info-card">
+        <div class="card-header">
+          <div>
+            <p class="section-label">ACCOUNT</p>
+            <h2>Personal Information</h2>
+          </div>
+
+          <button type="button" class="small-link" id="editInfoBtn">Edit</button>
+        </div>
+
+        <div class="info-list" id="infoView">
+          <div class="info-item">
+            <span>Full Name</span>
+            <strong><%= user.fullName || "-" %></strong>
+          </div>
+
+          <div class="info-item">
+            <span>Username</span>
+            <strong><%= user.username || "-" %></strong>
+          </div>
+
+          <div class="info-item locked-item">
+            <span>Email</span>
+            <strong><%= user.email || "-" %></strong>
+            <small>Email cannot be changed</small>
+          </div>
+
+          <div class="info-item">
+            <span>Gender</span>
+            <strong><%= user.gender || "-" %></strong>
+          </div>
+
+          <div class="info-item">
+            <span>University</span>
+            <strong><%= user.university || "-" %></strong>
+          </div>
+
+          <div class="info-item">
+            <span>Major</span>
+            <strong><%= user.major || "-" %></strong>
+          </div>
+        </div>
+
+        <form class="edit-form hidden" id="infoEditForm" action="/profile/update-info" method="POST">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" name="fullName" value="<%= user.fullName || '' %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" value="<%= user.username || '' %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" value="<%= user.email || '' %>" disabled />
+            <small>Email cannot be changed</small>
+          </div>
+
+          <div class="form-group">
+            <label>Gender</label>
+            <select name="gender">
+              <option value="">Select Gender</option>
+              <option value="Male" <%= user.gender === "Male" ? "selected" : "" %>>Male</option>
+              <option value="Female" <%= user.gender === "Female" ? "selected" : "" %>>Female</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>University</label>
+            <input type="text" name="university" value="<%= user.university || '' %>" />
+          </div>
+
+          <div class="form-group">
+            <label>Major</label>
+            <input type="text" name="major" value="<%= user.major || '' %>" />
+          </div>
+
+          <div class="edit-actions">
+            <button type="submit" class="primary-btn small">Save Changes</button>
+            <button type="button" class="ghost-btn small" id="cancelInfoBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="profile-card study-card">
+        <div class="card-header">
+          <div>
+            <p class="section-label">MATCHING</p>
+            <h2>My Study List</h2>
+          </div>
+
+          <button type="button" class="small-link" id="editStudyBtn">Edit</button>
+        </div>
+
+        <div id="studyView">
+          <% if (!studyProfile || totalSubjects === 0) { %>
+            <div class="empty-box">
+              <div class="empty-icon">📚</div>
+              <h3>No study list yet</h3>
+              <p>Add your weak and strong subjects from here.</p>
+            </div>
+          <% } else { %>
+
+            <div class="subjects-section">
+              <div class="subjects-title">
+                <span class="dot weak-dot"></span>
+                <h3>Subjects I Need Help With</h3>
+              </div>
+
+              <% if (weakSubjects.length === 0) { %>
+                <p class="muted-text">No weak subjects added.</p>
+              <% } else { %>
+                <div class="pill-wrap">
+                  <% weakSubjects.forEach(subject => { %>
+                    <span class="subject-pill weak-pill">Need: <%= subject %></span>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+
+            <div class="subjects-section">
+              <div class="subjects-title">
+                <span class="dot strong-dot"></span>
+                <h3>Subjects I Can Help With</h3>
+              </div>
+
+              <% if (strongSubjects.length === 0) { %>
+                <p class="muted-text">No strong subjects added.</p>
+              <% } else { %>
+                <div class="pill-wrap">
+                  <% strongSubjects.forEach(subject => { %>
+                    <span class="subject-pill strong-pill">Teach: <%= subject %></span>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+
+          <% } %>
+        </div>
+
+        <form class="edit-form hidden" id="studyEditForm" action="/profile/update-study-list" method="POST">
+          <div class="form-group">
+            <label>Subjects I Need Help With</label>
+            <textarea name="weakSubjects" rows="4" placeholder="Example: Network, OS, Calculus"><%= weakSubjects.join(", ") %></textarea>
+            <small>Write subjects separated by commas.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Subjects I Can Help With</label>
+            <textarea name="strongSubjects" rows="4" placeholder="Example: Math, Data Structure, Algorithm"><%= strongSubjects.join(", ") %></textarea>
+            <small>Write subjects separated by commas.</small>
+          </div>
+
+          <div class="edit-actions">
+            <button type="submit" class="primary-btn small">Save Study List</button>
+            <button type="button" class="ghost-btn small" id="cancelStudyBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <section class="profile-card competitions-card">
+      <div class="card-header">
+        <div>
+          <p class="section-label">ACTIVITY</p>
+          <h2>My Competitions</h2>
+        </div>
+      </div>
+
+      <% if (competitions.length === 0) { %>
+        <div class="empty-box wide">
+          <div class="empty-icon">🏆</div>
+          <h3>No competitions yet</h3>
+          <p>When you join Football, Padel, or any competition, it will appear here.</p>
+        </div>
+      <% } else { %>
+
+        <div class="competition-grid">
+          <% competitions.forEach(item => { %>
+            <article class="competition-card">
+              <div class="competition-top">
+                <div class="competition-icon">
+                  <% if (getCompetitionType(item) === "Football") { %>
+                    ⚽
+                  <% } else if (getCompetitionType(item) === "Padel") { %>
+                    🎾
+                  <% } else { %>
+                    🏆
+                  <% } %>
+                </div>
+
+                <div>
+                  <span class="competition-type"><%= getCompetitionType(item) %></span>
+                  <h3><%= item.tournamentName || "Competition" %></h3>
+                </div>
+              </div>
+
+              <div class="competition-info">
+                <div>
+                  <span>Team</span>
+                  <strong><%= item.teamName || "-" %></strong>
+                </div>
+
+                <div>
+                  <span>Registered</span>
+                  <strong><%= formatDate(item.createdAt) %></strong>
+                </div>
+
+                <div>
+                  <span>Players</span>
+                  <strong><%= item.players ? item.players.length : 0 %></strong>
+                </div>
+              </div>
+
+              <% if (item.players && item.players.length > 0) { %>
+                <div class="players-box">
+                  <p>Team Players</p>
+
+                  <div class="players-list">
+                    <% item.players.forEach(player => { %>
+                      <span><%= player.name %></span>
+                    <% }) %>
+                  </div>
+                </div>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+
+      <% } %>
+    </section>
+
+    <section class="logout-section">
+      <a href="/logout" class="logout-btn">Logout</a>
+    </section>
+
+  </main>
+
+  <script src="/javaScript/profile.js"></script>
 </body>
 </html>
