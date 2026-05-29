@@ -67,7 +67,13 @@ function addPlayer() {
 
   container.insertAdjacentHTML("beforeend", `
     <div class="form-group player-row">
-      <label>Player ${nextPlayerNumber}</label>
+      <div class="player-top-row">
+        <label>Player ${nextPlayerNumber}</label>
+
+        <button type="button" class="remove-player-x" onclick="removePlayer(this)">
+          ×
+        </button>
+      </div>
 
       <div class="player-inputs single-player-input">
         <input type="text" class="player-name" placeholder="Player Full Name" required>
@@ -75,12 +81,37 @@ function addPlayer() {
     </div>
   `);
 
-  if (nextPlayerNumber === maxP) {
-    const addBtn = document.querySelector(".add-player-btn");
+  updatePlayerNumbers();
+}
+function removePlayer(button) {
+  const row = button.closest(".player-row");
 
-    if (addBtn) {
-      addBtn.style.display = "none";
+  if (row) {
+    row.remove();
+  }
+
+  updatePlayerNumbers();
+}
+
+function updatePlayerNumbers() {
+  const rows = document.querySelectorAll("#players-container .player-row");
+
+  rows.forEach((row, index) => {
+    const label = row.querySelector("label");
+
+    if (!label) return;
+
+    if (index === 0) {
+      label.innerText = "Captain *";
+    } else {
+      label.innerText = `Player ${index + 1}`;
     }
+  });
+
+  const addBtn = document.querySelector(".add-player-btn");
+
+  if (addBtn) {
+    addBtn.style.display = rows.length >= maxP ? "none" : "block";
   }
 }
 
@@ -171,6 +202,7 @@ async function submitTeam(event) {
 
 window.openRegistration = openRegistration;
 window.addPlayer = addPlayer;
+window.removePlayer = removePlayer;
 window.closeRegistration = closeRegistration;
 window.closeAuthModal = closeAuthModal;
 window.submitTeam = submitTeam;
