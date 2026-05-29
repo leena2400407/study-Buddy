@@ -1,299 +1,605 @@
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tabSections = document.querySelectorAll(".tab-section");
 
-const exampleData = {
-    events: [
-        { category: "sports", title: "University Football Cup 2026", desc: "Registration open for 5-a-side teams", img: "../assests/images/football.avif" }
-    ],
-    resources: [
-        { category: "academic", title: "Your Comprehensive Guide to CS", desc: "YouTube playlist for Computer Science", link: "https://www.youtube.com/@DesoukiEgypt" }
-    ],
-    guides: [
-        { category: "freshman", title: "Welcome to College", desc: "Starting college can feel overwhelming, but everyone is new like you.", img: "../assests/images/orientation.avif" }
-    ],
-    edugate: [
-        { category: "courses", title: "Misr International University (MIU)", desc: "Overview of MIU: faculties, partnerships, student life", img: "../assests/images/miu.avif" }
-    ],
-};
+tabButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    const tabName = button.dataset.tab;
 
-// Load or initialize data from localStorage (front-end only)
-let adminData = localStorage.getItem('cylinderAdminData');
+    tabButtons.forEach(btn => btn.classList.remove("active"));
+    tabSections.forEach(section => section.classList.remove("active"));
 
-if (!adminData) {
-    // First time - load with examples
-    adminData = JSON.parse(JSON.stringify(exampleData));
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-} else {
-    adminData = JSON.parse(adminData);
-    // Ensure all sections exist
-    if (!adminData.events) adminData.events = [];
-    if (!adminData.resources) adminData.resources = [];
-    if (!adminData.guides) adminData.guides = [];
-    if (!adminData.ai) adminData.ai = [];
-    if (!adminData.edugate) adminData.edugate = [];
-    if (!adminData.games) adminData.games = [];
-}
+    button.classList.add("active");
+    document.getElementById(tabName).classList.add("active");
 
-// Navigation switching
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', function() {
-        document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-        const target = this.id.replace('nav-', 'view-');
-        document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
-        document.getElementById(target).classList.add('active');
-    });
+    loadTabData(tabName);
+  });
 });
 
-// Toggle form visibility
-function toggleForm(id) {
-    const form = document.getElementById(id);
-    form.style.display = form.style.display === "flex" ? "none" : "flex";
-    if (form.style.display === "flex") {
-        const firstInput = form.querySelector('input');
-        if (firstInput) firstInput.focus();
-    }
-}
-
-// Reset to example (ONE example per tab)
-function resetToExample(section) {
-    if(confirm(`Reset ${section} to example? This will remove all current items and add the example.`)) {
-        adminData[section] = JSON.parse(JSON.stringify(exampleData[section]));
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        
-        // Re-render the specific table
-        if(section === 'events') renderEventsTable();
-        else if(section === 'resources') renderResourcesTable();
-        else if(section === 'guides') renderGuidesTable();
-        else if(section === 'edugate') renderEduGateTable();
-        
-        alert(`✅ ${section} reset to example!`);
-    }
-}
-
-// SAVE FUNCTIONS
-function saveEvent() {
-    const category = document.getElementById('ev-category').value;
-    const title = document.getElementById('ev-title').value.trim();
-    const desc = document.getElementById('ev-desc').value.trim();
-    const img = document.getElementById('ev-img').value.trim() || "../assests/images/default.avif";
-
-    if (!title || !desc) {
-        alert("Please provide an Event Title and Description.");
-        return;
-    }
-
-    adminData.events.push({ category, title, desc, img });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('ev-title').value = "";
-    document.getElementById('ev-desc').value = "";
-    document.getElementById('ev-img').value = "";
-    toggleForm('form-events');
-    renderEventsTable();
-}
-
-function saveResource() {
-    const category = document.getElementById('res-category').value;
-    const title = document.getElementById('res-title').value.trim();
-    const desc = document.getElementById('res-desc').value.trim();
-    const link = document.getElementById('res-link').value.trim();
-
-    if (!title || !desc || !link) {
-        alert("Please provide all fields.");
-        return;
-    }
-
-    adminData.resources.push({ category, title, desc, link });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('res-title').value = "";
-    document.getElementById('res-desc').value = "";
-    document.getElementById('res-link').value = "";
-    toggleForm('form-resources');
-    renderResourcesTable();
-}
-
-function saveGuide() 
-{
-    const category = document.getElementById('guide-category').value;
-    const title = document.getElementById('guide-title').value.trim();
-    const desc = document.getElementById('guide-desc').value.trim();
-    const img = document.getElementById('guide-img').value.trim() || "../assests/images/default.avif";
-
-    if (!title || !desc) 
-        {
-        alert("Please provide all fields.");
-        return;
-    }
-
-    adminData.guides.push({ category, title, desc, img });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('guide-title').value = "";
-    document.getElementById('guide-desc').value = "";
-    document.getElementById('guide-img').value = "";
-    toggleForm('form-guides');
-    renderGuidesTable();
-}
-
-
-function saveEduGate() {
-    const category = document.getElementById('edugate-category').value;
-    const title = document.getElementById('edugate-title').value.trim();
-    const desc = document.getElementById('edugate-desc').value.trim();
-    const img = document.getElementById('edugate-img').value.trim() || "../assests/images/default.avif";
-
-    if (!title || !desc) {
-        alert("Please provide all fields.");
-        return;
-    }
-
-    adminData.edugate.push({ category, title, desc, img });
-    localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-    
-    document.getElementById('edugate-title').value = "";
-    document.getElementById('edugate-desc').value = "";
-    document.getElementById('edugate-img').value = "";
-    toggleForm('form-edugate');
-    renderEduGateTable();
-}
-
-
-// DELETE FUNCTIONS
-function deleteEvent(index) {
-    if(confirm(`Remove "${adminData.events[index].title}"?`)) {
-        adminData.events.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderEventsTable();
-    }
-}
-
-function deleteResource(index) {
-    if(confirm(`Remove "${adminData.resources[index].title}"?`)) {
-        adminData.resources.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderResourcesTable();
-    }
-}
-
-function deleteGuide(index) {
-    if(confirm(`Remove "${adminData.guides[index].title}"?`)) {
-        adminData.guides.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderGuidesTable();
-    }
-}
-
-
-function deleteEduGate(index) {
-    if(confirm(`Remove "${adminData.edugate[index].title}"?`)) {
-        adminData.edugate.splice(index, 1);
-        localStorage.setItem('cylinderAdminData', JSON.stringify(adminData));
-        renderEduGateTable();
-    }
-}
-
-
-
-// RENDER FUNCTIONS
-function renderEventsTable() {
-    const tbody = document.getElementById('table-events');
-    if (adminData.events.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No events available. Click "+ Create Event" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.events.map((e, i) => {
-        const badgeClass = e.category === 'sports' ? 'badge-sports' : 'badge-entertainment';
-        const badgeText = e.category === 'sports' ? '⚽ Sports' : '🎤 Entertainment';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(e.title)}</strong></td>
-            <td>${escapeHtml(e.desc)}</td>
-            <td><button class="btn-del" onclick="deleteEvent(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
-
-function renderResourcesTable() {
-    const tbody = document.getElementById('table-resources');
-    if (adminData.resources.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No resources available. Click "+ Add Resource" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.resources.map((r, i) => {
-        const badgeClass = r.category === 'academic' ? 'badge-sports' : r.category === 'tools' ? 'badge-entertainment' : 'badge-sports';
-        const badgeText = r.category === 'academic' ? '📚 Academic' : r.category === 'tools' ? '🛠️ Tools' : '📄 Other';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(r.title)}</strong></td>
-            <td>${escapeHtml(r.desc)}</td>
-            <td><a href="${escapeHtml(r.link)}" target="_blank" style="color: #00e5ff;">Link</a></td>
-            <td><button class="btn-del" onclick="deleteResource(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
-
-function renderGuidesTable() {
-    const tbody = document.getElementById('table-guides');
-    if (adminData.guides.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No guides available. Click "+ Add Guide" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.guides.map((g, i) => {
-        const badgeClass = g.category === 'freshman' ? 'badge-sports' : g.category === 'study' ? 'badge-entertainment' : 'badge-sports';
-        const badgeText = g.category === 'freshman' ? '🆕 Freshman' : g.category === 'study' ? '📖 Study' : '📄 Other';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(g.title)}</strong></td>
-            <td>${escapeHtml(g.desc)}</td>
-            <td><button class="btn-del" onclick="deleteGuide(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
-
-function renderEduGateTable() {
-    const tbody = document.getElementById('table-edugate');
-    if (adminData.edugate.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No EduGate items available. Click "+ Add EduGate Item" to add one.侧
-        <td colspan="4" class="empty-state">No EduGate items available. Click "+ Add EduGate Item" to add one.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = adminData.edugate.map((e, i) => {
-        const badgeClass = e.category === 'courses' ? 'badge-sports' : e.category === 'tutorials' ? 'badge-entertainment' : 'badge-sports';
-        const badgeText = e.category === 'courses' ? '📚 Courses' : e.category === 'tutorials' ? '🎥 Tutorials' : '📄 Other';
-        return `
-        <tr>
-            <td><span class="${badgeClass}">${badgeText}</span></td>
-            <td><strong>${escapeHtml(e.title)}</strong></td>
-            <td>${escapeHtml(e.desc)}</td>
-            <td><button class="btn-del" onclick="deleteEduGate(${i})">Remove</button></td>
-        </tr>`;
-    }).join('');
-}
-
-
-
-// Security: Escape HTML to prevent XSS
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-
-// Initialize all tables on page load
-document.addEventListener('DOMContentLoaded', function() {
-    renderEventsTable();
-    renderResourcesTable();
-    renderGuidesTable();
-    renderEduGateTable();
+document.addEventListener("DOMContentLoaded", () => {
+  loadOverview();
 });
+
+function loadTabData(tabName) {
+  if (tabName === "overview") loadOverview();
+  if (tabName === "users") loadUsers();
+  if (tabName === "matching") loadStudyProfiles();
+  if (tabName === "registrations") loadEventRegistrations();
+  if (tabName === "scores") loadGameScores();
+  if (tabName === "events") loadEvents();
+  if (tabName === "universities") loadUniversities();
+}
+
+async function fetchAdminData(url) {
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Request failed.");
+  }
+
+  return data;
+}
+
+async function loadOverview() {
+  const box = document.getElementById("overviewStats");
+
+  try {
+    const data = await fetchAdminData("/admin/api/overview");
+    const overview = data.overview;
+
+    box.innerHTML = `
+      ${statCard("Users", overview.usersCount)}
+      ${statCard("Study Profiles", overview.studyProfilesCount)}
+      ${statCard("Event Registrations", overview.eventRegistrationsCount)}
+      ${statCard("Game Scores", overview.gameScoresCount)}
+      ${statCard("Events", overview.eventsCount)}
+      ${statCard("Universities", overview.universitiesCount)}
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+function statCard(title, value) {
+  return `
+    <div class="stat-card">
+      <h3>${escapeHTML(title)}</h3>
+      <p>${Number(value) || 0}</p>
+    </div>
+  `;
+}
+
+async function loadUsers() {
+  const box = document.getElementById("usersTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/users");
+    const users = data.users || [];
+
+    if (users.length === 0) {
+      box.innerHTML = `<div class="empty-box">No users found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>University</th>
+            <th>Major</th>
+            <th>Gender</th>
+            <th>Role</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(user => `
+            <tr>
+              <td>${escapeHTML(user.fullName || "-")}</td>
+              <td>${escapeHTML(user.username || "-")}</td>
+              <td>${escapeHTML(user.email || "-")}</td>
+              <td>${escapeHTML(user.university || "-")}</td>
+              <td>${escapeHTML(user.major || "-")}</td>
+              <td>${escapeHTML(user.gender || "-")}</td>
+              <td><span class="badge">${escapeHTML(user.role || "student")}</span></td>
+              <td>
+                <button class="danger-btn" onclick="deleteUser('${user._id}')">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function deleteUser(userId) {
+  const confirmDelete = confirm(
+    "Are you sure you want to delete this user? This will also delete their study profile, game score, and event registrations."
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/users/${userId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not delete user.", "error");
+      return;
+    }
+
+    showToast("User deleted successfully.", "success");
+
+    loadUsers();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while deleting user.", "error");
+  }
+}
+
+async function loadStudyProfiles() {
+  const box = document.getElementById("profilesTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/study-profiles");
+    const profiles = data.profiles || [];
+
+    if (profiles.length === 0) {
+      box.innerHTML = `<div class="empty-box">No study profiles found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>University</th>
+            <th>Major</th>
+            <th>Weak Subjects</th>
+            <th>Strong Subjects</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${profiles.map(profile => `
+            <tr>
+              <td>${escapeHTML(profile.fullName || "-")}</td>
+              <td>${escapeHTML(profile.email || "-")}</td>
+              <td>${escapeHTML(profile.university || "-")}</td>
+              <td>${escapeHTML(profile.major || "-")}</td>
+              <td>${renderBadges(profile.weakSubjects)}</td>
+              <td>${renderBadges(profile.strongSubjects)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function loadEventRegistrations() {
+  const box = document.getElementById("registrationsTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/event-registrations");
+    const registrations = data.registrations || [];
+
+    if (registrations.length === 0) {
+      box.innerHTML = `<div class="empty-box">No event registrations found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Leader</th>
+            <th>Email</th>
+            <th>University</th>
+            <th>Tournament</th>
+            <th>Team</th>
+            <th>Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${registrations.map(reg => `
+            <tr>
+              <td>${escapeHTML(reg.fullName || "-")}</td>
+              <td>${escapeHTML(reg.email || "-")}</td>
+              <td>${escapeHTML(reg.university || "-")}</td>
+              <td>${escapeHTML(reg.tournamentName || "-")}</td>
+              <td>${escapeHTML(reg.teamName || "-")}</td>
+              <td>
+                ${(reg.players || []).map(player => `
+                  <div>${escapeHTML(player.name || "-")} - ${escapeHTML(player.email || "-")}</div>
+                `).join("") || "-"}
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function loadGameScores() {
+  const box = document.getElementById("scoresTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/game-scores");
+    const scores = data.scores || [];
+
+    if (scores.length === 0) {
+      box.innerHTML = `<div class="empty-box">No game scores found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scores.map(score => `
+            <tr>
+              <td>${escapeHTML(score.name || "-")}</td>
+              <td>${escapeHTML(score.score || 0)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function loadEvents() {
+  const box = document.getElementById("eventsTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/events");
+    const events = data.events || [];
+
+    if (events.length === 0) {
+      box.innerHTML = `<div class="empty-box">No events found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Button</th>
+            <th>Max Players</th>
+            <th>Image</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${events.map(event => `
+            <tr>
+              <td>${escapeHTML(event.title || "-")}</td>
+              <td>${escapeHTML(event.category || "-")}</td>
+              <td>${escapeHTML(event.buttonType || "-")}</td>
+              <td>${escapeHTML(event.maxPlayers || 0)}</td>
+              <td>${escapeHTML(event.imagePath || "-")}</td>
+              <td>
+                <button class="refresh-btn" onclick='editEvent(${JSON.stringify(event)})'>Edit</button>
+                <button class="danger-btn" onclick="deleteEvent('${event._id}')">Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function loadUniversities() {
+  const box = document.getElementById("universitiesTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/universities");
+    const universities = data.universities || [];
+
+    if (universities.length === 0) {
+      box.innerHTML = `<div class="empty-box">No universities found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Short Name</th>
+            <th>Location</th>
+            <th>Image</th>
+            <th>Portal</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${universities.map(uni => `
+            <tr>
+              <td>${escapeHTML(uni.name || "-")}</td>
+              <td>${escapeHTML(uni.shortName || "-")}</td>
+              <td>${escapeHTML(uni.location || "-")}</td>
+              <td>${escapeHTML(uni.imagePath || "-")}</td>
+              <td>${escapeHTML(uni.portalLink || "-")}</td>
+              <td>
+                <button class="refresh-btn" onclick='editUniversity(${JSON.stringify(uni)})'>Edit</button>
+                <button class="danger-btn" onclick="deleteUniversity('${uni._id}')">Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+function renderBadges(items) {
+  if (!items || items.length === 0) {
+    return "-";
+  }
+
+  return items.map(item => `
+    <span class="badge">${escapeHTML(item)}</span>
+  `).join("");
+}
+
+function showToast(message, type = "info") {
+  const toast = document.getElementById("toast");
+
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+
+  setTimeout(() => {
+    toast.className = "toast";
+  }, 2600);
+}
+
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const eventForm = document.getElementById("eventForm");
+  const universityForm = document.getElementById("universityForm");
+
+  if (eventForm) {
+    eventForm.addEventListener("submit", saveEvent);
+  }
+
+  if (universityForm) {
+    universityForm.addEventListener("submit", saveUniversity);
+  }
+});
+
+async function saveEvent(event) {
+  event.preventDefault();
+
+  const eventId = document.getElementById("eventId").value;
+
+  const payload = {
+    title: document.getElementById("eventTitle").value.trim(),
+    category: document.getElementById("eventCategory").value.trim(),
+    description: document.getElementById("eventDescription").value.trim(),
+    imagePath: document.getElementById("eventImagePath").value.trim(),
+    buttonType: document.getElementById("eventButtonType").value,
+    detailsLink: document.getElementById("eventDetailsLink").value.trim(),
+    maxPlayers: document.getElementById("eventMaxPlayers").value
+  };
+
+  const url = eventId
+    ? `/admin/api/events/${eventId}`
+    : "/admin/api/events";
+
+  const method = eventId ? "PATCH" : "POST";
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not save event.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    resetEventForm();
+    loadEvents();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while saving event.", "error");
+  }
+}
+
+function editEvent(event) {
+  document.getElementById("eventId").value = event._id || "";
+  document.getElementById("eventTitle").value = event.title || "";
+  document.getElementById("eventCategory").value = event.category || "";
+  document.getElementById("eventDescription").value = event.description || "";
+  document.getElementById("eventImagePath").value = event.imagePath || "";
+  document.getElementById("eventButtonType").value = event.buttonType || "register";
+  document.getElementById("eventDetailsLink").value = event.detailsLink || "";
+  document.getElementById("eventMaxPlayers").value = event.maxPlayers || 0;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+function resetEventForm() {
+  document.getElementById("eventForm").reset();
+  document.getElementById("eventId").value = "";
+}
+
+async function deleteEvent(eventId) {
+  const confirmDelete = confirm("Delete this event? Related event registrations for this event will also be deleted.");
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/api/events/${eventId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not delete event.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    loadEvents();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while deleting event.", "error");
+  }
+}
+
+async function saveUniversity(event) {
+  event.preventDefault();
+
+  const universityId = document.getElementById("universityId").value;
+
+  const payload = {
+    name: document.getElementById("uniName").value.trim(),
+    shortName: document.getElementById("uniShortName").value.trim(),
+    imagePath: document.getElementById("uniImagePath").value.trim(),
+    overview: document.getElementById("uniOverview").value.trim(),
+    location: document.getElementById("uniLocation").value.trim(),
+    academics: document.getElementById("uniAcademics").value.trim(),
+    whyChoose: document.getElementById("uniWhyChoose").value.trim(),
+    studentLife: document.getElementById("uniStudentLife").value.trim(),
+    contactInfo: document.getElementById("uniContactInfo").value.trim(),
+    portalLink: document.getElementById("uniPortalLink").value.trim()
+  };
+
+  const url = universityId
+    ? `/admin/api/universities/${universityId}`
+    : "/admin/api/universities";
+
+  const method = universityId ? "PATCH" : "POST";
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not save university.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    resetUniversityForm();
+    loadUniversities();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while saving university.", "error");
+  }
+}
+
+function editUniversity(uni) {
+  document.getElementById("universityId").value = uni._id || "";
+  document.getElementById("uniName").value = uni.name || "";
+  document.getElementById("uniShortName").value = uni.shortName || "";
+  document.getElementById("uniImagePath").value = uni.imagePath || "";
+  document.getElementById("uniOverview").value = uni.overview || "";
+  document.getElementById("uniLocation").value = uni.location || "";
+  document.getElementById("uniAcademics").value = (uni.academics || []).join("\n");
+  document.getElementById("uniWhyChoose").value = (uni.whyChoose || []).join("\n");
+  document.getElementById("uniStudentLife").value = (uni.studentLife || []).join("\n");
+  document.getElementById("uniContactInfo").value = uni.contactInfo || "";
+  document.getElementById("uniPortalLink").value = uni.portalLink || "";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+function resetUniversityForm() {
+  document.getElementById("universityForm").reset();
+  document.getElementById("universityId").value = "";
+}
+
+async function deleteUniversity(universityId) {
+  const confirmDelete = confirm("Delete this university from Edugate?");
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/api/universities/${universityId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not delete university.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    loadUniversities();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while deleting university.", "error");
+  }
+}

@@ -350,6 +350,469 @@ app.use((req, res, next) => {
   next();
 });
 
+const requireAdminPage = (req, res, next) => {
+  if (!req.session.user) {
+    req.flash("error", "Please login first.");
+    return res.redirect("/login?returnTo=/admin");
+  }
+
+  if (req.session.user.role !== "admin") {
+    return res.status(403).send("Access denied. Admins only.");
+  }
+
+  next();
+};
+
+const requireAdminApi = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Please login first."
+    });
+  }
+
+  if (req.session.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admins only."
+    });
+  }
+
+  next();
+};
+
+app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
+  try {
+    const usersCount = await User.countDocuments();
+    const studyProfilesCount = await StudyProfile.countDocuments();
+    const eventRegistrationsCount = await EventRegistration.countDocuments();
+    const gameScoresCount = await GameScore.countDocuments();
+    const eventsCount = await Event.countDocuments();
+    const universitiesCount = await University.countDocuments();
+
+    res.json({
+      success: true,
+      overview: {
+        usersCount,
+        studyProfilesCount,
+        eventRegistrationsCount,
+        gameScoresCount,
+        eventsCount,
+        universitiesCount
+      }
+    });
+  } catch (error) {
+    console.error("Admin overview error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load admin overview."
+    });
+  }
+});
+
+app.get("/admin/api/users", requireAdminApi, async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      users
+    });
+  } catch (error) {
+    console.error("Admin users error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load users."
+    });
+  }
+});
+
+app.get("/admin/api/study-profiles", requireAdminApi, async (req, res) => {
+  try {
+    const profiles = await StudyProfile.find()
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      profiles
+    });
+  } catch (error) {
+    console.error("Admin study profiles error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load study profiles."
+    });
+  }
+});
+
+app.get("/admin/api/event-registrations", requireAdminApi, async (req, res) => {
+  try {
+    const registrations = await EventRegistration.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      registrations
+    });
+  } catch (error) {
+    console.error("Admin event registrations error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load event registrations."
+    });
+  }
+});
+
+app.get("/admin/api/game-scores", requireAdminApi, async (req, res) => {
+  try {
+    const scores = await GameScore.find()
+      .sort({ score: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      scores
+    });
+  } catch (error) {
+    console.error("Admin game scores error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load game scores."
+    });
+  }
+});
+
+app.get("/admin/api/events", requireAdminApi, async (req, res) => {
+  try {
+    const events = await Event.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      events
+    });
+  } catch (error) {
+    console.error("Admin events error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load events."
+    });
+  }
+});
+
+app.get("/admin/api/universities", requireAdminApi, async (req, res) => {
+  try {
+    const universities = await University.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      universities
+    });
+  } catch (error) {
+    console.error("Admin universities error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load universities."
+    });
+  }
+});
+
+app.post("/admin/api/events", requireAdminApi, async (req, res) => {
+  try {
+    const {
+      title,
+      category,
+      description,
+      imagePath,
+      buttonType,
+      detailsLink,
+      maxPlayers
+    } = req.body;
+
+    if (!title || !category || !description || !imagePath || !buttonType) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, category, description, image, and button type are required."
+      });
+    }
+
+    const event = await Event.create({
+      title,
+      category,
+      description,
+      imagePath,
+      buttonType,
+      detailsLink: detailsLink || "",
+      maxPlayers: Number(maxPlayers) || 0
+    });
+
+    res.json({
+      success: true,
+      message: "Event added successfully.",
+      event
+    });
+
+  } catch (error) {
+    console.error("Admin add event error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not add event."
+    });
+  }
+});
+
+app.patch("/admin/api/events/:eventId", requireAdminApi, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const {
+      title,
+      category,
+      description,
+      imagePath,
+      buttonType,
+      detailsLink,
+      maxPlayers
+    } = req.body;
+
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        title,
+        category,
+        description,
+        imagePath,
+        buttonType,
+        detailsLink: detailsLink || "",
+        maxPlayers: Number(maxPlayers) || 0
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Event updated successfully.",
+      event
+    });
+
+  } catch (error) {
+    console.error("Admin update event error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not update event."
+    });
+  }
+});
+
+app.delete("/admin/api/events/:eventId", requireAdminApi, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = await Event.findByIdAndDelete(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    await EventRegistration.deleteMany({
+      tournamentName: event.title
+    });
+
+    res.json({
+      success: true,
+      message: "Event and related registrations deleted successfully."
+    });
+
+  } catch (error) {
+    console.error("Admin delete event error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not delete event."
+    });
+  }
+});
+
+function splitLines(value) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  return String(value || "")
+    .split("\n")
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+app.post("/admin/api/universities", requireAdminApi, async (req, res) => {
+  try {
+    const {
+      name,
+      shortName,
+      imagePath,
+      overview,
+      location,
+      academics,
+      whyChoose,
+      studentLife,
+      contactInfo,
+      portalLink
+    } = req.body;
+
+    if (!name || !shortName || !imagePath || !overview || !location || !portalLink) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, short name, image, overview, location, and portal link are required."
+      });
+    }
+
+    const university = await University.create({
+      name,
+      shortName,
+      imagePath,
+      overview,
+      location,
+      academics: splitLines(academics),
+      whyChoose: splitLines(whyChoose),
+      studentLife: splitLines(studentLife),
+      contactInfo: contactInfo || "",
+      portalLink
+    });
+
+    res.json({
+      success: true,
+      message: "University added successfully.",
+      university
+    });
+
+  } catch (error) {
+    console.error("Admin add university error:", error);
+
+    res.status(500).json({
+  success: false,
+  message: error.message
+});
+  }
+});
+
+app.patch("/admin/api/universities/:universityId", requireAdminApi, async (req, res) => {
+  try {
+    const { universityId } = req.params;
+
+    const {
+      name,
+      shortName,
+      imagePath,
+      overview,
+      location,
+      academics,
+      whyChoose,
+      studentLife,
+      contactInfo,
+      portalLink
+    } = req.body;
+
+    const university = await University.findByIdAndUpdate(
+      universityId,
+      {
+        name,
+        shortName,
+        imagePath,
+        overview,
+        location,
+        academics: splitLines(academics),
+        whyChoose: splitLines(whyChoose),
+        studentLife: splitLines(studentLife),
+        contactInfo: contactInfo || "",
+        portalLink
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!university) {
+      return res.status(404).json({
+        success: false,
+        message: "University was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "University updated successfully.",
+      university
+    });
+
+  } catch (error) {
+    console.error("Admin update university error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not update university."
+    });
+  }
+});
+
+app.delete("/admin/api/universities/:universityId", requireAdminApi, async (req, res) => {
+  try {
+    const { universityId } = req.params;
+
+    const university = await University.findByIdAndDelete(universityId);
+
+    if (!university) {
+      return res.status(404).json({
+        success: false,
+        message: "University was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "University deleted successfully."
+    });
+
+  } catch (error) {
+    console.error("Admin delete university error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not delete university."
+    });
+  }
+});
+
 
 const cleanSubjects = (subjects) => {
   if (!Array.isArray(subjects)) {
@@ -420,11 +883,15 @@ app.post("/login", async (req, res) => {
       email: user.email,
       university: user.university,
       major: user.major,
-      gender: user.gender
+      gender: user.gender,
+      role: user.role || "student"
     };
-
-    const redirectTo = req.session.returnTo || "/cylinder";
+    let redirectTo = req.session.returnTo || "/cylinder";
 delete req.session.returnTo;
+
+if (req.session.user.role === "admin") {
+  redirectTo = "/admin";
+}
 
 req.session.save(() => {
   res.redirect(redirectTo);
@@ -931,7 +1398,7 @@ app.get("/matching", (req, res) => {
   res.render("matching");
 });
 
-app.get("/admin", (req, res) => {
+app.get("/admin", requireAdminPage, (req, res) => {
   res.render("admin");
 });
 
@@ -941,7 +1408,7 @@ app.get("/ai", (req, res) => {
 
 app.get("/edugate", async (req, res) => {
   try {
-    const universities = await University.find().sort({ createdAt: -1 });
+    const universities = await University.find().sort({ createdAt: 1 });
 
     res.render("edugate", {
       universities
@@ -974,7 +1441,7 @@ app.get("/cylinder", (req, res) => {
 
 app.get("/events", async (req, res) => {
   try {
-    const events = await Event.find().sort({ createdAt: -1 });
+    const events = await Event.find().sort({ createdAt: 1 });
 
     const sportsCategories = ["sports", "football", "padel"];
     const entertainmentCategories = ["music", "concert", "entertainment"];
@@ -1263,6 +1730,45 @@ app.post("/leaderboard", requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not save score."
+    });
+  }
+});
+
+app.delete("/admin/users/:userId", requireAdminApi, async (req, res) => {  try {
+    const { userId } = req.params;
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User was not found."
+      });
+    }
+
+    await StudyProfile.deleteMany({
+      user: userId
+    });
+
+    await GameScore.deleteMany({
+      user: userId
+    });
+
+    await EventRegistration.deleteMany({
+      user: userId
+    });
+
+    res.json({
+      success: true,
+      message: "User and related records deleted successfully."
+    });
+
+  } catch (error) {
+    console.error("Delete user error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not delete user."
     });
   }
 });

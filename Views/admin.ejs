@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Study Buddy Admin</title>
+
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+
+<body>
+
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <div class="brand-icon">SB</div>
+      <div>
+        <h2>Admin Panel</h2>
+        <p>Study Buddy Control</p>
+      </div>
+    </div>
+
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="users">Users</button>
+    <button class="tab-btn" data-tab="matching">Matching</button>
+    <button class="tab-btn" data-tab="registrations">Event Registrations</button>
+    <button class="tab-btn" data-tab="scores">Leaderboard</button>
+    <button class="tab-btn" data-tab="events">Events</button>
+    <button class="tab-btn" data-tab="universities">Universities</button>
+
+    <button class="logout-btn" onclick="window.location.href='/logout'">
+      Logout
+    </button>
+  </aside>
+
+  <main class="admin-main">
+
+    <header class="admin-header">
+      <div>
+        <h1>Welcome, <%= user.fullName || user.username || "Admin" %></h1>
+        <p>Manage Study Buddy data from one place.</p>
+      </div>
+
+      <button class="home-btn" onclick="window.location.href='/cylinder'">
+        Back to Website
+      </button>
+    </header>
+
+    <section id="overview" class="tab-section active">
+      <h2>Overview</h2>
+
+      <div class="stats-grid" id="overviewStats">
+        <div class="loading-card">Loading overview...</div>
+      </div>
+    </section>
+
+    <section id="users" class="tab-section">
+      <div class="section-head">
+        <h2>Users</h2>
+        <button class="refresh-btn" onclick="loadUsers()">Refresh</button>
+      </div>
+
+      <div id="usersTable" class="table-box">
+        Loading users...
+      </div>
+    </section>
+
+    <section id="matching" class="tab-section">
+      <div class="section-head">
+        <h2>Matching Study Profiles</h2>
+        <button class="refresh-btn" onclick="loadStudyProfiles()">Refresh</button>
+      </div>
+
+      <div id="profilesTable" class="table-box">
+        Loading study profiles...
+      </div>
+    </section>
+
+    <section id="registrations" class="tab-section">
+      <div class="section-head">
+        <h2>Event Registrations</h2>
+        <button class="refresh-btn" onclick="loadEventRegistrations()">Refresh</button>
+      </div>
+
+      <div id="registrationsTable" class="table-box">
+        Loading registrations...
+      </div>
+    </section>
+
+    <section id="scores" class="tab-section">
+      <div class="section-head">
+        <h2>Game Leaderboard</h2>
+        <button class="refresh-btn" onclick="loadGameScores()">Refresh</button>
+      </div>
+
+      <div id="scoresTable" class="table-box">
+        Loading scores...
+      </div>
+    </section>
+
+    <section id="events" class="tab-section">
+  <div class="section-head">
+    <h2>Events</h2>
+    <button class="refresh-btn" onclick="loadEvents()">Refresh</button>
+  </div>
+
+  <form id="eventForm" class="admin-form">
+    <input type="hidden" id="eventId">
+
+    <input id="eventTitle" placeholder="Event title">
+    <input id="eventCategory" placeholder="Category: sports, padel, concert, music">
+    <input id="eventImagePath" placeholder="Image path: /assests/images/example.jpg">
+
+    <select id="eventButtonType">
+      <option value="register">Register</option>
+      <option value="details">Details</option>
+    </select>
+
+    <input id="eventDetailsLink" placeholder="Details link, only for details events">
+    <input id="eventMaxPlayers" type="number" placeholder="Max players">
+
+    <textarea id="eventDescription" placeholder="Event description"></textarea>
+
+    <div class="form-actions">
+      <button type="submit" class="refresh-btn">Save Event</button>
+      <button type="button" class="danger-btn" onclick="resetEventForm()">Cancel Edit</button>
+    </div>
+  </form>
+
+  <div id="eventsTable" class="table-box">
+    Loading events...
+  </div>
+</section>
+
+    <section id="universities" class="tab-section">
+  <div class="section-head">
+    <h2>Universities / Edugate</h2>
+    <button class="refresh-btn" onclick="loadUniversities()">Refresh</button>
+  </div>
+
+  <form id="universityForm" class="admin-form">
+    <input type="hidden" id="universityId">
+
+    <input id="uniName" placeholder="University full name">
+    <input id="uniShortName" placeholder="Short name: MIU, GUC">
+    <input id="uniImagePath" placeholder="Image path: /assests/images/guc.jpg">
+    <input id="uniLocation" placeholder="Location">
+    <input id="uniPortalLink" placeholder="Portal link">
+
+    <textarea id="uniOverview" placeholder="General overview"></textarea>
+    <textarea id="uniAcademics" placeholder="Academic hubs, one per line"></textarea>
+    <textarea id="uniWhyChoose" placeholder="Why choose this university, one per line"></textarea>
+    <textarea id="uniStudentLife" placeholder="Student life, one per line"></textarea>
+    <textarea id="uniContactInfo" placeholder="Quick contact info"></textarea>
+
+    <div class="form-actions">
+      <button type="submit" class="refresh-btn">Save University</button>
+      <button type="button" class="danger-btn" onclick="resetUniversityForm()">Cancel Edit</button>
+    </div>
+  </form>
+
+  <div id="universitiesTable" class="table-box">
+    Loading universities...
+  </div>
+</section>
+
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/javaScript/admin.js"></script>
+
+</body>
+</html>
