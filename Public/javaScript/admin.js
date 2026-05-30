@@ -27,6 +27,7 @@ function loadTabData(tabName) {
   if (tabName === "scores") loadGameScores();
   if (tabName === "events") loadEvents();
   if (tabName === "universities") loadUniversities();
+  if (tabName === "resources") loadResources();
 }
 
 async function fetchAdminData(url) {
@@ -48,12 +49,13 @@ async function loadOverview() {
     const overview = data.overview;
 
     box.innerHTML = `
-      ${statCard("Users", overview.usersCount)}
-      ${statCard("Study Profiles", overview.studyProfilesCount)}
-      ${statCard("Event Registrations", overview.eventRegistrationsCount)}
-      ${statCard("Game Scores", overview.gameScoresCount)}
-      ${statCard("Events", overview.eventsCount)}
-      ${statCard("Universities", overview.universitiesCount)}
+    ${statCard("Users", overview.usersCount)}
+    ${statCard("Study Profiles", overview.studyProfilesCount)}
+    ${statCard("Event Registrations", overview.eventRegistrationsCount)}
+    ${statCard("Game Scores", overview.gameScoresCount)}
+    ${statCard("Events", overview.eventsCount)}
+    ${statCard("Universities", overview.universitiesCount)}
+    ${statCard("Resources", overview.resourcesCount)}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -399,7 +401,9 @@ function escapeHTML(value) {
 
 document.addEventListener("DOMContentLoaded", () => {
   const eventForm = document.getElementById("eventForm");
-  const universityForm = document.getElementById("universityForm");
+const universityForm = document.getElementById("universityForm");
+const userForm = document.getElementById("userForm");
+const resourceForm = document.getElementById("resourceForm");
 
   if (eventForm) {
     eventForm.addEventListener("submit", saveEvent);
@@ -408,6 +412,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (universityForm) {
     universityForm.addEventListener("submit", saveUniversity);
   }
+
+  if (userForm) {
+  userForm.addEventListener("submit", saveUser);
+}
+
+if (resourceForm) {
+  resourceForm.addEventListener("submit", saveResource);
+}
 });
 
 async function saveEvent(event) {
@@ -601,5 +613,198 @@ async function deleteUniversity(universityId) {
 
   } catch (error) {
     showToast("Server error while deleting university.", "error");
+  }
+}
+
+async function saveUser(event) {
+  event.preventDefault();
+
+  const payload = {
+    fullName: document.getElementById("userFullName").value.trim(),
+    username: document.getElementById("userUsername").value.trim(),
+    email: document.getElementById("userEmail").value.trim(),
+    password: document.getElementById("userPassword").value,
+    gender: document.getElementById("userGender").value,
+    university: document.getElementById("userUniversity").value.trim(),
+    major: document.getElementById("userMajor").value.trim(),
+    role: document.getElementById("userRole").value
+  };
+
+  try {
+    const response = await fetch("/admin/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not create user.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    resetUserForm();
+    loadUsers();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while creating user.", "error");
+  }
+}
+
+function resetUserForm() {
+  document.getElementById("userForm").reset();
+}
+
+async function loadResources() {
+  const box = document.getElementById("resourcesTable");
+
+  try {
+    const data = await fetchAdminData("/admin/api/resources");
+    const categories = data.categories || [];
+
+    if (categories.length === 0) {
+      box.innerHTML = `<div class="empty-box">No resource categories found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Tab</th>
+            <th>Color</th>
+            <th>Resources</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${categories.map(category => `
+            <tr>
+              <td>${escapeHTML(category.name || "-")}</td>
+              <td><span class="badge">${escapeHTML(category.shortName || "-")}</span></td>
+              <td>${escapeHTML(category.color || "-")}</td>
+              <td>
+                ${(category.resources || []).map(resource => `
+                  <div class="mini-line">
+                    <strong>${escapeHTML(resource.title || "-")}</strong>
+                    <br>
+                    <span>${escapeHTML(resource.type || "website")}</span>
+                    <br>
+                    <span>${escapeHTML(resource.url || "-")}</span>
+                  </div>
+                `).join("") || "-"}
+              </td>
+              <td>
+                <button class="refresh-btn" onclick='editResource(${JSON.stringify(category)})'>Edit</button>
+                <button class="danger-btn" onclick="deleteResource('${category._id}')">Delete</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function saveResource(event) {
+  event.preventDefault();
+
+  const resourceId = document.getElementById("resourceId").value;
+
+  const payload = {
+    name: document.getElementById("resourceName").value.trim(),
+    shortName: document.getElementById("resourceShortName").value.trim(),
+    color: document.getElementById("resourceColor").value.trim(),
+    resourcesText: document.getElementById("resourceLinksText").value.trim()
+  };
+
+  const url = resourceId
+    ? `/admin/api/resources/${resourceId}`
+    : "/admin/api/resources";
+
+  const method = resourceId ? "PATCH" : "POST";
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not save resource category.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    resetResourceForm();
+    loadResources();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while saving resource category.", "error");
+  }
+}
+
+function editResource(category) {
+  document.getElementById("resourceId").value = category._id || "";
+  document.getElementById("resourceName").value = category.name || "";
+  document.getElementById("resourceShortName").value = category.shortName || "";
+  document.getElementById("resourceColor").value = category.color || "#0077b6";
+
+  document.getElementById("resourceLinksText").value = (category.resources || [])
+    .map(resource => {
+      return `${resource.title || ""} | ${resource.url || ""} | ${resource.type || "website"}`;
+    })
+    .join("\n");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+function resetResourceForm() {
+  document.getElementById("resourceForm").reset();
+  document.getElementById("resourceId").value = "";
+}
+
+async function deleteResource(categoryId) {
+  const confirmDelete = confirm("Delete this resource category?");
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/api/resources/${categoryId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not delete resource category.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    loadResources();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while deleting resource category.", "error");
   }
 }

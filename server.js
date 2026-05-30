@@ -393,6 +393,7 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
     const gameScoresCount = await GameScore.countDocuments();
     const eventsCount = await Event.countDocuments();
     const universitiesCount = await University.countDocuments();
+    const resourcesCount = await ResourceCategory.countDocuments();
 
     res.json({
       success: true,
@@ -402,7 +403,8 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
         eventRegistrationsCount,
         gameScoresCount,
         eventsCount,
-        universitiesCount
+        universitiesCount,
+        resourcesCount
       }
     });
   } catch (error) {
@@ -411,6 +413,159 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not load admin overview."
+    });
+  }
+});
+
+function parseResourcesText(value) {
+  return String(value || "")
+    .split("\n")
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split("|").map(part => part.trim());
+
+      return {
+        title: parts[0] || "",
+        url: parts[1] || "",
+        type: parts[2] || "website"
+      };
+    })
+    .filter(resource => resource.title && resource.url);
+}
+
+app.get("/admin/api/resources", requireAdminApi, async (req, res) => {
+  try {
+    const categories = await ResourceCategory.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      categories
+    });
+
+  } catch (error) {
+    console.error("Admin resources error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load resources."
+    });
+  }
+});
+
+app.post("/admin/api/resources", requireAdminApi, async (req, res) => {
+  try {
+    const {
+      name,
+      shortName,
+      color,
+      resourcesText
+    } = req.body;
+
+    if (!name || !shortName) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name and short name are required."
+      });
+    }
+
+    const category = await ResourceCategory.create({
+      name: name.trim(),
+      shortName: shortName.trim(),
+      color: color || "#0077b6",
+      resources: parseResourcesText(resourcesText)
+    });
+
+    res.json({
+      success: true,
+      message: "Resource category added successfully.",
+      category
+    });
+
+  } catch (error) {
+    console.error("Admin add resource category error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not add resource category."
+    });
+  }
+});
+
+app.patch("/admin/api/resources/:categoryId", requireAdminApi, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const {
+      name,
+      shortName,
+      color,
+      resourcesText
+    } = req.body;
+
+    const category = await ResourceCategory.findByIdAndUpdate(
+      categoryId,
+      {
+        name: name.trim(),
+        shortName: shortName.trim(),
+        color: color || "#0077b6",
+        resources: parseResourcesText(resourcesText)
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Resource category was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Resource category updated successfully.",
+      category
+    });
+
+  } catch (error) {
+    console.error("Admin update resource category error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not update resource category."
+    });
+  }
+});
+
+app.delete("/admin/api/resources/:categoryId", requireAdminApi, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const category = await ResourceCategory.findByIdAndDelete(categoryId);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Resource category was not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Resource category deleted successfully."
+    });
+
+  } catch (error) {
+    console.error("Admin delete resource category error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not delete resource category."
     });
   }
 });
@@ -436,6 +591,114 @@ app.get("/admin/api/users", requireAdminApi, async (req, res) => {
   }
 });
 
+app.post("/admin/api/users", requireAdminApi, async (req, res) => {
+  try {
+    let {
+      fullName,
+      username,
+      email,
+      password,
+      gender,
+      university,
+      major,
+      role
+    } = req.body;
+
+    fullName = String(fullName || "").trim();
+    username = String(username || "").trim();
+    email = String(email || "").trim().toLowerCase();
+    password = String(password || "");
+    university = String(university || "").trim();
+    major = String(major || "").trim();
+    role = String(role || "student").trim().toLowerCase();
+
+    const cleanedGender = String(gender || "").trim().toLowerCase();
+
+    if (!fullName || !username || !email || !password || !cleanedGender || !university || !major || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill in all user fields."
+      });
+    }
+
+    let finalGender = "";
+
+    if (cleanedGender === "male") {
+      finalGender = "Male";
+    } else if (cleanedGender === "female") {
+      finalGender = "Female";
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Gender must be Male or Female."
+      });
+    }
+
+    if (!["student", "admin"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Role must be student or admin."
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters."
+      });
+    }
+
+    const existingUser = await User.findOne({
+      $or: [
+        { email },
+        { username }
+      ]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email or username already exists."
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      fullName,
+      username,
+      email,
+      password: hashedPassword,
+      gender: finalGender,
+      university,
+      major,
+      role
+    });
+
+    return res.json({
+      success: true,
+      message: `${role === "admin" ? "Admin" : "User"} created successfully.`,
+      user: {
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        username: newUser.username,
+        email: newUser.email,
+        university: newUser.university,
+        major: newUser.major,
+        gender: newUser.gender,
+        role: newUser.role
+      }
+    });
+
+  } catch (error) {
+    console.error("Admin create user error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Could not create user."
+    });
+  }
+});
 app.get("/admin/api/study-profiles", requireAdminApi, async (req, res) => {
   try {
     const profiles = await StudyProfile.find()

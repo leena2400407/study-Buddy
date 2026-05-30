@@ -23,9 +23,10 @@
     <button class="tab-btn active" data-tab="overview">Overview</button>
     <button class="tab-btn" data-tab="users">Users</button>
     <button class="tab-btn" data-tab="matching">Matching</button>
+    <button class="tab-btn" data-tab="events">Events</button>
     <button class="tab-btn" data-tab="registrations">Event Registrations</button>
     <button class="tab-btn" data-tab="scores">Leaderboard</button>
-    <button class="tab-btn" data-tab="events">Events</button>
+    <button class="tab-btn" data-tab="resources">Resources</button>
     <button class="tab-btn" data-tab="universities">Universities</button>
 
     <button class="logout-btn" onclick="window.location.href='/logout'">
@@ -55,15 +56,38 @@
     </section>
 
     <section id="users" class="tab-section">
-      <div class="section-head">
+       <div class="section-head">
         <h2>Users</h2>
         <button class="refresh-btn" onclick="loadUsers()">Refresh</button>
       </div>
 
+      <form id="userForm" class="admin-form">
+        <input id="userFullName" placeholder="Full name">
+        <input id="userUsername" placeholder="Username">
+        <input id="userEmail" placeholder="Email">
+        <input id="userPassword" type="password" placeholder="Password">
+        <select id="userGender">
+          <option value="">Select gender</option>
+          <option value="male">-</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          
+        </select>
+        <input id="userUniversity" placeholder="University">
+        <input id="userMajor" placeholder="Major">
+        <select id="userRole">
+          <option value="student">Normal User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="form-actions">
+          <button type="submit" class="refresh-btn">Create User</button>
+          <button type="button" class="danger-btn" onclick="resetUserForm()">Clear</button>
+        </div>
+      </form>
       <div id="usersTable" class="table-box">
-        Loading users...
-      </div>
-    </section>
+         Loading users..
+        </div>
+      </section>
 
     <section id="matching" class="tab-section">
       <div class="section-head">
@@ -161,6 +185,39 @@
 
   <div id="universitiesTable" class="table-box">
     Loading universities...
+  </div>
+</section>
+
+<section id="resources" class="tab-section">
+  <div class="section-head">
+    <h2>Resources / Academic Atlas</h2>
+    <button class="refresh-btn" onclick="loadResources()">Refresh</button>
+  </div>
+
+  <form id="resourceForm" class="admin-form">
+    <input type="hidden" id="resourceId">
+
+    <input id="resourceName" placeholder="Category name: Computer Science">
+    <input id="resourceShortName" placeholder="Tab short name: CS">
+    <input id="resourceColor" placeholder="Color: #0077b6">
+
+    <textarea
+      id="resourceLinksText"
+      class="full-row"
+      placeholder="Write resources one per line like this:
+      CS Arabic Playlist | https://www.youtube.com/@DesoukiEgypt | playlist
+      W3Schools | https://www.w3schools.com/ | website
+      Helper Links | /assests/Links.pdf | pdf"
+    ></textarea>
+
+    <div class="form-actions">
+      <button type="submit" class="refresh-btn">Save Resource Category</button>
+      <button type="button" class="danger-btn" onclick="resetResourceForm()">Cancel Edit</button>
+    </div>
+  </form>
+
+  <div id="resourcesTable" class="table-box">
+    Loading resources...
   </div>
 </section>
 
