@@ -50,7 +50,7 @@ if (signupForm) {
 const emailDomain = email.split("@")[1]?.toLowerCase();
 
 const isAllowedUniversityEmail = allowedUniversityDomains.includes(emailDomain);
-    const passwordRegex = /^.{8,}$/;
+const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
     if (
       !fullName ||
@@ -71,18 +71,10 @@ const isAllowedUniversityEmail = allowedUniversityDomains.includes(emailDomain);
       valid = false;
     }
 
-    if (!email.includes("@") || !isAllowedUniversityEmail) {
-        if (emailError) {
-            emailError.innerText = "Please use your official university email.";
-        }
-        valid = false;
-    }
-
     if (!passwordRegex.test(password)) {
       if (passwordError) {
-        passwordError.innerText = "Password must be at least 8 characters.";
+        passwordError.innerText = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
       }
-
       valid = false;
     }
 

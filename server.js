@@ -4,6 +4,8 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 const StudyProfile = require("./models/StudyProfile");
@@ -16,6 +18,11 @@ const ResourceCategory = require("./models/resources");
 require("dotenv").config();
 
 const app = express();
+app.use(
+  helmet({
+    contentSecurityPolicy: false
+  })
+);
 
 connectDB();
 
@@ -341,6 +348,14 @@ app.use(
 
 app.use(flash());
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many attempts. Please try again later."
+});
+
 // EJS global variables
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -351,12 +366,11 @@ app.use((req, res, next) => {
 
 const requireAdminPage = (req, res, next) => {
   if (!req.session.user) {
-    req.flash("error", "Please login first.");
-    return res.redirect("/login?returnTo=/admin");
+    return res.status(404).render("ERROR");
   }
 
   if (req.session.user.role !== "admin") {
-    return res.status(403).send("Access denied. Admins only.");
+    return res.status(404).render("ERROR");
   }
 
   next();
@@ -379,11 +393,6 @@ const requireAdminApi = (req, res, next) => {
 
   next();
 };
-
-
-app.get("/game", (req, res) => {
-  res.render("game-landing-page");
-});
 
 app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
   try {
@@ -641,12 +650,23 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
       });
     }
 
-    if (password.length < 8) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters."
+        message: "Please enter a valid email."
       });
     }
+
+    const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+      success: false,
+      message:
+      "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+    });
+  }
 
     const existingUser = await User.findOne({
       $or: [
@@ -699,6 +719,7 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
     });
   }
 });
+
 app.get("/admin/api/study-profiles", requireAdminApi, async (req, res) => {
   try {
     const profiles = await StudyProfile.find()
@@ -1125,18 +1146,26 @@ app.get("/login", (req, res) => {
   res.render("login");
 });
 
-app.post("/login", async (req, res) => {
+app.post("/login", authLimiter,async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const cleanedUsername = String(req.body.username || "").trim();
+    const cleanedPassword = String(req.body.password || "");
 
-    const user = await User.findOne({ username });
+    if (!cleanedUsername || !cleanedPassword) {
+      req.flash("error", "Please enter username and password.");
+      return res.redirect("/login");
+    }
+
+    const user = await User.findOne({
+      username: cleanedUsername
+    });
 
     if (!user) {
       req.flash("error", "Invalid username or password.");
       return res.redirect("/login");
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(cleanedPassword, user.password);
 
     if (!isMatch) {
       req.flash("error", "Invalid username or password.");
@@ -1153,16 +1182,18 @@ app.post("/login", async (req, res) => {
       gender: user.gender,
       role: user.role || "student"
     };
+
     let redirectTo = req.session.returnTo || "/cylinder";
-delete req.session.returnTo;
+    delete req.session.returnTo;
 
-if (req.session.user.role === "admin") {
-  redirectTo = "/admin";
-}
+    if (req.session.user.role === "admin") {
+      redirectTo = "/admin";
+    }
 
-req.session.save(() => {
-  res.redirect(redirectTo);
-});
+    req.session.save(() => {
+      res.redirect(redirectTo);
+    });
+
   } catch (error) {
     console.error("Login error:", error);
     req.flash("error", "Something went wrong.");
@@ -1174,11 +1205,9 @@ app.get("/signup", (req, res) => {
   res.render("signup");
 });
 
-app.post("/signup", async (req, res) => {
-    console.log("Signup request received");
-    console.log("req.body");
+app.post("/signup", authLimiter, async (req, res) => {
   try {
-    const {
+    let {
       fullName,
       username,
       gender,
@@ -1189,46 +1218,105 @@ app.post("/signup", async (req, res) => {
       confirmPassword
     } = req.body;
 
+    const cleanedFullName = String(fullName || "").trim();
+    const cleanedUsername = String(username || "").trim();
+    const cleanedGenderRaw = String(gender || "").trim().toLowerCase();
+    const cleanedUniversity = String(university || "").trim();
+    const cleanedMajor = String(major || "").trim();
+    const cleanedEmail = String(email || "").trim().toLowerCase();
+    const cleanedPassword = String(password || "");
+    const cleanedConfirmPassword = String(confirmPassword || "");
+
+    let finalGender = "";
+
+    if (cleanedGenderRaw === "male") {
+      finalGender = "Male";
+    } else if (cleanedGenderRaw === "female") {
+      finalGender = "Female";
+    }
+
     if (
-      !fullName ||
-      !username ||
-      !gender ||
-      !university ||
-      !major ||
-      !email ||
-      !password ||
-      !confirmPassword
+      !cleanedFullName ||
+      !cleanedUsername ||
+      !finalGender ||
+      !cleanedUniversity ||
+      !cleanedMajor ||
+      !cleanedEmail ||
+      !cleanedPassword ||
+      !cleanedConfirmPassword
     ) {
       req.flash("error", "Please fill in all fields.");
       return res.redirect("/signup");
     }
 
-    const allowedUniversityDomains = [
-        "miuegypt.edu.eg",
-        "giu-uni.de",
-        "ecu.edu.eg",
-        "cis.asu.edu.eg",
-        "student.guc.edu.eg",    
-    ];
-    const emailDomain = email.split("@")[1]?.toLowerCase();
-
-    if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
-        req.flash("error", "Please use your official university email.");
-        return res.redirect("/signup");
-    }
-
-    if (password.length < 8) {
-      req.flash("error", "Password must be at least 8 characters.");
+    if (cleanedFullName.length < 3 || cleanedFullName.length > 60) {
+      req.flash("error", "Full name must be between 3 and 60 characters.");
       return res.redirect("/signup");
     }
 
-    if (password !== confirmPassword) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+
+    if (!usernameRegex.test(cleanedUsername)) {
+      req.flash(
+        "error",
+        "Username must be 3-20 characters and only contain letters, numbers, and underscores."
+      );
+      return res.redirect("/signup");
+    }
+
+    if (cleanedUniversity.length < 2 || cleanedUniversity.length > 80) {
+      req.flash("error", "Please enter a valid university.");
+      return res.redirect("/signup");
+    }
+
+    if (cleanedMajor.length < 2 || cleanedMajor.length > 80) {
+      req.flash("error", "Please enter a valid major.");
+      return res.redirect("/signup");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(cleanedEmail)) {
+      req.flash("error", "Please enter a valid email.");
+      return res.redirect("/signup");
+    }
+
+    const allowedUniversityDomains = [
+      "miuegypt.edu.eg",
+      "giu-uni.de",
+      "ecu.edu.eg",
+      "cis.asu.edu.eg",
+      "student.guc.edu.eg"
+    ];
+
+    const emailDomain = cleanedEmail.split("@")[1];
+
+    if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
+      req.flash("error", "Please use your official university email.");
+      return res.redirect("/signup");
+    }
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    if (!passwordRegex.test(cleanedPassword)) {
+      req.flash(
+        "error",
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      );
+      return res.redirect("/signup");
+    }
+
+    if (cleanedPassword !== cleanedConfirmPassword) {
       req.flash("error", "Passwords do not match.");
       return res.redirect("/signup");
     }
 
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [
+        { email: cleanedEmail },
+        { username: cleanedUsername }
+      ]
     });
 
     if (existingUser) {
@@ -1236,30 +1324,29 @@ app.post("/signup", async (req, res) => {
       return res.redirect("/signup");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(cleanedPassword, 10);
 
     await User.create({
-      fullName,
-      username,
-      gender,
-      university,
-      major,
-      email,
-      password: hashedPassword
+      fullName: cleanedFullName,
+      username: cleanedUsername,
+      gender: finalGender,
+      university: cleanedUniversity,
+      major: cleanedMajor,
+      email: cleanedEmail,
+      password: hashedPassword,
+      role: "student"
     });
-    await sendSignupEmail(email, fullName);
+
+    await sendSignupEmail(cleanedEmail, cleanedFullName);
 
     req.flash("success", "Account created successfully. Please log in.");
     res.redirect("/login");
+
   } catch (error) {
     console.error("Signup error:", error);
-    req.flash("error", "Something went wrong.");
+    req.flash("error", error.message || "Something went wrong.");
     res.redirect("/signup");
   }
-});
-
-app.get("/mainpage", (req, res) => {
-  res.render("index");
 });
 
 app.get("/mainpage", (req, res) => {
@@ -1303,7 +1390,7 @@ app.post("/profile/update-info", requirePageAuth, async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    const {
+    let {
       fullName,
       username,
       gender,
@@ -1311,14 +1398,76 @@ app.post("/profile/update-info", requirePageAuth, async (req, res) => {
       major
     } = req.body;
 
+    const cleanedFullName = String(fullName || "").trim();
+    const cleanedUsername = String(username || "").trim();
+    const cleanedGenderRaw = String(gender || "").trim().toLowerCase();
+    const cleanedUniversity = String(university || "").trim();
+    const cleanedMajor = String(major || "").trim();
+
+    let finalGender = "";
+
+    if (cleanedGenderRaw === "male") {
+      finalGender = "Male";
+    } else if (cleanedGenderRaw === "female") {
+      finalGender = "Female";
+    }
+
+    if (
+      !cleanedFullName ||
+      !cleanedUsername ||
+      !finalGender ||
+      !cleanedUniversity ||
+      !cleanedMajor
+    ) {
+      req.flash("error", "Please fill in all profile fields.");
+      return res.redirect("/profile#info");
+    }
+
+    if (cleanedFullName.length < 3 || cleanedFullName.length > 60) {
+      req.flash("error", "Full name must be between 3 and 60 characters.");
+      return res.redirect("/profile#info");
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+
+    if (!usernameRegex.test(cleanedUsername)) {
+      req.flash(
+        "error",
+        "Username must be 3-20 characters and only contain letters, numbers, and underscores."
+      );
+      return res.redirect("/profile#info");
+    }
+
+    if (cleanedUniversity.length < 2 || cleanedUniversity.length > 80) {
+      req.flash("error", "Please enter a valid university.");
+      return res.redirect("/profile#info");
+    }
+
+    if (cleanedMajor.length < 2 || cleanedMajor.length > 80) {
+      req.flash("error", "Please enter a valid major.");
+      return res.redirect("/profile#info");
+    }
+
+    const existingUsername = await User.findOne({
+      username: cleanedUsername,
+      _id: {
+        $ne: userId
+      }
+    });
+
+    if (existingUsername) {
+      req.flash("error", "Username is already taken.");
+      return res.redirect("/profile#info");
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        fullName,
-        username,
-        gender,
-        university,
-        major
+        fullName: cleanedFullName,
+        username: cleanedUsername,
+        gender: finalGender,
+        university: cleanedUniversity,
+        major: cleanedMajor
       },
       {
         new: true,
@@ -1370,19 +1519,34 @@ app.post("/profile/update-study-list", requirePageAuth, async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    const weakSubjects = req.body.weakSubjects
-      ? req.body.weakSubjects
-          .split(",")
-          .map(subject => subject.trim())
-          .filter(Boolean)
-      : [];
+    const weakSubjects = cleanSubjects(
+      String(req.body.weakSubjects || "")
+        .split(",")
+    );
 
-    const strongSubjects = req.body.strongSubjects
-      ? req.body.strongSubjects
-          .split(",")
-          .map(subject => subject.trim())
-          .filter(Boolean)
-      : [];
+    const strongSubjects = cleanSubjects(
+      String(req.body.strongSubjects || "")
+        .split(",")
+    );
+
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
+      req.flash("error", "Add at least one weak subject or one strong subject.");
+      return res.redirect("/profile#study");
+    }
+
+    if (weakSubjects.length > 20 || strongSubjects.length > 20) {
+      req.flash("error", "You can add maximum 20 weak subjects and 20 strong subjects.");
+      return res.redirect("/profile#study");
+    }
+
+    const tooLongSubject = [...weakSubjects, ...strongSubjects].find(subject => {
+      return subject.length > 40;
+    });
+
+    if (tooLongSubject) {
+      req.flash("error", "Each subject must be 40 characters or less.");
+      return res.redirect("/profile#study");
+    }
 
     const user = await User.findById(userId).lean();
 
@@ -1494,13 +1658,6 @@ app.post("/profile/competition/:registrationId/update", requirePageAuth, async (
   }
 });
 
-
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/");
-  });
-});
-
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/");
@@ -1524,92 +1681,6 @@ app.get("/api/matching/profile", requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not load your study profile."
-    });
-  }
-});
-
-app.post("/api/matching/profile", requireAuth, async (req, res) => {
-  try {
-    const weakSubjects = cleanSubjects(req.body.weakSubjects);
-    const strongSubjects = cleanSubjects(req.body.strongSubjects);
-
-    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Add at least one weak subject or one strong subject."
-      });
-    }
-
-      app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
-  try {
-    const profile = await StudyProfile.findOneAndUpdate(
-      {
-        user: req.session.user.id
-      },
-      {
-        weakSubjects: [],
-        strongSubjects: []
-      },
-      {
-        new: true
-      }
-    );
-
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Study profile was not found."
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Study list cleared.",
-      profile
-    });
-
-  } catch (error) {
-    console.error("Clear study profile error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Could not clear your study list."
-    });
-  }
-});
-
-
-    const profile = await StudyProfile.findOneAndUpdate(
-      {
-        user: req.session.user.id
-      },
-      {
-        user: req.session.user.id,
-        fullName: req.session.user.fullName,
-        username: req.session.user.username,
-        email: req.session.user.email,
-        university: req.session.user.university || "",
-        major: req.session.user.major || "",
-        weakSubjects,
-        strongSubjects
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true
-      }
-    );
-
-    res.json({
-      success: true,
-      profile
-    });
-  } catch (error) {
-    console.error("Save matching profile error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Could not save your study list."
     });
   }
 });
@@ -1652,8 +1723,53 @@ app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
   }
 });
 
+app.post("/api/matching/profile", requireAuth, async (req, res) => {
+  try {
+    const weakSubjects = cleanSubjects(req.body.weakSubjects);
+    const strongSubjects = cleanSubjects(req.body.strongSubjects);
 
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Add at least one weak subject or one strong subject."
+      });
+    }
 
+    const profile = await StudyProfile.findOneAndUpdate(
+      {
+        user: req.session.user.id
+      },
+      {
+        user: req.session.user.id,
+        fullName: req.session.user.fullName,
+        username: req.session.user.username,
+        email: req.session.user.email,
+        university: req.session.user.university || "",
+        major: req.session.user.major || "",
+        weakSubjects,
+        strongSubjects
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
+    );
+
+    res.json({
+      success: true,
+      profile
+    });
+
+  } catch (error) {
+    console.error("Save matching profile error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not save your study list."
+    });
+  }
+});
 
 app.get("/api/matching/matches", requireAuth, async (req, res) => {
   try {
@@ -1756,10 +1872,6 @@ app.get("/api/matching/matches", requireAuth, async (req, res) => {
     });
   }
 });
-
- app.get("/freshman-guide", (req, res) => {
-      res.render("freshman-guid");
-    });
 
 app.post("/api/matching/send-room", requireAuth, async (req, res) => {
 
@@ -1950,14 +2062,6 @@ app.get("/academic-atlas", async (req, res) => {
       categories: []
     });
   }
-});
-
-app.get("/game", requirePageAuth, (req, res) => {
-  res.render("game");
-});
-
-app.get("/game2", (req, res) => {
-  res.render("game2");
 });
 
 app.get("/cylinder", (req, res) => {
@@ -2246,10 +2350,31 @@ app.post("/leaderboard", requireAuth, async (req, res) => {
   try {
     const score = Number(req.body.score);
 
-    if (Number.isNaN(score)) {
+    if (!Number.isFinite(score)) {
       return res.status(400).json({
         success: false,
         message: "Score is required."
+      });
+    }
+
+    if (!Number.isInteger(score)) {
+      return res.status(400).json({
+        success: false,
+        message: "Score must be a whole number."
+      });
+    }
+
+    if (score < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Score cannot be negative."
+      });
+    }
+
+    if (score > 1000000) {
+      return res.status(400).json({
+        success: false,
+        message: "Score is too high."
       });
     }
 
@@ -2264,7 +2389,7 @@ app.post("/leaderboard", requireAuth, async (req, res) => {
       },
       {
         $max: {
-          score: score
+          score
         },
         $set: {
           user: req.session.user.id,
@@ -2331,30 +2456,17 @@ app.delete("/admin/users/:userId", requireAdminApi, async (req, res) => {  try {
     });
   }
 });
+
 app.get("/game-landing-page", (req, res) => {
   res.render("game-landing-page");
 });
 
-app.get("/games", (req, res) => {
-  res.render("game-landing-page");
-});
-
-// Old game routes
-app.get("/game", requirePageAuth, (req, res) => {
-  res.render("game");
-});
-
-app.get("/game2", (req, res) => {
-  res.render("game2");
-});
-
-// New cleaner game URLs
 app.get("/blockblast", requirePageAuth, (req, res) => {
   res.render("game");
 });
 
 app.get("/wordle", requirePageAuth, (req, res) => {
-  res.render("game2");
+  res.render("Game2");
 });
 
 
@@ -2365,7 +2477,10 @@ app.get("/freshman-guid", (req, res) => {
   res.render("freshman-guid");
 });
 
+app.use((req, res) => {
+  res.status(404).render("ERROR");
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
-
