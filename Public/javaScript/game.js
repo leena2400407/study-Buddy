@@ -5,7 +5,6 @@ const API_BASE = '';
 let gridMap    = [];
 let score      = 0;
 let highScore  = 0;
-try { highScore = parseInt(localStorage.getItem('bphs_v5')) || 0; } catch(e) { highScore = 0; }
 let streak     = 0;
 let bestStreak = 0;
 let gameActive = false;
@@ -658,10 +657,6 @@ function updateScore(pts) {
     if (score > highScore) {
         highScore = score;
         highScoreEl.textContent = highScore.toLocaleString();
-
-        try {
-            localStorage.setItem('bphs_v5', highScore);
-        } catch(e) {}
     }
 }
 
