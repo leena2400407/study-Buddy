@@ -1,6 +1,66 @@
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tabSections = document.querySelectorAll(".tab-section");
 
+
+const adminLimit = 5;
+
+const adminPages = {
+  users: 1,
+  matching: 1,
+  registrations: 1,
+  scores: 1,
+  events: 1,
+  universities: 1,
+  resources: 1
+};
+
+function renderPagination(tabName, pagination, loadFunctionName) {
+  if (!pagination) return "";
+
+  const currentPage = pagination.page || 1;
+  const totalPages = pagination.totalPages || 1;
+
+  return `
+    <div class="admin-pagination">
+      <button 
+        class="refresh-btn"
+        ${currentPage <= 1 ? "disabled" : ""}
+        onclick="changeAdminPage('${tabName}', -1, ${totalPages}, '${loadFunctionName}')"
+      >
+        Previous
+      </button>
+
+      <span>
+        Page ${currentPage} of ${totalPages}
+      </span>
+
+      <button 
+        class="refresh-btn"
+        ${currentPage >= totalPages ? "disabled" : ""}
+        onclick="changeAdminPage('${tabName}', 1, ${totalPages}, '${loadFunctionName}')"
+      >
+        Next
+      </button>
+    </div>
+  `;
+}
+
+function changeAdminPage(tabName, direction, totalPages, loadFunctionName) {
+  const nextPage = adminPages[tabName] + direction;
+
+  if (nextPage < 1 || nextPage > totalPages) return;
+
+  adminPages[tabName] = nextPage;
+
+  if (loadFunctionName === "loadUsers") loadUsers();
+  if (loadFunctionName === "loadStudyProfiles") loadStudyProfiles();
+  if (loadFunctionName === "loadEventRegistrations") loadEventRegistrations();
+  if (loadFunctionName === "loadGameScores") loadGameScores();
+  if (loadFunctionName === "loadEvents") loadEvents();
+  if (loadFunctionName === "loadUniversities") loadUniversities();
+  if (loadFunctionName === "loadResources") loadResources();
+}
+
 tabButtons.forEach(button => {
   button.addEventListener("click", () => {
     const tabName = button.dataset.tab;
@@ -75,7 +135,7 @@ async function loadUsers() {
   const box = document.getElementById("usersTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/users");
+    const data = await fetchAdminData(`/admin/api/users?page=${adminPages.users}&limit=${adminLimit}`);
     const users = data.users || [];
 
     if (users.length === 0) {
@@ -116,6 +176,7 @@ async function loadUsers() {
           `).join("")}
         </tbody>
       </table>
+      ${renderPagination("users", data.pagination, "loadUsers")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -155,8 +216,8 @@ async function loadStudyProfiles() {
   const box = document.getElementById("profilesTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/study-profiles");
-    const profiles = data.profiles || [];
+    const data = await fetchAdminData(`/admin/api/study-profiles?page=${adminPages.matching}&limit=${adminLimit}`);
+    const profiles = Array.isArray(data.profiles) ? data.profiles : [];
 
     if (profiles.length === 0) {
       box.innerHTML = `<div class="empty-box">No study profiles found.</div>`;
@@ -188,6 +249,8 @@ async function loadStudyProfiles() {
           `).join("")}
         </tbody>
       </table>
+
+      ${renderPagination("matching", data.pagination, "loadStudyProfiles")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -198,8 +261,8 @@ async function loadEventRegistrations() {
   const box = document.getElementById("registrationsTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/event-registrations");
-    const registrations = data.registrations || [];
+    const data = await fetchAdminData(`/admin/api/event-registrations?page=${adminPages.registrations}&limit=${adminLimit}`);
+    const registrations = Array.isArray(data.registrations) ? data.registrations : [];
 
     if (registrations.length === 0) {
       box.innerHTML = `<div class="empty-box">No event registrations found.</div>`;
@@ -235,41 +298,8 @@ async function loadEventRegistrations() {
           `).join("")}
         </tbody>
       </table>
-    `;
-  } catch (error) {
-    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
-  }
-}
 
-async function loadGameScores() {
-  const box = document.getElementById("scoresTable");
-
-  try {
-    const data = await fetchAdminData("/admin/api/game-scores");
-    const scores = data.scores || [];
-
-    if (scores.length === 0) {
-      box.innerHTML = `<div class="empty-box">No game scores found.</div>`;
-      return;
-    }
-
-    box.innerHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${scores.map(score => `
-            <tr>
-              <td>${escapeHTML(score.name || "-")}</td>
-              <td>${escapeHTML(score.score || 0)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
+      ${renderPagination("registrations", data.pagination, "loadEventRegistrations")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -280,8 +310,8 @@ async function loadEvents() {
   const box = document.getElementById("eventsTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/events");
-    const events = data.events || [];
+    const data = await fetchAdminData(`/admin/api/events?page=${adminPages.events}&limit=${adminLimit}`);
+    const events = Array.isArray(data.events) ? data.events : [];
 
     if (events.length === 0) {
       box.innerHTML = `<div class="empty-box">No events found.</div>`;
@@ -317,6 +347,43 @@ async function loadEvents() {
           `).join("")}
         </tbody>
       </table>
+
+      ${renderPagination("events", data.pagination, "loadEvents")}
+    `;
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function loadGameScores() {
+  const box = document.getElementById("scoresTable");
+
+  try {
+    const data = await fetchAdminData(`/admin/api/game-scores?page=${adminPages.scores}&limit=${adminLimit}`);    const scores = data.scores || [];
+
+    if (scores.length === 0) {
+      box.innerHTML = `<div class="empty-box">No game scores found.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${scores.map(score => `
+            <tr>
+              <td>${escapeHTML(score.name || "-")}</td>
+              <td>${escapeHTML(score.score || 0)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      ${renderPagination("scores", data.pagination, "loadGameScores")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -327,8 +394,7 @@ async function loadUniversities() {
   const box = document.getElementById("universitiesTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/universities");
-    const universities = data.universities || [];
+    const data = await fetchAdminData(`/admin/api/universities?page=${adminPages.universities}&limit=${adminLimit}`);    const universities = data.universities || [];
 
     if (universities.length === 0) {
       box.innerHTML = `<div class="empty-box">No universities found.</div>`;
@@ -364,6 +430,7 @@ async function loadUniversities() {
           `).join("")}
         </tbody>
       </table>
+      ${renderPagination("universities", data.pagination, "loadUniversities")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -664,8 +731,7 @@ async function loadResources() {
   const box = document.getElementById("resourcesTable");
 
   try {
-    const data = await fetchAdminData("/admin/api/resources");
-    const categories = data.categories || [];
+    const data = await fetchAdminData(`/admin/api/resources?page=${adminPages.resources}&limit=${adminLimit}`);    const categories = data.categories || [];
 
     if (categories.length === 0) {
       box.innerHTML = `<div class="empty-box">No resource categories found.</div>`;
@@ -709,6 +775,7 @@ async function loadResources() {
           `).join("")}
         </tbody>
       </table>
+      ${renderPagination("resources", data.pagination, "loadResources")}
     `;
 
   } catch (error) {

@@ -426,6 +426,23 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
   }
 });
 
+function getPagination(query) {
+  const page = Math.max(Number(query.page) || 1, 1);
+
+  const limit = Math.min(
+    Math.max(Number(query.limit) || 100, 1),
+    100
+  );
+
+  const skip = (page - 1) * limit;
+
+  return {
+    page,
+    limit,
+    skip
+  };
+}
+
 function parseResourcesText(value) {
   return String(value || "")
     .split("\n")
@@ -445,13 +462,25 @@ function parseResourcesText(value) {
 
 app.get("/admin/api/resources", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await ResourceCategory.countDocuments();
+
     const categories = await ResourceCategory.find()
       .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      categories
+      categories,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
 
   } catch (error) {
@@ -581,14 +610,26 @@ app.delete("/admin/api/resources/:categoryId", requireAdminApi, async (req, res)
 
 app.get("/admin/api/users", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await User.countDocuments();
+
     const users = await User.find()
       .select("-password")
       .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      users
+      users,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin users error:", error);
@@ -739,13 +780,25 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
 
 app.get("/admin/api/study-profiles", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await StudyProfile.countDocuments();
+
     const profiles = await StudyProfile.find()
       .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      profiles
+      profiles,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin study profiles error:", error);
@@ -759,13 +812,25 @@ app.get("/admin/api/study-profiles", requireAdminApi, async (req, res) => {
 
 app.get("/admin/api/event-registrations", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await EventRegistration.countDocuments();
+
     const registrations = await EventRegistration.find()
       .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      registrations
+      registrations,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin event registrations error:", error);
@@ -779,13 +844,25 @@ app.get("/admin/api/event-registrations", requireAdminApi, async (req, res) => {
 
 app.get("/admin/api/game-scores", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await GameScore.countDocuments();
+
     const scores = await GameScore.find()
       .sort({ score: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      scores
+      scores,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin game scores error:", error);
@@ -799,13 +876,25 @@ app.get("/admin/api/game-scores", requireAdminApi, async (req, res) => {
 
 app.get("/admin/api/events", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await Event.countDocuments();
+
     const events = await Event.find()
       .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      events
+      events,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin events error:", error);
@@ -819,13 +908,25 @@ app.get("/admin/api/events", requireAdminApi, async (req, res) => {
 
 app.get("/admin/api/universities", requireAdminApi, async (req, res) => {
   try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await University.countDocuments();
+
     const universities = await University.find()
       .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     res.json({
       success: true,
-      universities
+      universities,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
     });
   } catch (error) {
     console.error("Admin universities error:", error);
@@ -1119,6 +1220,64 @@ app.delete("/admin/api/universities/:universityId", requireAdminApi, async (req,
 });
 
 
+const subjectAliases = {
+  algo: "Algorithms",
+  algorithm: "Algorithms",
+  algorithms: "Algorithms",
+
+  ds: "Data Structures",
+  datastructure: "Data Structures",
+  datastructures: "Data Structures",
+  "data structure": "Data Structures",
+  "data structures": "Data Structures",
+
+  os: "Operating Systems",
+  "operating system": "Operating Systems",
+  "operating systems": "Operating Systems",
+
+  db: "Database",
+  database: "Database",
+  databases: "Database",
+
+  oop: "Object Oriented Programming",
+  "object oriented programming": "Object Oriented Programming",
+  "object-oriented programming": "Object Oriented Programming",
+
+  math: "Math",
+  maths: "Math",
+  mathematics: "Math",
+
+  ai: "Artificial Intelligence",
+  "artificial intelligence": "Artificial Intelligence",
+
+  ml: "Machine Learning",
+  "machine learning": "Machine Learning",
+
+  web: "Web Development",
+  "web development": "Web Development",
+
+  se: "Software Engineering",
+  "software engineering": "Software Engineering"
+};
+
+const normalizeSubject = (subject) => {
+  const cleaned = String(subject || "")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const key = cleaned.toLowerCase();
+
+  if (subjectAliases[key]) {
+    return subjectAliases[key];
+  }
+
+  return cleaned
+    .toLowerCase()
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 const cleanSubjects = (subjects) => {
   if (!Array.isArray(subjects)) {
     return [];
@@ -1126,15 +1285,8 @@ const cleanSubjects = (subjects) => {
 
   return [...new Set(
     subjects
-      .map(subject => String(subject).trim().replace(/\s+/g, " "))
+      .map(normalizeSubject)
       .filter(Boolean)
-      .map(subject =>
-        subject
-          .toLowerCase()
-          .split(" ")
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")
-      )
   )];
 };
 
@@ -1788,8 +1940,30 @@ app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
 
 app.post("/api/matching/profile", requireAuth, async (req, res) => {
   try {
-    const weakSubjects = cleanSubjects(req.body.weakSubjects);
-    const strongSubjects = cleanSubjects(req.body.strongSubjects);
+    const rawWeakSubjects = Array.isArray(req.body.weakSubjects)
+      ? req.body.weakSubjects
+      : [];
+
+    const rawStrongSubjects = Array.isArray(req.body.strongSubjects)
+      ? req.body.strongSubjects
+      : [];
+
+    const subjectRegex = /^[A-Za-z][A-Za-z\s&+\-#]*$/;
+
+    const invalidSubject = [...rawWeakSubjects, ...rawStrongSubjects]
+      .map(subject => String(subject).trim())
+      .filter(Boolean)
+      .find(subject => !subjectRegex.test(subject));
+
+    if (invalidSubject) {
+      return res.status(400).json({
+        success: false,
+        message: "Subjects must not contain numbers. Use letters only, like Math or Operating Systems."
+      });
+    }
+
+    const weakSubjects = cleanSubjects(rawWeakSubjects);
+    const strongSubjects = cleanSubjects(rawStrongSubjects);
 
     if (weakSubjects.length === 0 && strongSubjects.length === 0) {
       return res.status(400).json({
