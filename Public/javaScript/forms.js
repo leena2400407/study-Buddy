@@ -30,6 +30,8 @@ if (signupForm) {
     const emailError = document.getElementById("emailError");
     const passwordError = document.getElementById("passwordError");
     const confirmError = document.getElementById("confirmError");
+    const fullNameError = document.getElementById("fullNameError");
+    const usernameError = document.getElementById("usernameError");
 
     if (messageBox) {
       messageBox.textContent = "";
@@ -39,6 +41,8 @@ if (signupForm) {
     if (emailError) emailError.innerText = "";
     if (passwordError) passwordError.innerText = "";
     if (confirmError) confirmError.innerText = "";
+    if (fullNameError) fullNameError.innerText = "";
+    if (usernameError) usernameError.innerText = "";
 
     const allowedUniversityDomains = [
         "miuegypt.edu.eg",
@@ -51,6 +55,8 @@ const emailDomain = email.split("@")[1]?.toLowerCase();
 
 const isAllowedUniversityEmail = allowedUniversityDomains.includes(emailDomain);
 const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
+const usernameRegex = /^[A-Za-z_]{3,20}$/;
 
     if (
       !fullName ||
@@ -70,6 +76,16 @@ const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
       valid = false;
     }
+    if (!fullNameRegex.test(fullName)) {
+       if (fullNameError) {
+         fullNameError.innerText = "Full name must include first and last name using letters only.";}
+         valid = false;}
+         if (!usernameRegex.test(username)) {
+          if (usernameError) {
+            usernameError.innerText = "Username must be 3-20 characters and only contain letters and underscores.";
+          }
+          valid = false;
+        }
 
     if (!passwordRegex.test(password)) {
       if (passwordError) {

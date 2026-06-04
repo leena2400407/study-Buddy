@@ -622,6 +622,23 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
     role = String(role || "student").trim().toLowerCase();
 
     const cleanedGender = String(gender || "").trim().toLowerCase();
+    fullName = fullName.replace(/\s+/g, " ");
+    const fullNameRegex = /^[A-Za-z]+[0-9]*$/;
+
+    if (!fullNameRegex.test(fullName)) {
+       return res.status(400).json({
+        success: false,
+        message: "Full name must start with letters, and numbers are only allowed at the end."
+      });
+    }
+
+    const usernameRegex = /^(?=.{3,20}$)[A-Za-z_]+[0-9]*$/;
+    if (!usernameRegex.test(username)) {
+       return res.status(400).json({
+        success: false,
+        message: "Username must be 3-20 characters, start with letters/underscores, and numbers are only allowed at the end."
+      });
+    }
 
     if (!fullName || !username || !email || !password || !cleanedGender || !university || !major || !role) {
       return res.status(400).json({
@@ -1201,8 +1218,20 @@ app.post("/login", authLimiter,async (req, res) => {
   }
 });
 
+function renderSignupError(res, message, oldInput) {
+  return res.status(400).render("signup", {
+    error: [message],
+    success: [],
+    oldInput
+  });
+}
+
 app.get("/signup", (req, res) => {
-  res.render("signup");
+  res.render("signup", {
+    oldInput: {},
+    error: [],
+    success: []
+  });
 });
 
 app.post("/signup", authLimiter, async (req, res) => {
@@ -1218,7 +1247,7 @@ app.post("/signup", authLimiter, async (req, res) => {
       confirmPassword
     } = req.body;
 
-    const cleanedFullName = String(fullName || "").trim();
+    const cleanedFullName = String(fullName || "").trim().replace(/\s+/g, " ");
     const cleanedUsername = String(username || "").trim();
     const cleanedGenderRaw = String(gender || "").trim().toLowerCase();
     const cleanedUniversity = String(university || "").trim();
@@ -1226,6 +1255,15 @@ app.post("/signup", authLimiter, async (req, res) => {
     const cleanedEmail = String(email || "").trim().toLowerCase();
     const cleanedPassword = String(password || "");
     const cleanedConfirmPassword = String(confirmPassword || "");
+
+    const oldInput = {
+      fullName: cleanedFullName,
+      username: cleanedUsername,
+      gender: cleanedGenderRaw,
+      university: cleanedUniversity,
+      major: cleanedMajor,
+      email: cleanedEmail
+    };
 
     let finalGender = "";
 
@@ -1245,40 +1283,49 @@ app.post("/signup", authLimiter, async (req, res) => {
       !cleanedPassword ||
       !cleanedConfirmPassword
     ) {
-      req.flash("error", "Please fill in all fields.");
-      return res.redirect("/signup");
+      return renderSignupError(res, "Please fill in all fields.", oldInput);
     }
 
-    if (cleanedFullName.length < 3 || cleanedFullName.length > 60) {
-      req.flash("error", "Full name must be between 3 and 60 characters.");
-      return res.redirect("/signup");
+    const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
+
+    if (!fullNameRegex.test(cleanedFullName)) {
+      return renderSignupError(
+        res,
+        "Full name must contain first and last name using letters only.",
+        oldInput
+      );
     }
 
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (cleanedFullName.length < 5 || cleanedFullName.length > 60) {
+      return renderSignupError(
+        res,
+        "Full name must be between 5 and 60 characters.",
+        oldInput
+      );
+    }
+
+    const usernameRegex = /^[A-Za-z_]{3,20}$/;
 
     if (!usernameRegex.test(cleanedUsername)) {
-      req.flash(
-        "error",
-        "Username must be 3-20 characters and only contain letters, numbers, and underscores."
+      return renderSignupError(
+        res,
+        "Username must be 3-20 characters and only contain letters and underscores.",
+        oldInput
       );
-      return res.redirect("/signup");
     }
 
     if (cleanedUniversity.length < 2 || cleanedUniversity.length > 80) {
-      req.flash("error", "Please enter a valid university.");
-      return res.redirect("/signup");
+      return renderSignupError(res, "Please enter a valid university.", oldInput);
     }
 
     if (cleanedMajor.length < 2 || cleanedMajor.length > 80) {
-      req.flash("error", "Please enter a valid major.");
-      return res.redirect("/signup");
+      return renderSignupError(res, "Please enter a valid major.", oldInput);
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(cleanedEmail)) {
-      req.flash("error", "Please enter a valid email.");
-      return res.redirect("/signup");
+      return renderSignupError(res, "Please enter a valid email.", oldInput);
     }
 
     const allowedUniversityDomains = [
@@ -1292,24 +1339,26 @@ app.post("/signup", authLimiter, async (req, res) => {
     const emailDomain = cleanedEmail.split("@")[1];
 
     if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
-      req.flash("error", "Please use your official university email.");
-      return res.redirect("/signup");
+      return renderSignupError(
+        res,
+        "Please use your official university email.",
+        oldInput
+      );
     }
 
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
     if (!passwordRegex.test(cleanedPassword)) {
-      req.flash(
-        "error",
-        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      return renderSignupError(
+        res,
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
+        oldInput
       );
-      return res.redirect("/signup");
     }
 
     if (cleanedPassword !== cleanedConfirmPassword) {
-      req.flash("error", "Passwords do not match.");
-      return res.redirect("/signup");
+      return renderSignupError(res, "Passwords do not match.", oldInput);
     }
 
     const existingUser = await User.findOne({
@@ -1320,8 +1369,11 @@ app.post("/signup", authLimiter, async (req, res) => {
     });
 
     if (existingUser) {
-      req.flash("error", "Email or username already exists.");
-      return res.redirect("/signup");
+      return renderSignupError(
+        res,
+        "Email or username already exists.",
+        oldInput
+      );
     }
 
     const hashedPassword = await bcrypt.hash(cleanedPassword, 10);
@@ -1344,8 +1396,19 @@ app.post("/signup", authLimiter, async (req, res) => {
 
   } catch (error) {
     console.error("Signup error:", error);
-    req.flash("error", error.message || "Something went wrong.");
-    res.redirect("/signup");
+
+    return renderSignupError(
+      res,
+      error.message || "Something went wrong.",
+      {
+        fullName: req.body.fullName || "",
+        username: req.body.username || "",
+        gender: req.body.gender || "",
+        university: req.body.university || "",
+        major: req.body.major || "",
+        email: req.body.email || ""
+      }
+    );
   }
 });
 
