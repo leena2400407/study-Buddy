@@ -5,11 +5,11 @@ document.addEventListener("DOMContentLoaded", function () {
     threshold: 0.1
   };
 
-  const observer = new IntersectionObserver((entries, observer) => {
+  const observer = new IntersectionObserver((entries, observerInstance) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add("active");
-        observer.unobserve(entry.target);
+        observerInstance.unobserve(entry.target);
       }
     });
   }, observerOptions);
@@ -20,9 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
 let maxP = 10;
 let pendingTournamentName = "";
 
-const isLoggedIn =
-  window.EVENTS_PAGE_DATA && window.EVENTS_PAGE_DATA.isLoggedIn === true;
-
 function openRegistration(e, name, maxPlayersFromDatabase) {
   e.preventDefault();
 
@@ -31,11 +28,39 @@ function openRegistration(e, name, maxPlayersFromDatabase) {
     return;
   }
 
+  checkBracketBeforeOpeningForm(name, maxPlayersFromDatabase);
+}
+
+async function checkBracketBeforeOpeningForm(name, maxPlayersFromDatabase) {
+  try {
+    const response = await fetch(
+      `/api/events/bracket?tournamentName=${encodeURIComponent(name)}`,
+      {
+        method: "GET",
+        credentials: "include"
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success && data.registered) {
+      showBracketModal(data);
+      return;
+    }
+
+    openRegistrationForm(name, maxPlayersFromDatabase);
+
+  } catch (error) {
+    console.error("Bracket check error:", error);
+    openRegistrationForm(name, maxPlayersFromDatabase);
+  }
+}
+
+function openRegistrationForm(name, maxPlayersFromDatabase) {
   pendingTournamentName = name;
   maxP = Number(maxPlayersFromDatabase) || 10;
 
   document.getElementById("modal-tournament-name").innerText = name;
-
   document.getElementById("team-name").value = "";
 
   document.getElementById("players-container").innerHTML = `
@@ -83,6 +108,7 @@ function addPlayer() {
 
   updatePlayerNumbers();
 }
+
 function removePlayer(button) {
   const row = button.closest(".player-row");
 
@@ -101,11 +127,7 @@ function updatePlayerNumbers() {
 
     if (!label) return;
 
-    if (index === 0) {
-      label.innerText = "Captain *";
-    } else {
-      label.innerText = `Player ${index + 1}`;
-    }
+    label.innerText = index === 0 ? "Captain *" : `Player ${index + 1}`;
   });
 
   const addBtn = document.querySelector(".add-player-btn");
@@ -123,10 +145,163 @@ function closeAuthModal() {
   document.getElementById("auth-modal").classList.add("hidden");
 }
 
+function closeBracketModal() {
+  document.getElementById("bracket-modal").classList.add("hidden");
+}
+
+function getBlankTeamText(index) {
+  return index % 2 === 0 ? "Waiting Team" : "BYE / Empty Slot";
+}
+
+function buildBracketTeams(teams) {
+  const bracketSize = 8;
+  const finalTeams = [];
+
+  for (let i = 0; i < bracketSize; i++) {
+    if (teams[i]) {
+      finalTeams.push(teams[i]);
+    } else {
+      finalTeams.push({
+        seed: i + 1,
+        teamName: getBlankTeamText(i),
+        captainName: "",
+        isEmpty: true,
+        isMine: false
+      });
+    }
+  }
+
+  return finalTeams;
+}
+
+function createRoundOneHTML(teams) {
+  let html = `<div class="bracket-round">
+    <h3>Round of 8</h3>
+  `;
+
+  for (let i = 0; i < teams.length; i += 2) {
+    const teamA = teams[i];
+    const teamB = teams[i + 1];
+
+    html += `
+      <div class="bracket-match">
+        <div class="bracket-team ${teamA.isMine ? "my-team" : ""} ${teamA.isEmpty ? "empty-team" : ""}">
+          <span>#${teamA.seed}</span>
+          <strong>${teamA.teamName}</strong>
+        </div>
+
+        <div class="bracket-team ${teamB.isMine ? "my-team" : ""} ${teamB.isEmpty ? "empty-team" : ""}">
+          <span>#${teamB.seed}</span>
+          <strong>${teamB.teamName}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function createEmptyRoundHTML(title, count) {
+  let html = `<div class="bracket-round">
+    <h3>${title}</h3>
+  `;
+
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="bracket-match future-match">
+        <div class="bracket-team empty-team">
+          <span>Winner</span>
+          <strong>Waiting</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function showBracketModal(data) {
+  const eventData = data.event || {};
+  const teams = Array.isArray(data.teams) ? data.teams : [];
+  const myRegistration = data.myRegistration || null;
+
+  const bracketModal = document.getElementById("bracket-modal");
+  const bracketTitle = document.getElementById("bracket-event-title");
+  const bracketSubtitle = document.getElementById("bracket-event-subtitle");
+  const bracketArea = document.getElementById("bracket-area");
+  const bracketMyTeam = document.getElementById("bracket-my-team");
+  const bracketTeamCount = document.getElementById("bracket-team-count");
+  const locationBtn = document.getElementById("bracket-location-btn");
+
+  if (!bracketModal || !bracketArea) return;
+
+  if (bracketTitle) {
+    bracketTitle.innerText = eventData.title || pendingTournamentName || "Tournament Bracket";
+  }
+
+  if (bracketSubtitle) {
+    bracketSubtitle.innerText = eventData.category || "Knockout Tournament";
+  }
+
+  if (bracketMyTeam) {
+    bracketMyTeam.innerText = myRegistration ? myRegistration.teamName : "Not registered yet";
+  }
+
+  if (bracketTeamCount) {
+    bracketTeamCount.innerText = `${teams.length} team${teams.length === 1 ? "" : "s"} registered`;
+  }
+
+  const roundOneTeams = buildBracketTeams(teams);
+
+  bracketArea.innerHTML = `
+    ${createRoundOneHTML(roundOneTeams)}
+    ${createEmptyRoundHTML("Semi Final", 4)}
+    ${createEmptyRoundHTML("Final", 2)}
+    ${createEmptyRoundHTML("Winner", 1)}
+  `;
+
+  if (locationBtn) {
+    const link = eventData.detailsLink || "";
+
+    if (link) {
+      locationBtn.style.display = "inline-flex";
+      locationBtn.onclick = function () {
+        window.open(link, "_blank");
+      };
+    } else {
+      locationBtn.style.display = "none";
+      locationBtn.onclick = null;
+    }
+  }
+
+  closeRegistration();
+  bracketModal.classList.remove("hidden");
+}
+
+async function loadAndShowBracket(tournamentName) {
+  const response = await fetch(
+    `/api/events/bracket?tournamentName=${encodeURIComponent(tournamentName)}`,
+    {
+      method: "GET",
+      credentials: "include"
+    }
+  );
+
+  const data = await response.json();
+
+  if (data.success) {
+    showBracketModal(data);
+  }
+}
+
 async function submitTeam(event) {
   event.preventDefault();
 
-  const submitBtn = document.querySelector(".submit-btn");
+  const submitBtn = document.querySelector("#team-form .submit-btn");
   const teamName = document.getElementById("team-name").value.trim();
   const playerRows = document.querySelectorAll("#players-container .player-row");
 
@@ -184,10 +359,15 @@ async function submitTeam(event) {
       return;
     }
 
-    alert(data.message);
-
     closeRegistration();
-    document.getElementById("team-form").reset();
+
+    const form = document.getElementById("team-form");
+
+    if (form) {
+      form.reset();
+    }
+
+    await loadAndShowBracket(pendingTournamentName);
 
   } catch (error) {
     console.error("Registration error:", error);
@@ -205,4 +385,5 @@ window.addPlayer = addPlayer;
 window.removePlayer = removePlayer;
 window.closeRegistration = closeRegistration;
 window.closeAuthModal = closeAuthModal;
+window.closeBracketModal = closeBracketModal;
 window.submitTeam = submitTeam;

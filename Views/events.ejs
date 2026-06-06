@@ -213,11 +213,44 @@
   </div>
 
 
+  <!-- TOURNAMENT BRACKET MODAL -->
+  <div id="bracket-modal" class="hidden bracket-overlay">
+    <div class="bracket-modal-box">
+
+      <button class="bracket-close-btn" onclick="closeBracketModal()">
+        ×
+      </button>
+
+      <div class="bracket-header">
+        <span class="bracket-mini-title">TOURNAMENT BRACKET</span>
+        <h2 id="bracket-event-title">Tournament Bracket</h2>
+        <p id="bracket-event-subtitle">Registered teams and knockout path</p>
+      </div>
+
+      <div class="bracket-user-card" id="bracket-user-card">
+        <span>Your Team</span>
+        <strong id="bracket-my-team">Not registered yet</strong>
+      </div>
+
+      <div id="bracket-area" class="bracket-area"></div>
+
+      <div class="bracket-footer">
+        <p id="bracket-team-count">0 teams registered</p>
+
+        <button id="bracket-location-btn" class="bracket-location-btn" type="button">
+          Open Location
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
   <script>
-  window.EVENTS_PAGE_DATA = {
-    isLoggedIn: <%= user ? "true" : "false" %>
-  };
-</script>
+    window.EVENTS_PAGE_DATA = {
+      isLoggedIn: <%= user ? "true" : "false" %>
+    };
+  </script>
 
   <script src="/javaScript/events.js"></script>
 

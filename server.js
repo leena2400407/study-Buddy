@@ -2950,6 +2950,137 @@ app.post("/api/ai", async (req, res) => {
   }
 });
 
+app.get("/api/events/registration-status", requireAuth, async (req, res) => {
+  try {
+    const tournamentName = String(req.query.tournamentName || "").trim();
+
+    if (!tournamentName) {
+      return res.status(400).json({
+        success: false,
+        message: "Tournament name is required."
+      });
+    }
+
+    const eventData = await Event.findOne({
+      title: tournamentName
+    }).lean();
+
+    if (!eventData) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    const registration = await EventRegistration.findOne({
+      user: req.session.user.id,
+      tournamentName
+    }).lean();
+
+    if (!registration) {
+      return res.json({
+        success: true,
+        registered: false
+      });
+    }
+
+    return res.json({
+      success: true,
+      registered: true,
+      event: {
+        title: eventData.title,
+        category: eventData.category,
+        description: eventData.description,
+        imagePath: eventData.imagePath,
+        detailsLink: eventData.detailsLink,
+        maxPlayers: eventData.maxPlayers
+      },
+      registration: {
+        teamName: registration.teamName,
+        captainName: registration.captainName,
+        captainEmail: registration.captainEmail,
+        players: registration.players || [],
+        createdAt: registration.createdAt
+      }
+    });
+
+  } catch (error) {
+    console.error("Registration status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not check registration status."
+    });
+  }
+});
+
+app.get("/api/events/bracket", requireAuth, async (req, res) => {
+  try {
+    const tournamentName = String(req.query.tournamentName || "").trim();
+
+    if (!tournamentName) {
+      return res.status(400).json({
+        success: false,
+        message: "Tournament name is required."
+      });
+    }
+
+    const eventData = await Event.findOne({
+      title: tournamentName
+    }).lean();
+
+    if (!eventData) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    const registrations = await EventRegistration.find({
+      tournamentName
+    })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    const teams = registrations.map((registration, index) => {
+      return {
+        seed: index + 1,
+        teamName: registration.teamName,
+        captainName: registration.captainName,
+        captainEmail: registration.captainEmail,
+        players: registration.players || [],
+        isMine: String(registration.user) === String(req.session.user.id),
+        createdAt: registration.createdAt
+      };
+    });
+
+    const myRegistration = teams.find(team => team.isMine) || null;
+
+    return res.json({
+      success: true,
+      registered: !!myRegistration,
+      event: {
+        title: eventData.title,
+        category: eventData.category,
+        description: eventData.description,
+        imagePath: eventData.imagePath,
+        detailsLink: eventData.detailsLink,
+        maxPlayers: eventData.maxPlayers
+      },
+      myRegistration,
+      teams
+    });
+
+  } catch (error) {
+    console.error("Bracket load error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load tournament bracket."
+    });
+  }
+});
+
 app.post("/events/register", requireAuth, async (req, res) => {
   try {
     const { tournamentName, teamName, players } = req.body;
@@ -2973,14 +3104,30 @@ app.post("/events/register", requireAuth, async (req, res) => {
     const alreadyRegistered = await EventRegistration.findOne({
       user: req.session.user.id,
       tournamentName
-    });
-
+    }).lean();
     if (alreadyRegistered) {
-      return res.status(400).json({
-        success: false,
-        message: "You already registered for this tournament."
-      });
+      return res.json({
+      success: true,
+      alreadyRegistered: true,
+       message: "You are already registered for this tournament.",
+       event: {
+        title: eventData.title,
+        category: eventData.category,
+        description: eventData.description,
+        imagePath: eventData.imagePath,
+        detailsLink: eventData.detailsLink,
+        maxPlayers: eventData.maxPlayers
+      
+      },
+    registration: {
+      teamName: alreadyRegistered.teamName,
+      captainName: alreadyRegistered.captainName,
+      captainEmail: alreadyRegistered.captainEmail,
+      players: alreadyRegistered.players || [],
+      createdAt: alreadyRegistered.createdAt
     }
+  });
+}
 
     const maxPlayers = Number(eventData.maxPlayers) || 10;
 
@@ -3061,9 +3208,26 @@ app.post("/events/register", requireAuth, async (req, res) => {
     }
 
     res.json({
-      success: true,
-      message: "Tournament registration completed successfully. Confirmation email sent to the captain."
-    });
+    success: true,
+    alreadyRegistered: false,
+    message: "Tournament registration completed successfully. Confirmation email sent to the captain.",
+    event: {
+      title: eventData.title,
+      category: eventData.category,
+      description: eventData.description,
+      imagePath: eventData.imagePath,
+      detailsLink: eventData.detailsLink,
+      maxPlayers: eventData.maxPlayers
+    },
+    registration: {
+      teamName,
+      captainName,
+      captainEmail,
+      players: cleanedPlayers,
+      createdAt: new Date()
+    } 
+  
+  });
 
   } catch (error) {
     console.error("Event registration error:", error);

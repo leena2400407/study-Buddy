@@ -539,3 +539,252 @@ body::after {
 .single-player-input input {
   width: 100%;
 }
+
+/* ================= TOURNAMENT BRACKET MODAL FIX ================= */
+
+.bracket-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  background:
+    radial-gradient(circle at top, rgba(76, 29, 149, 0.35), transparent 38%),
+    radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.25), transparent 32%),
+    rgba(2, 6, 23, 0.88) !important;
+  backdrop-filter: blur(18px);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+}
+
+.bracket-overlay.hidden {
+  display: none !important;
+}
+
+.bracket-modal-box {
+  position: relative !important;
+  width: min(1180px, 96vw) !important;
+  max-height: 92vh !important;
+  overflow: auto !important;
+  border-radius: 32px !important;
+  padding: 34px !important;
+  color: #ffffff !important;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(24, 24, 62, 0.96)),
+    radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.25), transparent 42%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.65) !important;
+}
+
+.bracket-close-btn {
+  position: absolute !important;
+  top: 18px !important;
+  right: 20px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border: none !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: white !important;
+  font-size: 28px !important;
+  transition: 0.25s ease !important;
+}
+
+.bracket-close-btn:hover {
+  background: rgba(239, 68, 68, 0.9) !important;
+  transform: rotate(90deg);
+}
+
+.bracket-header {
+  text-align: center !important;
+  margin-bottom: 24px !important;
+}
+
+.bracket-mini-title {
+  display: inline-flex !important;
+  padding: 8px 16px !important;
+  border-radius: 999px !important;
+  background: rgba(34, 197, 94, 0.14) !important;
+  border: 1px solid rgba(34, 197, 94, 0.35) !important;
+  color: #86efac !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.4px !important;
+}
+
+.bracket-header h2 {
+  margin: 14px 0 8px !important;
+  font-size: clamp(30px, 5vw, 52px) !important;
+  font-weight: 900 !important;
+  letter-spacing: -1.3px !important;
+  color: white !important;
+}
+
+.bracket-header p {
+  margin: 0 !important;
+  color: #cbd5e1 !important;
+  font-size: 16px !important;
+}
+
+.bracket-user-card {
+  width: fit-content !important;
+  margin: 0 auto 28px !important;
+  padding: 12px 20px !important;
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  border: 1px solid rgba(96, 165, 250, 0.35) !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.bracket-user-card span {
+  color: #93c5fd !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+.bracket-user-card strong {
+  color: white !important;
+  font-weight: 900 !important;
+}
+
+.bracket-area {
+  display: grid !important;
+  grid-template-columns: 1.35fr 1fr 0.9fr 0.8fr !important;
+  gap: 28px !important;
+  align-items: center !important;
+  min-width: 900px !important;
+}
+
+.bracket-round {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+}
+
+.bracket-round h3 {
+  text-align: center !important;
+  margin: 0 0 8px !important;
+  color: #e0f2fe !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.bracket-match {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  background: rgba(2, 6, 23, 0.52) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.bracket-match::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  right: -28px !important;
+  width: 28px !important;
+  height: 2px !important;
+  background: rgba(148, 163, 184, 0.55) !important;
+}
+
+.bracket-round:last-child .bracket-match::after {
+  display: none !important;
+}
+
+.bracket-team {
+  min-height: 56px !important;
+  border-radius: 14px !important;
+  padding: 10px 12px !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.bracket-team span {
+  min-width: 42px !important;
+  color: #93c5fd !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.bracket-team strong {
+  color: #f8fafc !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.bracket-team.my-team {
+  border-color: rgba(34, 197, 94, 0.8) !important;
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(15, 23, 42, 0.94)) !important;
+  box-shadow: 0 0 32px rgba(34, 197, 94, 0.22) !important;
+}
+
+.bracket-team.empty-team {
+  opacity: 0.55 !important;
+  border-style: dashed !important;
+}
+
+.future-match {
+  min-height: 92px !important;
+  justify-content: center !important;
+}
+
+.bracket-footer {
+  margin-top: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  color: #94a3b8 !important;
+}
+
+.bracket-footer p {
+  margin: 0 !important;
+  color: #cbd5e1 !important;
+  font-weight: 700 !important;
+}
+
+.bracket-location-btn {
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 13px 22px !important;
+  cursor: pointer !important;
+  color: white !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.3) !important;
+  transition: 0.25s ease !important;
+}
+
+.bracket-location-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 45px rgba(124, 58, 237, 0.38) !important;
+}
+
+@media (max-width: 900px) {
+  .bracket-modal-box {
+    padding: 28px 18px !important;
+  }
+
+  .bracket-area {
+    overflow-x: auto !important;
+  }
+
+  .bracket-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .bracket-location-btn {
+    width: 100% !important;
+  }
+}
