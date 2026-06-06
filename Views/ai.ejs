@@ -5,96 +5,145 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>
-    <%= typeof pageTitle !== "undefined" ? pageTitle : "Study Buddy AI" %>
+    <%= typeof pageTitle !== "undefined" ? pageTitle : "AI Chatbot" %>
   </title>
 
   <link rel="stylesheet" href="/css/ai.css" />
 </head>
 
 <body>
-  <div class="background">
-    <div class="bg-glow glow-one"></div>
-    <div class="bg-glow glow-two"></div>
-    <div class="bg-grid"></div>
-  </div>
+  <div class="visual-world"></div>
 
-  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+  <nav class="signal-nav" aria-label="Hidden controls">
+    <button class="signal-dot" type="button" aria-label="Open controls">
+      <span></span>
+    </button>
 
-  <main class="ai-page">
-    <section class="top-card">
-      <div class="brand">
-        <div class="brand-logo">AI</div>
+    <div class="signal-menu">
+      <button id="themeToggle" type="button">soft mode</button>
+      <button id="clearBtn" type="button">clear</button>
+      <button type="button" onclick="window.location.href='/cylinder#cylinder'">exit</button>
+    </div>
+  </nav>
 
-        <div>
-          <p class="brand-small">Study Buddy</p>
-          <h1>AI Assistant</h1>
-        </div>
-      </div>
+  <main class="ai-app">
+    <aside class="identity-panel ai-side-panel">
+      <div class="ai-side-inner">
+        <div class="ai-side-top">
+          <p class="eyebrow">AI Chatbot</p>
 
-      <p class="top-description">
-        Ask anything. Get explanations, summaries, code help, study plans, project ideas,
-        exam tips, and quick answers.
-      </p>
-
-      <div class="status-pill">
-        <span></span>
-        Gemini connected
-      </div>
-    </section>
-
-    <section class="chat-card">
-      <header class="chat-header">
-        <div class="assistant-meta">
-          <div class="assistant-avatar">✦</div>
-
-          <div>
-            <h2>Study Buddy AI</h2>
-            <p id="chatStatus">Online • Ask me anything</p>
+          <div class="ai-model-badge">
+            <span></span>
+            online
           </div>
         </div>
 
-        <button id="clearBtn" class="clear-btn" type="button">
-          Clear chat
-        </button>
+        <div class="ai-core-card">
+          <div class="ai-rings">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="ai-core">
+            <span>AI</span>
+          </div>
+        </div>
+
+        <div class="ai-side-title">
+          <h1>
+            A clean space<br />
+            for thinking.
+          </h1>
+
+          <p>
+            Ask questions, understand lessons, explain code, summarize topics,
+            and prepare with a focused chatbot experience.
+          </p>
+        </div>
+
+        <div class="ai-mini-tags">
+          <span>study</span>
+          <span>code</span>
+          <span>summary</span>
+          <span>exam</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="chat-studio">
+      <header class="chat-header">
+        <div>
+          <p class="chat-label">live session</p>
+          <h2>AI Chatbot</h2>
+        </div>
+
+        <div class="status-pill">
+          <span></span>
+          <p id="chatStatus">online</p>
+        </div>
       </header>
 
-      <section class="start-screen" id="startScreen">
-        <div class="start-icon">🤖</div>
+      <section id="startScreen" class="start-screen">
+        <div class="start-symbol">
+          <span>✦</span>
+        </div>
 
-        <h3>Ready when you are</h3>
+        <p class="eyebrow">choose a starting point</p>
 
-        <p>
-          Start a clean AI chat. The assistant will answer openly like Gemini,
-          not with preset topic replies.
+        <h3>What do you want to understand?</h3>
+
+        <p class="start-copy">
+          Start with a shortcut or write your own question. The chat is designed
+          to stay focused, smooth, and presentation-ready.
         </p>
 
-        <button class="start-btn" id="startBtn" type="button">
-          Start chatting
+        <div class="prompt-grid">
+          <button type="button" data-prompt="Summarize this topic for my exam in simple steps.">
+            <span>summary</span>
+            <strong>Make it simple</strong>
+            <small>Turn large content into clear points.</small>
+          </button>
+
+          <button type="button" data-prompt="Explain this code step by step and tell me what each part does.">
+            <span>coding</span>
+            <strong>Explain code</strong>
+            <small>Understand logic and structure.</small>
+          </button>
+
+          <button type="button" data-prompt="Give me MCQ questions to test my understanding.">
+            <span>exam</span>
+            <strong>Test me</strong>
+            <small>Practice with focused questions.</small>
+          </button>
+        </div>
+
+        <button id="startBtn" class="start-btn" type="button">
+          enter chat
         </button>
       </section>
 
-      <section class="chat-ui hidden" id="chatUi">
-        <div class="chat-box" id="chatBox"></div>
+      <section id="chatUi" class="chat-ui hidden">
+        <div id="chatBox" class="chat-box"></div>
 
-        <form class="chat-form" id="chatForm">
-          <div class="input-box">
+        <form id="chatForm" class="chat-form">
+          <div class="input-shell">
             <textarea
               id="messageInput"
-              placeholder="Type your question..."
+              placeholder="Ask anything..."
               rows="1"
               autocomplete="off"
               required
             ></textarea>
 
-            <div class="input-info">
+            <div class="input-meta">
               <span id="charCount">0 characters</span>
               <span>Enter to send • Shift + Enter for new line</span>
             </div>
           </div>
 
-          <button id="sendBtn" type="submit">
-            <span>Send</span>
-            <span>➜</span>
+          <button id="sendBtn" class="send-btn" type="submit" disabled>
+            send
           </button>
         </form>
       </section>
