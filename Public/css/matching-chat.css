@@ -250,3 +250,183 @@ body {
     min-width: 82px;
   }
 }
+
+.hidden {
+  display: none !important;
+}
+
+.schedule-panel {
+  margin: 0 18px 16px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.18), transparent 38%),
+    rgba(15, 23, 42, 0.88);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.schedule-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.schedule-panel-head h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.schedule-close-btn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.schedule-panel label {
+  display: block;
+  margin-bottom: 8px;
+  color: #dbeafe;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.schedule-panel input {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(15, 23, 42, 0.82);
+  color: white;
+  padding: 0 16px;
+  font-size: 15px;
+  outline: none;
+}
+
+.schedule-panel input:focus {
+  border-color: rgba(147, 197, 253, 0.75);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.12);
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.schedule-cancel-btn,
+.schedule-send-btn {
+  border: 0;
+  border-radius: 16px;
+  padding: 13px 18px;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.schedule-cancel-btn {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.schedule-send-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.schedule-cancel-btn:hover,
+.schedule-send-btn:hover {
+  transform: translateY(-2px);
+}
+
+.chat-form {
+  align-items: center;
+}
+
+.chat-form .send-btn,
+.chat-form .schedule-btn,
+.chat-form .match-now-btn {
+  min-width: 105px;
+  height: 52px;
+  border: 0;
+  border-radius: 16px;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.chat-form .send-btn {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.chat-form .schedule-btn {
+  background: linear-gradient(135deg, #0891b2, #38bdf8);
+}
+
+.chat-form .match-now-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.chat-form .send-btn:hover,
+.chat-form .schedule-btn:hover,
+.chat-form .match-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(96, 165, 250, 0.22);
+}
+
+.meeting-status-card {
+  align-self: center;
+  width: min(620px, 100%);
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(14, 165, 233, 0.1);
+  color: #dbeafe;
+  text-align: center;
+}
+
+.meeting-status-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.meeting-status-card p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.meeting-status-card.sent {
+  border-color: rgba(34, 197, 94, 0.28);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+@media (max-width: 760px) {
+  .chat-form {
+    flex-wrap: wrap;
+  }
+
+  .chat-form input {
+    flex: 1 1 100%;
+  }
+
+  .chat-form .send-btn,
+  .chat-form .schedule-btn,
+  .chat-form .match-now-btn {
+    flex: 1;
+    min-width: 90px;
+  }
+
+  .schedule-actions {
+    flex-direction: column;
+  }
+}

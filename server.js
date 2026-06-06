@@ -1896,6 +1896,180 @@ const sendMatchRequestEmail = async ({
   });
 };
 
+const createJitsiRoom = () => {
+  const randomCode = Math.floor(100000 + Math.random() * 900000);
+  const roomId = `studybuddy-${Date.now()}-${randomCode}`;
+
+  const jitsiConfig =
+    "#config.startWithVideoMuted=true" +
+    "&config.startWithAudioMuted=true" +
+    "&config.toolbarButtons=%5B%22microphone%22%2C%22chat%22%2C%22participants-pane%22%2C%22tileview%22%2C%22hangup%22%5D";
+
+  return {
+    roomId,
+    meetingLink: `https://meet.jit.si/${roomId}${jitsiConfig}`
+  };
+};
+
+const formatMatchSchedule = (scheduledAt) => {
+  if (!scheduledAt) return "Not scheduled.";
+
+  return new Date(scheduledAt).toLocaleString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+const sendChatMatchEmail = async (matchRequest) => {
+  if (matchRequest.emailSentAt) {
+    return {
+      alreadySent: true,
+      meetingLink: matchRequest.meetingLink
+    };
+  }
+
+  const freshRequest = await MatchRequest.findById(matchRequest._id);
+
+  if (!freshRequest) {
+    throw new Error("Match request was not found.");
+  }
+
+  const senderUser = await User.findById(freshRequest.sender).lean();
+  const receiverUser = await User.findById(freshRequest.receiver).lean();
+
+  const senderEmail =
+    freshRequest.senderEmail ||
+    senderUser?.email ||
+    "";
+
+  const receiverEmail =
+    freshRequest.receiverEmail ||
+    receiverUser?.email ||
+    "";
+
+  const senderName =
+    freshRequest.senderName ||
+    senderUser?.fullName ||
+    senderUser?.username ||
+    "Student";
+
+  const receiverName =
+    freshRequest.receiverName ||
+    receiverUser?.fullName ||
+    receiverUser?.username ||
+    "Student";
+
+  const emailList = [...new Set(
+    [senderEmail, receiverEmail]
+      .map(email => String(email || "").trim().toLowerCase())
+      .filter(Boolean)
+  )];
+
+  if (emailList.length < 2) {
+    throw new Error("Both student emails were not found.");
+  }
+
+  const room = createJitsiRoom();
+
+  freshRequest.roomId = room.roomId;
+  freshRequest.meetingLink = room.meetingLink;
+  freshRequest.emailSentAt = new Date();
+  freshRequest.status = "matched";
+
+  await freshRequest.save();
+
+  const transporter = createEmailTransporter();
+
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222; max-width: 650px; margin: auto; padding: 20px;">
+      <div style="background: #f7f9fc; padding: 24px; border-radius: 14px; border: 1px solid #e5e7eb;">
+        <h2 style="margin-top: 0; color: #1f2937;">Your Study Buddy Room is Ready</h2>
+
+        <p>
+          A study match has been created between
+          <strong>${senderName}</strong> and <strong>${receiverName}</strong>.
+        </p>
+
+        <div style="margin: 18px 0; padding: 16px; border-radius: 12px; background: #eef2ff; border: 1px solid #c7d2fe;">
+          <p style="margin: 0; color: #1e1b4b;">
+            <strong>Subject:</strong><br>
+            ${freshRequest.senderWeakSubject || freshRequest.receiverWeakSubject || "Study session"}
+          </p>
+        </div>
+
+        <p>
+          <strong>Meeting Time:</strong><br>
+          ${formatMatchSchedule(freshRequest.scheduledAt)}
+        </p>
+
+        <p>
+          <strong>Room ID:</strong><br>
+          ${freshRequest.roomId}
+        </p>
+
+        <p>
+          <strong>Video Room Link:</strong><br>
+          <a href="${freshRequest.meetingLink}" target="_blank" style="color: #2563eb; word-break: break-all;">
+            ${freshRequest.meetingLink}
+          </a>
+        </p>
+
+        <p>Click the link above to join the meeting.</p>
+      </div>
+
+      <div style="margin-top: 22px; background: #fff1f2; padding: 24px; border-radius: 14px; border: 1px solid #fecdd3;">
+        <h2 style="margin-top: 0; color: #991b1b;">Study Room Rules</h2>
+
+        <p>1. We only connect people for studying purposes.</p>
+        <p>2. Respect your colleagues in the meet.</p>
+        <p>3. If you joined the call and no one entered after 5 minutes, you have the right to leave the meet.</p>
+        <p>4. You must be logged in to the website for the meet to start.</p>
+        <p>5. You must enter using a laptop.</p>
+      </div>
+
+      <p style="margin-top: 22px;">
+        Best regards,<br>
+        <strong>Study Buddy Team</strong>
+      </p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to: emailList.join(", "),
+    subject: "Your Study Buddy Video Room",
+    html: emailHtml
+  });
+
+  return {
+    alreadySent: false,
+    meetingLink: freshRequest.meetingLink
+  };
+};
+
+const checkScheduledChatMatches = async () => {
+  try {
+    const dueRequests = await MatchRequest.find({
+      status: "rescheduled",
+      scheduledAt: { $lte: new Date() },
+      emailSentAt: null
+    }).limit(20);
+
+    for (const request of dueRequests) {
+      await sendChatMatchEmail(request);
+      console.log(`Scheduled chat match email sent for request ${request._id}`);
+    }
+  } catch (error) {
+    console.error("Scheduled chat match checker error:", error);
+  }
+};
+
+setInterval(checkScheduledChatMatches, 60 * 1000);
+
 const CS_SUBJECTS = [
   "Programming",
   "Object Oriented Programming",
@@ -3120,11 +3294,23 @@ app.get("/api/matching/chat/:chatId/messages", requireAuth, async (req, res) => 
       });
     }
 
-    res.json({
-      success: true,
-      messages: chat.messages || [],
-      currentUserId: String(req.session.user.id)
-    });
+   const matchRequest = await MatchRequest.findById(chat.matchRequest).lean();
+
+res.json({
+  success: true,
+  messages: chat.messages || [],
+  currentUserId: String(req.session.user.id),
+  request: matchRequest
+    ? {
+        _id: matchRequest._id,
+        status: matchRequest.status,
+        scheduledAt: matchRequest.scheduledAt,
+        emailSentAt: matchRequest.emailSentAt,
+        meetingLink: matchRequest.meetingLink,
+        roomId: matchRequest.roomId
+      }
+    : null
+});
 
   } catch (error) {
     console.error("Load chat messages error:", error);
@@ -3132,6 +3318,160 @@ app.get("/api/matching/chat/:chatId/messages", requireAuth, async (req, res) => 
     res.status(500).json({
       success: false,
       message: "Could not load chat messages."
+    });
+  }
+});
+
+app.patch("/api/matching/chat/:chatId/schedule", requireAuth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { scheduledAt } = req.body;
+
+    if (!scheduledAt) {
+      return res.status(400).json({
+        success: false,
+        message: "Choose a meeting date and time."
+      });
+    }
+
+    const finalScheduledAt = new Date(scheduledAt);
+
+    if (Number.isNaN(finalScheduledAt.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date and time."
+      });
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat was not found."
+      });
+    }
+
+    const isParticipant = (chat.participants || []).some((participantId) => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot schedule this match."
+      });
+    }
+
+    const matchRequest = await MatchRequest.findById(chat.matchRequest);
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    matchRequest.status = "rescheduled";
+    matchRequest.scheduledAt = finalScheduledAt;
+    matchRequest.emailSentAt = null;
+    matchRequest.roomId = "";
+    matchRequest.meetingLink = "";
+
+    await matchRequest.save();
+
+    chat.messages.push({
+      sender: req.session.user.id,
+      senderName: req.session.user.fullName || req.session.user.username || "Student",
+      text: `Scheduled the match for ${formatMatchSchedule(finalScheduledAt)}.`
+    });
+
+    await chat.save();
+
+    if (finalScheduledAt.getTime() <= Date.now()) {
+      await sendChatMatchEmail(matchRequest);
+
+      return res.json({
+        success: true,
+        message: "Selected time is now/past, so the meeting email was sent now to both students."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: `Meeting scheduled. The email will be sent to both students at ${formatMatchSchedule(finalScheduledAt)}.`
+    });
+
+  } catch (error) {
+    console.error("Schedule chat match error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Could not schedule the match."
+    });
+  }
+});
+
+app.post("/api/matching/chat/:chatId/match-now", requireAuth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat was not found."
+      });
+    }
+
+    const isParticipant = (chat.participants || []).some((participantId) => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot start this match."
+      });
+    }
+
+    const matchRequest = await MatchRequest.findById(chat.matchRequest);
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    matchRequest.scheduledAt = new Date();
+
+    const result = await sendChatMatchEmail(matchRequest);
+
+    chat.messages.push({
+      sender: req.session.user.id,
+      senderName: req.session.user.fullName || req.session.user.username || "Student",
+      text: result.alreadySent
+        ? "The meeting link was already sent before."
+        : "Started the match now. The meeting email was sent to both students."
+    });
+
+    await chat.save();
+
+    return res.json({
+      success: true,
+      message: result.alreadySent
+        ? "Meeting email was already sent before."
+        : "Match started now. Meeting email sent to both students."
+    });
+
+  } catch (error) {
+    console.error("Match now error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Could not start the match now."
     });
   }
 });
