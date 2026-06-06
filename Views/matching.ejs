@@ -1,216 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Study Buddy Matching</title>
+  <title>Study Buddy Matching</title>
 
-    <link rel="stylesheet" href="/css/matching.css" />
+  <link rel="stylesheet" href="/css/matching.css" />
 </head>
 
 <body class="matching-experience">
-    <div class="match-bg-grid"></div>
+  <div class="match-bg-grid"></div>
 
-    <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
 
-    <section class="page-wrapper">
+  <section class="page-wrapper">
 
-        <section class="hero-section reveal-on-scroll">
-            <div class="hero-content">
-                <p class="small-title">STUDY BUDDY MATCHING</p>
+    <section class="hero-section reveal-on-scroll">
+      <div class="hero-content">
+        <p class="small-title">STUDY BUDDY MATCHING</p>
 
-                <h1>
-                    Find Your Perfect<br>
-                    Study Partner
-                </h1>
+        <h1>
+          Find Your Perfect<br>
+          Study Partner
+        </h1>
 
-                <p class="hero-text">
-                    Build your study list, save it to the database, then find students who can help you
-                    in your weak subjects or students you can help in your strong subjects.
-                </p>
+        <p class="hero-text">
+          Build your study list using fixed subjects, save it, then find students from your same
+          university and major who can help you.
+        </p>
 
-                <div class="hero-buttons">
-                    <button class="main-btn" onclick="openModal()">Build My List</button>
-                    <button class="secondary-btn" onclick="startSearchFlow()">view requests</button>
-                </div>
+        <% if (!user) { %>
+          <p class="login-warning">
+            You must be logged in before searching for study matches.
+          </p>
+        <% } %>
+      </div>
+    </section>
 
-                <% if (!user) { %>
-                    <p class="login-warning">
-                        You must be logged in before building a list or adding a request.
-                    </p>
-                <% } %>
-            </div>
-        </section>
+    <section class="match-flow reveal-on-scroll">
+      <div class="flow-card">
+        <span>01</span>
+        <strong>Build your list</strong>
+        <p>Add one or more subjects you need help with and one or more subjects you can teach.</p>
+      </div>
 
-        <section class="match-flow reveal-on-scroll">
-            <div class="flow-card">
-                <span>01</span>
-                <strong>Add subjects</strong>
-                <p>Add the subject you need help with or the subject you can teach.</p>
-            </div>
+      <div class="flow-card">
+        <span>02</span>
+        <strong>Send request</strong>
+        <p>Choose a matched student and send them a study request by email and in-app.</p>
+      </div>
 
-            <div class="flow-card">
-                <span>02</span>
-                <strong>Save your list</strong>
-                <p>save your study list so you can make your request </p>
-            </div>
+      <div class="flow-card">
+        <span>03</span>
+        <strong>Start chatting</strong>
+        <p>If the student accepts, a private study chat opens between both of you.</p>
+      </div>
+    </section>
 
-            <div class="flow-card">
-                <span>03</span>
-                <strong>Find matches</strong>
-                <p>The system finds you the suitable students you can study with.</p>
-            </div>
-        </section>
+    <section class="dashboard reveal-on-scroll">
 
-        <section class="dashboard reveal-on-scroll">
+      <div class="left-panel">
 
-            <div class="left-panel">
-                <div class="panel-card my-profile">
-                    <div class="card-header">
-                        <div>
-                            <p class="section-label">MY STUDY PROFILE</p>
-                            <h2>Your Study List</h2>
-                        </div>
+        <div class="panel-card my-profile">
+          <p class="section-label">FIND MATCHES</p>
+          <h2>Choose Your Subjects</h2>
 
-                       <div class="profile-actions">
-                        <button class="edit-btn" onclick="openModal()">Edit</button>
-                        <button class="clear-btn" onclick="clearStudyList()">Clear</button>
-                        </div>
-                        </div>
+          <div class="match-form">
 
-                    <div class="profile-section">
-                        <h4>I need help with</h4>
-                        <div id="profileWeak" class="subject-list empty-list">
-                            No weak subjects added yet.
-                        </div>
-                    </div>
+            <label for="weakSubjectSelect">I need help with</label>
+            <select id="weakSubjectSelect" class="subject-select">
+              <option value="">Choose weak subject</option>
+            </select>
 
-                    <div class="profile-section">
-                        <h4>I can teach</h4>
-                        <div id="profileStrong" class="subject-list empty-list">
-                            No strong subjects added yet.
-                        </div>
-                    </div>
-                </div>
+            <button class="secondary-btn full-btn" type="button" onclick="addSelectedSubject('weak')">
+              Add Weak Subject
+            </button>
 
-                <div class="panel-card meet-rules-panel">
-                    <p class="section-label rules-label">MEET RULES</p>
+            <label for="strongSubjectSelect">I can help with</label>
+            <select id="strongSubjectSelect" class="subject-select">
+              <option value="">Choose strong subject</option>
+            </select>
 
-                    <h2>Study Room Rules</h2>
+            <button class="secondary-btn full-btn" type="button" onclick="addSelectedSubject('strong')">
+              Add Strong Subject
+            </button>
 
-                    <div class="rules-list">
-                        <div class="rule-item">
-                            <div class="rule-number"> </div>
-                            <p>1. We only connect people for studying purposes.</p>
-                            <br>
-                        </div>
-
-                        <div class="rule-item">
-                            <div class="rule-number"> </div>
-                            <p>2. Respect your colleagues in the meet.</p>
-                            <br>
-                        </div>
-
-                        <div class="rule-item">
-                            <div class="rule-number"> </div>
-                            <p>3. If you joined the call and no one entered after 5 minutes, you have the right to leave the meet.</p>
-                            <br>
-                        </div>
-
-                        <div class="rule-item">
-                            <div class="rule-number"> </div>
-                            <p>4. You must be logged in to the website for the meet to start.</p>
-                            <br>
-                        </div>
-
-                        <div class="rule-item">
-                            <div class="rule-number"> </div>
-                            <p>5. You must enter using a laptop.</p>
-                        </div>
-
-                    </div>
-                </div>
+            <div class="profile-section">
+              <h4>I need help with</h4>
+              <div id="profileWeak" class="subject-list empty-list">
+                No weak subjects added yet.
+              </div>
             </div>
 
-            <div class="right-panel">
-                <div class="panel-card matches-panel" id="matches-section">
-                    <div class="card-header">
-                        <div>
-                            <p class="section-label">AVAILABLE STUDENTS</p>
-                            <h2>People Matching You</h2>
-                        </div>
-                    </div>
-
-                    <div class="search-box">
-                        <input
-                            type="text"
-                            id="searchInput"
-                            placeholder="Search available students..."
-                            oninput="renderMatches()"
-                        />
-                    </div>
-
-                    <div id="matchesGrid" class="matches-grid">
-                        <div class="empty-state-card">
-                            <div class="empty-icon">🔎</div>
-                            <h3>No request yet</h3>
-                            <p>Click Add Request after saving your list to find available students.</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="profile-section">
+              <h4>I can teach</h4>
+              <div id="profileStrong" class="subject-list empty-list">
+                No strong subjects added yet.
+              </div>
             </div>
 
-        </section>
+            <button class="main-btn full-btn" type="button" onclick="saveStudyList()">
+              Save My List
+            </button>
+
+            <button class="main-btn full-btn" type="button" onclick="searchMatches()">
+              Search Matches
+            </button>
+
+            <button class="clear-btn full-btn" type="button" onclick="clearStudyList()">
+              Clear List
+            </button>
+
+          </div>
+        </div>
+
+        <div class="panel-card meet-rules-panel">
+          <p class="section-label rules-label">MATCH RULES</p>
+
+          <h2>Study Match Rules</h2>
+
+          <div class="rules-list">
+            <div class="rule-item">
+              <p>1. You can only match with students from your same university and major.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>2. Match requests are sent by email and also appear inside the website.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>3. Chat opens only after the other student accepts your request.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>4. Use the chat for studying only.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>5. Be respectful and clear about what you need help with.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="right-panel">
+
+        <div class="panel-card matches-panel" id="matches-section">
+          <div class="card-header">
+            <div>
+              <p class="section-label">AVAILABLE STUDENTS</p>
+              <h2>Matching Results</h2>
+            </div>
+          </div>
+
+          <div id="matchesGrid" class="matches-grid">
+            <div class="empty-state-card">
+              <div class="empty-icon">🔎</div>
+              <h3>No search yet</h3>
+              <p>Add subjects to your study list, save it, then search for matches.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card matches-panel">
+          <div class="card-header">
+            <div>
+              <p class="section-label">REQUESTS</p>
+              <h2>My Match Requests</h2>
+            </div>
+          </div>
+
+          <div id="requestsGrid" class="matches-grid">
+            <div class="empty-state-card small-empty">
+              <div class="empty-icon">📩</div>
+              <h3>No requests yet</h3>
+              <p>Your sent, received, accepted, and rejected match requests will appear here.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
 
     </section>
 
-    <div class="overlay" id="overlay">
-        <div class="modal">
-            <span class="close" onclick="closeModal()">&times;</span>
+  </section>
 
-            <p class="section-label">EDIT YOUR LIST</p>
-            <h2>My Study List</h2>
+  <div class="toast" id="toast"></div>
 
-            <p class="glowing-text">
-                Add at least one weak subject or one strong subject. You do not need both.
-            </p>
+  <script>
+    window.MATCHING_PAGE_DATA = {
+      isLoggedIn: <%= user ? "true" : "false" %>
+    };
+  </script>
 
-            <label>Weak Subjects</label>
-            <div class="tag-box" id="weakContainer">
-                <input
-                    type="text"
-                    class="tag-input"
-                    id="weakInput"
-                    placeholder="Example: Math"
-                    onkeydown="handleTag(event, 'weak')"
-                />
-                <button class="add-tag-btn" type="button" onclick="addSubject('weak')">Add</button>
-            </div>
-
-            <label>Strong Subjects</label>
-            <div class="tag-box" id="strongContainer">
-                <input
-                    type="text"
-                    class="tag-input"
-                    id="strongInput"
-                    placeholder="Example: Data Structure"
-                    onkeydown="handleTag(event, 'strong')"
-                />
-                <button class="add-tag-btn" type="button" onclick="addSubject('strong')">Add</button>
-            </div>
-
-            <button class="save-btn" type="button" onclick="saveList()">Save Changes</button>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
-
-    <script>
-  window.MATCHING_PAGE_DATA = {
-    isLoggedIn: <%= user ? "true" : "false" %>};
-    </script>
-
-    <script src="/javaScript/matching.js"></script>
+  <script src="/javaScript/matching.js?v=5"></script>
 </body>
 </html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Study Buddy Chat</title>
+
+  <link rel="stylesheet" href="/css/matching-chat.css" />
+</head>
+
+<body>
+  <div class="chat-bg"></div>
+
+  <button class="back-btn" type="button" onclick="window.location.href='/matching'">
+    ← Back
+  </button>
+
+  <main class="chat-page">
+    <section class="chat-shell">
+
+      <header class="chat-header">
+        <div class="chat-avatar">
+          <%= otherUser && otherUser.fullName ? otherUser.fullName.charAt(0).toUpperCase() : "S" %>
+        </div>
+
+        <div>
+          <p class="small-title">STUDY BUDDY CHAT</p>
+
+          <h1>
+            <%= otherUser && otherUser.fullName ? otherUser.fullName : "Study Partner" %>
+          </h1>
+
+          <p class="chat-subtitle">
+            Private study chat between matched students.
+          </p>
+        </div>
+      </header>
+
+      <section id="messagesBox" class="messages-box">
+        <div class="loading-message">
+          Loading messages...
+        </div>
+      </section>
+
+      <form id="chatForm" class="chat-form">
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Write your message..."
+          maxlength="1000"
+          autocomplete="off"
+        />
+
+        <button type="submit">
+          Send
+        </button>
+      </form>
+
+    </section>
+  </main>
+
+  <script>
+    window.CHAT_PAGE_DATA = {
+      chatId: "<%= chatId %>"
+    };
+  </script>
+
+  <script src="/javaScript/matching-chat.js?v=1"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Study Buddy Chat</title>
+
+  <link rel="stylesheet" href="/css/matching-chat.css" />
+</head>
+
+<body>
+  <div class="chat-bg"></div>
+
+  <button class="back-btn" type="button" onclick="window.location.href='/matching'">
+    ← Back
+  </button>
+
+  <%
+    const safeOtherUser =
+      typeof otherUser !== "undefined" && otherUser
+        ? otherUser
+        : null;
+
+    const partnerName =
+      safeOtherUser && safeOtherUser.fullName
+        ? safeOtherUser.fullName
+        : safeOtherUser && safeOtherUser.username
+          ? safeOtherUser.username
+          : "Study Partner";
+
+    const avatarLetter =
+      partnerName && partnerName.length > 0
+        ? partnerName.charAt(0).toUpperCase()
+        : "S";
+  %>
+
+  <main class="chat-page">
+    <section class="chat-shell">
+
+      <header class="chat-header">
+        <div class="chat-avatar">
+          <%= avatarLetter %>
+        </div>
+
+        <div>
+          <p class="small-title">STUDY BUDDY CHAT</p>
+
+          <h1>
+            <%= partnerName %>
+          </h1>
+
+          <p class="chat-subtitle">
+            Private study chat between matched students.
+          </p>
+        </div>
+      </header>
+
+      <section id="messagesBox" class="messages-box">
+        <div class="loading-message">
+          Loading messages...
+        </div>
+      </section>
+
+      <form id="chatForm" class="chat-form">
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Write your message..."
+          maxlength="1000"
+          autocomplete="off"
+        />
+
+        <button type="submit">
+          Send
+        </button>
+      </form>
+
+    </section>
+  </main>
+
+  <script>
+    window.CHAT_PAGE_DATA = {
+      chatId: "<%= typeof chatId !== 'undefined' ? chatId : '' %>"
+    };
+  </script>
+
+  <script src="/javaScript/matching-chat.js?v=2"></script>
+</body>
+</html>

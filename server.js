@@ -15,6 +15,9 @@ const EventRegistration = require("./models/eventsReg");
 const University = require("./models/Universities");
 const { requireAuth, requirePageAuth } = require("./middleware/authMiddleware");
 const ResourceCategory = require("./models/resources");
+const crypto = require("crypto");
+const MatchRequest = require("./models/MatchReq");
+const Chat = require("./models/chat");
 require("dotenv").config();
 
 const app = express();
@@ -25,9 +28,6 @@ app.use(
 );
 
 connectDB();
-
-const matchCooldowns = new Map();
-const MATCH_COOLDOWN_MS = 8 * 60 * 1000;
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -90,95 +90,6 @@ const sendSignupEmail = async (userEmail, fullName) => {
         <br>
         <p>Best regards,</p>
         <p><strong>Study Buddy Team</strong></p>
-      </div>
-    `
-  });
-};
-
-const sendMatchRoomEmail = async ({ to, receiverName, senderName, matchedName, roomId, meetingLink, helpSubjects }) => {
-  const transporter = createEmailTransporter();
-
-  await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
-    to,
-    subject: "Your Study Buddy Video Room",
-    html: `
-
-      <div style="margin-top: 22px; background: #fff1f2; padding: 24px; border-radius: 14px; border: 1px solid #fecdd3;">
-          <h2 style="margin-top: 0; color: #991b1b;">Study Room Rules</h2>
-
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
-            <strong style="color: #b91c1c;">01</strong>
-            <p style="margin: 6px 0 0;">We only connect people for studying purposes.</p>
-          </div>
-
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
-            <strong style="color: #b91c1c;">02</strong>
-            <p style="margin: 6px 0 0;">Respect your colleagues in the meet.</p>
-          </div>
-
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
-            <strong style="color: #b91c1c;">03</strong>
-            <p style="margin: 6px 0 0;">
-              If you joined the call and no one entered after 5 minutes, you have the right to leave the meet.
-            </p>
-          </div>
-
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #fecdd3;">
-            <strong style="color: #b91c1c;">04</strong>
-            <p style="margin: 6px 0 0;">
-              You must be logged in to the website for the meet to start.
-            </p>
-          </div>
-
-          <div style="background: white; padding: 14px 16px; border-radius: 10px; border: 1px solid #fecdd3;">
-            <strong style="color: #b91c1c;">05</strong>
-            <p style="margin: 6px 0 0;">
-              You must enter using a laptop.
-            </p>
-          </div>
-
-        </div>
-
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222; max-width: 650px; margin: auto; padding: 20px;">
-        <div style="background: #f7f9fc; padding: 24px; border-radius: 14px; border: 1px solid #e5e7eb;">
-          <h2 style="margin-top: 0; color: #1f2937;">Your Study Buddy Room is Ready</h2>
-
-          <p>Hello ${receiverName},</p>
-
-          <p>
-            A study match has been created between
-            <strong>${senderName}</strong> and <strong>${matchedName}</strong>.
-          </p>
-
-        <div style="margin: 18px 0; padding: 16px; border-radius: 12px; background: #eef2ff; border: 1px solid #c7d2fe;">
-          <p style="margin: 0; color: #1e1b4b; font-size: 15px; line-height: 1.6;">
-            <strong>Helping with:</strong><br>
-            ${helpSubjects && helpSubjects.length > 0 ? helpSubjects.join(", ") : "General study support"}
-          </p>
-      </div>
-
-          <p>
-          <strong>Room ID:</strong><br>
-          ${roomId}
-          </p>
-
-          <p>
-            <strong>Video Room Link:</strong><br>
-            <a href="${meetingLink}" target="_blank" style="color: #2563eb; word-break: break-all;">
-            ${meetingLink}
-            </a>
-          </p>
-
-          <p>
-            Click the link above to join the meeting.
-          </p>
-        </div>
-
-        <p style="margin-top: 22px;">
-          Best regards,<br>
-          <strong>Study Buddy Team</strong>
-        </p>
       </div>
     `
   });
@@ -1290,14 +1201,6 @@ const cleanSubjects = (subjects) => {
   )];
 };
 
-const getCommonSubjects = (firstList, secondList) => {
-  return firstList.filter(firstSubject =>
-    secondList.some(secondSubject =>
-      firstSubject.toLowerCase() === secondSubject.toLowerCase()
-    )
-  );
-};
-
 // Routes
 app.get("/", (req, res) => {
   res.render("index");
@@ -1938,6 +1841,672 @@ app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
   }
 });
 
+const sendMatchRequestEmail = async ({
+  to,
+  receiverName,
+  senderName,
+  senderWeakSubject,
+  senderStrongSubject,
+  acceptLink,
+  rejectLink
+}) => {
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "New Study Buddy Match Request",
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 28px; max-width: 680px; margin: auto; border-radius: 18px;">
+        <h1 style="margin-top: 0; color: #ffffff;">New Study Match Request</h1>
+
+        <p style="font-size: 16px; line-height: 1.7; color: #dbeafe;">
+          Hi <strong>${receiverName}</strong>,
+        </p>
+
+        <p style="font-size: 16px; line-height: 1.7; color: #d1d5db;">
+          <strong>${senderName}</strong> wants to match with you on Study Buddy.
+        </p>
+
+        <div style="margin: 22px 0; padding: 18px; background: #1e293b; border-radius: 14px; border: 1px solid #334155;">
+          <p style="margin: 0 0 10px; color: #fca5a5;">
+            <strong>${senderName} needs help with:</strong> ${senderWeakSubject}
+          </p>
+
+          <p style="margin: 0; color: #86efac;">
+            <strong>${senderName} can help with:</strong> ${senderStrongSubject}
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 26px;">
+          <a href="${acceptLink}" target="_blank" style="display: inline-block; background: #22c55e; color: white; padding: 13px 20px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+            Accept Request
+          </a>
+
+          <a href="${rejectLink}" target="_blank" style="display: inline-block; background: #ef4444; color: white; padding: 13px 20px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+            Reject Request
+          </a>
+        </div>
+
+        <p style="margin-top: 26px; color: #94a3b8; font-size: 14px;">
+          Only accept if you want to open a private study chat with this student.
+        </p>
+      </div>
+    `
+  });
+};
+
+const CS_SUBJECTS = [
+  "Programming",
+  "Object Oriented Programming",
+  "Data Structures",
+  "Algorithms",
+  "Database",
+  "Operating Systems",
+  "Computer Networks",
+  "Software Engineering",
+  "Web Development",
+  "Artificial Intelligence",
+  "Machine Learning",
+  "Cybersecurity",
+  "Computer Architecture",
+  "Discrete Mathematics",
+  "Calculus",
+  "Linear Algebra",
+  "Physics",
+  "Math"
+];
+
+function isValidCSSubject(subject) {
+  return CS_SUBJECTS.includes(String(subject || "").trim());
+}
+
+app.post("/api/matching/request/:requestId/accept", requireAuth, async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const matchRequest = await MatchRequest.findOne({
+      _id: requestId,
+      receiver: req.session.user.id
+    });
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    if (matchRequest.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `This request is already ${matchRequest.status}.`
+      });
+    }
+
+    const chat = await Chat.create({
+      participants: [matchRequest.sender, matchRequest.receiver],
+      matchRequest: matchRequest._id,
+      messages: []
+    });
+
+    matchRequest.status = "accepted";
+    matchRequest.chat = chat._id;
+    await matchRequest.save();
+
+    res.json({
+      success: true,
+      message: "Match request accepted. Chat opened.",
+      chatId: chat._id
+    });
+
+  } catch (error) {
+    console.error("Accept match request API error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not accept match request."
+    });
+  }
+});
+
+app.post("/api/matching/request/:requestId/reject", requireAuth, async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const matchRequest = await MatchRequest.findOne({
+      _id: requestId,
+      receiver: req.session.user.id
+    });
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    if (matchRequest.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `This request is already ${matchRequest.status}.`
+      });
+    }
+
+    matchRequest.status = "rejected";
+    await matchRequest.save();
+
+    res.json({
+      success: true,
+      message: "Match request rejected."
+    });
+
+  } catch (error) {
+    console.error("Reject match request API error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not reject match request."
+    });
+  }
+});
+
+app.get("/api/matching/subjects", requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    subjects: CS_SUBJECTS
+  });
+});
+app.post("/api/matching/search", requireAuth, async (req, res) => {
+  try {
+    const weakSubjects = Array.isArray(req.body.weakSubjects)
+      ? req.body.weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
+      : [];
+
+    const strongSubjects = Array.isArray(req.body.strongSubjects)
+      ? req.body.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
+      : [];
+
+    if (weakSubjects.length === 0 || strongSubjects.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Add at least one weak subject and one strong subject."
+      });
+    }
+
+    const invalidSubject = [...weakSubjects, ...strongSubjects].find(subject => {
+      return !isValidCSSubject(subject);
+    });
+
+    if (invalidSubject) {
+      return res.status(400).json({
+        success: false,
+        message: "Please choose valid subjects only."
+      });
+    }
+
+    const duplicatedSubject = weakSubjects.find(subject => {
+      return strongSubjects.includes(subject);
+    });
+
+    if (duplicatedSubject) {
+      return res.status(400).json({
+        success: false,
+        message: "The same subject cannot be both weak and strong."
+      });
+    }
+
+    const currentUser = await User.findById(req.session.user.id).lean();
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User was not found."
+      });
+    }
+
+    await StudyProfile.findOneAndUpdate(
+      { user: currentUser._id },
+      {
+        user: currentUser._id,
+        fullName: currentUser.fullName,
+        username: currentUser.username,
+        email: currentUser.email,
+        university: currentUser.university || "",
+        major: currentUser.major || "",
+        weakSubjects,
+        strongSubjects
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true
+      }
+    );
+
+    const profiles = await StudyProfile.find({
+      user: { $ne: currentUser._id },
+      university: currentUser.university,
+      major: currentUser.major,
+      strongSubjects: { $in: weakSubjects }
+    }).lean();
+
+    const matches = profiles.map(profile => {
+      const otherWeakSubjects = profile.weakSubjects || [];
+      const otherStrongSubjects = profile.strongSubjects || [];
+
+      const canHelpMe = weakSubjects.filter(subject =>
+        otherStrongSubjects.includes(subject)
+      );
+
+      const iCanHelpThem = strongSubjects.filter(subject =>
+        otherWeakSubjects.includes(subject)
+      );
+
+      const isPerfectMatch = canHelpMe.length > 0 && iCanHelpThem.length > 0;
+
+      return {
+        profileId: profile._id,
+        userId: profile.user,
+        fullName: profile.fullName,
+        username: profile.username,
+        email: profile.email,
+        university: profile.university,
+        major: profile.major,
+        weakSubjects: otherWeakSubjects,
+        strongSubjects: otherStrongSubjects,
+        canHelpMe,
+        iCanHelpThem,
+        matchType: isPerfectMatch ? "Perfect Match" : "Helper Match"
+      };
+    });
+
+    res.json({
+      success: true,
+      matches
+    });
+
+  } catch (error) {
+    console.error("Matching search error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not search for matches."
+    });
+  }
+});
+app.post("/api/matching/request", requireAuth, async (req, res) => {
+  try {
+    const {
+      receiverProfileId,
+      weakSubject,
+      strongSubject
+    } = req.body;
+
+    const senderWeakSubject = String(weakSubject || "").trim();
+    const senderStrongSubject = String(strongSubject || "").trim();
+
+    if (!receiverProfileId) {
+      return res.status(400).json({
+        success: false,
+        message: "Matched student was not selected."
+      });
+    }
+
+    if (!isValidCSSubject(senderWeakSubject) || !isValidCSSubject(senderStrongSubject)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please choose valid weak and strong subjects."
+      });
+    }
+
+    if (senderWeakSubject === senderStrongSubject) {
+      return res.status(400).json({
+        success: false,
+        message: "Weak subject and strong subject cannot be the same."
+      });
+    }
+
+    const sender = await User.findById(req.session.user.id).lean();
+
+    if (!sender) {
+      return res.status(404).json({
+        success: false,
+        message: "Sender was not found."
+      });
+    }
+
+    const receiverProfile = await StudyProfile.findById(receiverProfileId).lean();
+
+    if (!receiverProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Matched student was not found."
+      });
+    }
+
+    if (String(receiverProfile.user) === String(sender._id)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot send a match request to yourself."
+      });
+    }
+
+    if (
+      receiverProfile.university !== sender.university ||
+      receiverProfile.major !== sender.major
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only match with students from your same university and major."
+      });
+    }
+
+    if (!(receiverProfile.strongSubjects || []).includes(senderWeakSubject)) {
+      return res.status(400).json({
+        success: false,
+        message: "This student is not a valid helper for your weak subject."
+      });
+    }
+
+    const existingPending = await MatchRequest.findOne({
+      sender: sender._id,
+      receiver: receiverProfile.user,
+      status: "pending"
+    });
+
+    if (existingPending) {
+      return res.status(400).json({
+        success: false,
+        message: "You already sent a pending request to this student."
+      });
+    }
+
+    const emailToken = crypto.randomBytes(32).toString("hex");
+
+    const matchRequest = await MatchRequest.create({
+      sender: sender._id,
+      receiver: receiverProfile.user,
+
+      senderName: sender.fullName || sender.username,
+      senderEmail: sender.email,
+
+      receiverName: receiverProfile.fullName,
+      receiverEmail: receiverProfile.email,
+
+      senderWeakSubject,
+      senderStrongSubject,
+
+      receiverWeakSubject: (receiverProfile.weakSubjects || [])[0] || "",
+      receiverStrongSubject: senderWeakSubject,
+
+      emailToken
+    });
+
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+
+    const acceptLink = `${baseUrl}/matching/request/${matchRequest._id}/accept?token=${emailToken}`;
+    const rejectLink = `${baseUrl}/matching/request/${matchRequest._id}/reject?token=${emailToken}`;
+
+    await sendMatchRequestEmail({
+      to: receiverProfile.email,
+      receiverName: receiverProfile.fullName,
+      senderName: sender.fullName || sender.username,
+      senderWeakSubject,
+      senderStrongSubject,
+      acceptLink,
+      rejectLink
+    });
+
+    res.json({
+      success: true,
+      message: `Match request sent to ${receiverProfile.fullName}.`
+    });
+
+  } catch (error) {
+    console.error("Send match request error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not send match request."
+    });
+  }
+});
+
+app.get("/matching/request/:requestId/accept", async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const token = String(req.query.token || "");
+
+    const matchRequest = await MatchRequest.findById(requestId);
+
+    if (!matchRequest || matchRequest.emailToken !== token) {
+      return res.status(404).render("ERROR");
+    }
+
+    if (matchRequest.status !== "pending") {
+      return res.send(`
+        <div style="font-family: Arial; max-width: 520px; margin: 80px auto; text-align: center;">
+          <h1>This request is already ${matchRequest.status}.</h1>
+          <a href="/matching">Back to Matching</a>
+        </div>
+      `);
+    }
+
+    const chat = await Chat.create({
+      participants: [matchRequest.sender, matchRequest.receiver],
+      matchRequest: matchRequest._id,
+      messages: []
+    });
+
+    matchRequest.status = "accepted";
+    matchRequest.chat = chat._id;
+    await matchRequest.save();
+
+    res.redirect(`/matching/chat/${chat._id}`);
+
+  } catch (error) {
+    console.error("Accept match request error:", error);
+    res.status(500).render("ERROR");
+  }
+});
+
+app.get("/matching/request/:requestId/reject", async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const token = String(req.query.token || "");
+
+    const matchRequest = await MatchRequest.findById(requestId);
+
+    if (!matchRequest || matchRequest.emailToken !== token) {
+      return res.status(404).render("ERROR");
+    }
+
+    if (matchRequest.status !== "pending") {
+      return res.send(`
+        <div style="font-family: Arial; max-width: 520px; margin: 80px auto; text-align: center;">
+          <h1>This request is already ${matchRequest.status}.</h1>
+          <a href="/matching">Back to Matching</a>
+        </div>
+      `);
+    }
+
+    matchRequest.status = "rejected";
+    await matchRequest.save();
+
+    res.send(`
+      <div style="font-family: Arial; max-width: 520px; margin: 80px auto; text-align: center;">
+        <h1>Request rejected</h1>
+        <p>You rejected this Study Buddy match request.</p>
+        <a href="/matching">Back to Matching</a>
+      </div>
+    `);
+
+  } catch (error) {
+    console.error("Reject match request error:", error);
+    res.status(500).render("ERROR");
+  }
+});
+
+
+app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => {
+  try {
+    const text = String(req.body.text || "").trim();
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Message cannot be empty."
+      });
+    }
+
+    if (text.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is too long."
+      });
+    }
+
+    const chat = await Chat.findById(req.params.chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat was not found."
+      });
+    }
+
+    const isParticipant = (chat.participants || []).some(participantId => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot send messages here."
+      });
+    }
+
+    chat.messages.push({
+      sender: req.session.user.id,
+      senderName: req.session.user.fullName || req.session.user.username || "Student",
+      text
+    });
+
+    await chat.save();
+
+    res.json({
+      success: true,
+      message: "Message sent."
+    });
+
+  } catch (error) {
+    console.error("Send chat message error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not send message."
+    });
+  }
+});
+
+app.get("/api/matching/requests", requireAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    const requests = await MatchRequest.find({
+      $or: [
+        { sender: userId },
+        { receiver: userId }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const formattedRequests = requests.map(request => {
+      const isSender = String(request.sender) === String(userId);
+
+      return {
+        _id: request._id,
+        status: request.status,
+        chat: request.chat,
+
+        direction: isSender ? "sent" : "received",
+
+        otherName: isSender
+          ? request.receiverName
+          : request.senderName,
+
+        otherEmail: isSender
+          ? request.receiverEmail
+          : request.senderEmail,
+
+        senderName: request.senderName,
+        receiverName: request.receiverName,
+
+        senderWeakSubject: request.senderWeakSubject,
+        senderStrongSubject: request.senderStrongSubject,
+
+        createdAt: request.createdAt
+      };
+    });
+
+    res.json({
+      success: true,
+      requests: formattedRequests
+    });
+
+  } catch (error) {
+    console.error("Load match requests error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load match requests."
+    });
+  }
+});
+
+app.post("/api/matching/request/:requestId/cancel", requireAuth, async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const matchRequest = await MatchRequest.findOne({
+      _id: requestId,
+      sender: req.session.user.id
+    });
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    if (matchRequest.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending requests can be cancelled."
+      });
+    }
+
+    matchRequest.status = "cancelled";
+    await matchRequest.save();
+
+    res.json({
+      success: true,
+      message: "Match request cancelled."
+    });
+
+  } catch (error) {
+    console.error("Cancel match request error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not cancel match request."
+    });
+  }
+});
+
 app.post("/api/matching/profile", requireAuth, async (req, res) => {
   try {
     const rawWeakSubjects = Array.isArray(req.body.weakSubjects)
@@ -2004,234 +2573,6 @@ app.post("/api/matching/profile", requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not save your study list."
-    });
-  }
-});
-
-app.get("/api/matching/matches", requireAuth, async (req, res) => {
-  try {
-    const myProfile = await StudyProfile.findOne({
-      user: req.session.user.id
-    });
-
-    if (!myProfile) {
-      return res.status(400).json({
-        success: false,
-        message: "Build and save your list first."
-      });
-    }
-
-    const myWeakSubjects = myProfile.weakSubjects || [];
-    const myStrongSubjects = myProfile.strongSubjects || [];
-
-    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Add at least one weak subject or one strong subject."
-      });
-    }
-
-    if (!myProfile.university || !myProfile.major) {
-      return res.status(400).json({
-        success: false,
-        message: "Your profile is missing university or major. Please save your study list again."
-      });
-    }
-
-    const allProfiles = await StudyProfile.find({
-      user: {
-        $ne: req.session.user.id
-      },
-      university: myProfile.university,
-      major: myProfile.major
-    }).lean();
-
-   const matches = allProfiles
-      .map(profile => {
-        const otherWeakSubjects = profile.weakSubjects || [];
-        const otherStrongSubjects = profile.strongSubjects || [];
-
-        const canTeachMe = getCommonSubjects(myWeakSubjects, otherStrongSubjects);
-        const iCanTeachThem = getCommonSubjects(myStrongSubjects, otherWeakSubjects);
-
-        if (canTeachMe.length === 0 && iCanTeachThem.length === 0) {
-          return null;
-        }
-        let score = 0;
-
-        if (canTeachMe.length > 0) {
-        score += canTeachMe.length * 70;
-          }
-
-          if (iCanTeachThem.length > 0) {
-          score += iCanTeachThem.length * 30;
-          }
-
-          if (score > 100) {
-          score = 100;
-            }
-
-        return {
-          _id: profile._id,
-          user: profile.user,
-          fullName: profile.fullName,
-          username: profile.username,
-          email: profile.email,
-          university: profile.university,
-          major: profile.major,
-          weakSubjects: otherWeakSubjects,
-          strongSubjects: otherStrongSubjects,
-          canTeachMe,
-          iCanTeachThem,
-          score
-        };
-      })
-      .filter(Boolean)
-      .sort((a, b) => {
-        if (b.canTeachMe.length !== a.canTeachMe.length) {
-          return b.canTeachMe.length - a.canTeachMe.length;
-        }
-
-        return b.score - a.score;
-      });
-
-    res.json({
-      success: true,
-      matches
-    });
-
-  } catch (error) {
-    console.error("Get matches error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Could not load matches."
-    });
-  }
-});
-
-app.post("/api/matching/send-room", requireAuth, async (req, res) => {
-
-  try {
-    const { matchedProfileId } = req.body;
-
-    const userId = String(req.session.user.id);
-    const lastMatchTime = matchCooldowns.get(userId);
-    const now = Date.now();
-
-    if (lastMatchTime && now - lastMatchTime < MATCH_COOLDOWN_MS) {
-      const remainingMs = MATCH_COOLDOWN_MS - (now - lastMatchTime);
-      const remainingMinutes = Math.ceil(remainingMs / 60000);
-
-    return res.status(429).json({
-      success: false,
-      message: `Please wait ${remainingMinutes} minute${remainingMinutes === 1 ? "" : "s"} before creating another match room.`
-    });
-  }
-
-    if (!matchedProfileId) {
-      return res.status(400).json({
-        success: false,
-        message: "Matched student was not selected."
-      });
-    }
-
-    const myProfile = await StudyProfile.findOne({
-      user: req.session.user.id
-    });
-
-    if (!myProfile) {
-      return res.status(400).json({
-        success: false,
-        message: "Build and save your list first."
-      });
-    }
-
-    const matchedProfile = await StudyProfile.findById(matchedProfileId);
-
-    if (!matchedProfile) {
-      return res.status(404).json({
-        success: false,
-        message: "Matched student was not found."
-      });
-    }
-
-    if (String(matchedProfile.user) === String(req.session.user.id)) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot match with yourself."
-      });
-    }
-
-    if (
-      myProfile.university !== matchedProfile.university ||
-      myProfile.major !== matchedProfile.major
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only match with students from your same university and major."
-      });
-    }
-
-    const myWeakSubjects = myProfile.weakSubjects || [];
-    const myStrongSubjects = myProfile.strongSubjects || [];
-    const otherWeakSubjects = matchedProfile.weakSubjects || [];
-    const otherStrongSubjects = matchedProfile.strongSubjects || [];
-
-    const canTeachMe = getCommonSubjects(myWeakSubjects, otherStrongSubjects);
-    const iCanTeachThem = getCommonSubjects(myStrongSubjects, otherWeakSubjects);
-
-    if (canTeachMe.length === 0 && iCanTeachThem.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "This student is not a valid match anymore."
-      });
-    }
-
-    const randomCode = Math.floor(100000 + Math.random() * 900000);
-    const roomId = `studybuddy-${Date.now()}-${randomCode}`;
-
-    const jitsiConfig =
-      "#config.startWithVideoMuted=true" +
-      "&config.startWithAudioMuted=true" +
-      "&config.toolbarButtons=%5B%22microphone%22%2C%22chat%22%2C%22participants-pane%22%2C%22tileview%22%2C%22hangup%22%5D";
-
-    const meetingLink = `https://meet.jit.si/${roomId}${jitsiConfig}`;
-
-    await sendMatchRoomEmail({
-      to: myProfile.email,
-      receiverName: myProfile.fullName,
-      senderName: myProfile.fullName,
-      matchedName: matchedProfile.fullName,
-      roomId,
-      meetingLink,
-      helpSubjects: canTeachMe
-    });
-
-    await sendMatchRoomEmail({
-      to: matchedProfile.email,
-      receiverName: matchedProfile.fullName,
-      senderName: myProfile.fullName,
-      matchedName: matchedProfile.fullName,
-      roomId,
-      meetingLink,
-      helpSubjects: canTeachMe
-    });
-
-    matchCooldowns.set(userId, Date.now());
-
-    res.json({
-      success: true,
-      message: `Video room sent to you and ${matchedProfile.fullName}.`,
-      roomId,
-      meetingLink
-    });
-  } catch (error) {
-    console.error("Send matching room error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Could not create or send the video room."
     });
   }
 });
@@ -2707,12 +3048,156 @@ app.get("/wordle", requirePageAuth, (req, res) => {
 });
 
 
-// Server start
 const PORT = process.env.PORT || 5000;
 
 app.get("/freshman-guid", (req, res) => {
   res.render("freshman-guid");
 });
+
+app.get("/matching/chat/:chatId", requirePageAuth, async (req, res) => {
+  try {
+    const chatId = req.params.chatId;
+
+    const chat = await Chat.findById(chatId).lean();
+
+    if (!chat) {
+      return res.status(404).render("ERROR");
+    }
+
+    const isParticipant = (chat.participants || []).some((participantId) => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(404).render("ERROR");
+    }
+
+    const otherUserId = (chat.participants || []).find((participantId) => {
+      return String(participantId) !== String(req.session.user.id);
+    });
+
+    let otherUser = null;
+
+    if (otherUserId) {
+      otherUser = await User.findById(otherUserId)
+        .select("fullName username email")
+        .lean();
+    }
+
+    return res.render("matching-chat", {
+      chatId: chatId,
+      otherUser: otherUser || null
+    });
+
+  } catch (error) {
+    console.error("Chat page error:", error);
+    return res.status(500).render("ERROR");
+  }
+});
+
+
+app.get("/api/matching/chat/:chatId/messages", requireAuth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const chat = await Chat.findById(chatId).lean();
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat was not found."
+      });
+    }
+
+    const isParticipant = (chat.participants || []).some(participantId => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot access this chat."
+      });
+    }
+
+    res.json({
+      success: true,
+      messages: chat.messages || [],
+      currentUserId: String(req.session.user.id)
+    });
+
+  } catch (error) {
+    console.error("Load chat messages error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load chat messages."
+    });
+  }
+});
+
+app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => {
+  try {
+    const chatId = req.params.chatId;
+    const text = String(req.body.text || "").trim();
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Message cannot be empty."
+      });
+    }
+
+    if (text.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Message is too long."
+      });
+    }
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat was not found."
+      });
+    }
+
+    const isParticipant = (chat.participants || []).some((participantId) => {
+      return String(participantId) === String(req.session.user.id);
+    });
+
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot send messages in this chat."
+      });
+    }
+
+    chat.messages.push({
+      sender: req.session.user.id,
+      senderName: req.session.user.fullName || req.session.user.username || "Student",
+      text: text
+    });
+
+    await chat.save();
+
+    return res.json({
+      success: true,
+      message: "Message sent."
+    });
+
+  } catch (error) {
+    console.error("Send chat message error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not send message."
+    });
+  }
+});
+
 
 app.use((req, res) => {
   res.status(404).render("ERROR");

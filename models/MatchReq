@@ -1,0 +1,79 @@
+const mongoose = require("mongoose");
+
+const matchRequestSchema = new mongoose.Schema(
+  {
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
+    senderName: {
+      type: String,
+      required: true
+    },
+
+    senderEmail: {
+      type: String,
+      required: true
+    },
+
+    receiverName: {
+      type: String,
+      required: true
+    },
+
+    receiverEmail: {
+      type: String,
+      required: true
+    },
+
+    senderWeakSubject: {
+      type: String,
+      required: true
+    },
+
+    senderStrongSubject: {
+      type: String,
+      required: true
+    },
+
+    receiverWeakSubject: {
+      type: String,
+      default: ""
+    },
+
+    receiverStrongSubject: {
+      type: String,
+      default: ""
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "cancelled"],
+      default: "pending"
+    },
+
+    emailToken: {
+      type: String,
+      required: true
+    },
+
+    chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+      default: null
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model("MatchRequest", matchRequestSchema);
