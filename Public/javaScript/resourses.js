@@ -39,6 +39,19 @@ function createLeftPageBookmark(tabElement) {
 
   leftBookmark.onclick = function () {
     if (isFlipping) return;
+
+    const contentId = getContentId(tabElement);
+    const targetContent = document.getElementById(contentId);
+
+    const isCurrentPageOpen =
+      tabElement.classList.contains("active") ||
+      (targetContent && targetContent.classList.contains("active"));
+
+    
+    if (isCurrentPageOpen) {
+      return;
+    }
+
     returnBookmarkWithPage(tabElement, leftBookmark);
   };
 
@@ -66,15 +79,27 @@ function handleBookmark(tabElement) {
   if (isFlipping || !tabElement) return;
 
   const tabId = getTabId(tabElement);
-  const leftBookmark = document.querySelector(`#leftPageBookmarkHolder [data-tab-id="${tabId}"]`);
+  const contentId = getContentId(tabElement);
+  const targetContent = document.getElementById(contentId);
 
-  if (leftBookmark) {
-    returnBookmarkWithPage(tabElement, leftBookmark);
+  const leftBookmark = document.querySelector(
+    `#leftPageBookmarkHolder [data-tab-id="${tabId}"]`
+  );
+
+  const isCurrentPageOpen =
+    tabElement.classList.contains("active") ||
+    (targetContent && targetContent.classList.contains("active"));
+
+  // If the same page is already open, do nothing.
+  // Even if its bookmark is on the left, it should not return.
+  if (isCurrentPageOpen) {
     return;
   }
 
-  if (tabElement.classList.contains("active")) {
-    flipBookmarkToLeft(tabElement);
+  // If this page is not open but its bookmark is on the left,
+  // clicking it should return it and open its page.
+  if (leftBookmark) {
+    returnBookmarkWithPage(tabElement, leftBookmark);
     return;
   }
 
@@ -183,13 +208,22 @@ function flipBookmarkToLeft(tabElement) {
 }
 
 function returnBookmarkWithPage(tabElement, leftBookmark) {
-  if (isFlipping) return;
+  if (isFlipping || !tabElement) return;
 
   isFlipping = true;
+
+  const contentId = getContentId(tabElement);
+  const targetContent = document.getElementById(contentId);
+  const mainContainer = document.querySelector(".main-content-container");
 
   const faces = prepareFlipFaces();
 
   if (!faces) {
+    if (targetContent) {
+      switchContent(targetContent, tabElement);
+    }
+
+    removeLeftBookmark(tabElement);
     isFlipping = false;
     return;
   }
@@ -199,18 +233,51 @@ function returnBookmarkWithPage(tabElement, leftBookmark) {
 
   if (leftBookmark) {
     leftBookmark.style.opacity = "0";
+    leftBookmark.style.transform = "translateX(10px) scale(0.96)";
+    leftBookmark.style.transition = "opacity 0.16s ease, transform 0.16s ease";
   }
 
   playBackFlip();
 
   setTimeout(() => {
+    if (mainContainer) {
+      mainContainer.classList.add("is-switching");
+    }
+  }, 35);
+
+  setTimeout(() => {
+    if (targetContent) {
+      switchContent(targetContent, tabElement);
+    }
+  }, 190);
+
+  setTimeout(() => {
+    if (mainContainer) {
+      mainContainer.classList.remove("is-switching");
+    }
+  }, 260);
+
+  setTimeout(() => {
     removeLeftBookmark(tabElement);
-  }, 420);
+  }, 280);
 
   setTimeout(() => {
     cleanFlip();
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      const tabId = getTabId(tab);
+      const existsLeft = document.querySelector(
+        `#leftPageBookmarkHolder [data-tab-id="${tabId}"]`
+      );
+
+      if (!existsLeft) {
+        tab.classList.remove("is-moving");
+        tab.classList.remove("flipped-bookmark");
+      }
+    });
+
     isFlipping = false;
-  }, 600);
+  }, 360);
 }
 
 function switchTab(tabElement) {
