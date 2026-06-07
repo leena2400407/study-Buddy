@@ -28,6 +28,7 @@
     <button class="tab-btn" data-tab="scores">Leaderboard</button>
     <button class="tab-btn" data-tab="resources">Resources</button>
     <button class="tab-btn" data-tab="universities">Universities</button>
+    <button class="tab-btn" data-tab="avatars">Avatars</button>
 
     <button class="logout-btn" onclick="window.location.href='/logout'">
       Logout
@@ -263,6 +264,33 @@
 
   <div id="resourcesTable" class="table-box">
     Loading resources...
+  </div>
+</section>
+
+<section id="avatars" class="tab-section">
+  <div class="section-head">
+    <h2>Signup Avatars</h2>
+    <button class="refresh-btn" onclick="loadAvatars()">Refresh</button>
+  </div>
+
+  <form id="avatarForm" class="admin-form" enctype="multipart/form-data">
+    <input id="avatarName" name="name" placeholder="Avatar name">
+
+    <input 
+      id="avatarImage" 
+      name="avatarImage" 
+      type="file" 
+      accept="image/png, image/jpeg, image/webp"
+    >
+
+    <div class="form-actions">
+      <button type="submit" class="refresh-btn">Upload Avatar</button>
+      <button type="button" class="danger-btn" onclick="resetAvatarForm()">Clear</button>
+    </div>
+  </form>
+
+  <div id="avatarsTable" class="table-box">
+    Loading avatars...
   </div>
 </section>
 

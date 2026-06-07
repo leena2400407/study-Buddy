@@ -74,11 +74,11 @@
               </button>
 
               <div id="profileCard" class="profile-card">
-                <img
-                  src="/assests/images/profile.png"
-                  alt="Student Profile Avatar"
-                  class="profile-avatar-img"
-                >
+                <% if (user && user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="Student Profile Avatar" class="profile-avatar-img">
+                <% } else { %>
+                  <img src="/assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
+                  <% } %>
 
                 <% if (user) { %>
                   <h3 id="dropdown-name" class="profile-name">

@@ -13,6 +13,31 @@ function getRedirectUrl() {
 }
 
 //====================================================
+// Signup avatar picker
+function selectSignupAvatar(button) {
+  const avatarPath = button.dataset.avatarPath || "";
+  const hiddenInput = document.getElementById("selectedAvatar");
+  const avatarError = document.getElementById("avatarError");
+
+  document.querySelectorAll(".avatar-option").forEach(option => {
+    option.classList.remove("selected");
+  });
+
+  button.classList.add("selected");
+
+  if (hiddenInput) {
+    hiddenInput.value = avatarPath;
+  }
+
+  if (avatarError) {
+    avatarError.innerText = "";
+  }
+}
+
+window.selectSignupAvatar = selectSignupAvatar;
+
+//====================================================
+// Signup validation
 const signupForm = document.getElementById("signup-form");
 
 if (signupForm) {
@@ -28,12 +53,18 @@ if (signupForm) {
     const university = document.getElementById("university").value;
     const major = document.getElementById("major").value;
 
+    const selectedAvatarInput = document.getElementById("selectedAvatar");
+    const selectedAvatar = selectedAvatarInput
+      ? selectedAvatarInput.value.trim()
+      : "";
+
     const messageBox = document.getElementById("signup-message");
     const emailError = document.getElementById("emailError");
     const passwordError = document.getElementById("passwordError");
     const confirmError = document.getElementById("confirmError");
     const fullNameError = document.getElementById("fullNameError");
     const usernameError = document.getElementById("usernameError");
+    const avatarError = document.getElementById("avatarError");
 
     if (messageBox) {
       messageBox.textContent = "";
@@ -45,6 +76,7 @@ if (signupForm) {
     if (confirmError) confirmError.innerText = "";
     if (fullNameError) fullNameError.innerText = "";
     if (usernameError) usernameError.innerText = "";
+    if (avatarError) avatarError.innerText = "";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
@@ -59,10 +91,11 @@ if (signupForm) {
       !confirmPassword ||
       !genderInput ||
       !university ||
-      !major
+      !major ||
+      !selectedAvatar
     ) {
       if (messageBox) {
-        messageBox.textContent = "Please fill in all fields.";
+        messageBox.textContent = "Please fill in all fields and choose an avatar.";
         messageBox.style.color = "red";
         messageBox.style.display = "block";
       }
@@ -89,6 +122,14 @@ if (signupForm) {
     if (email && !emailRegex.test(email)) {
       if (emailError) {
         emailError.innerText = "Please enter a valid email.";
+      }
+
+      valid = false;
+    }
+
+    if (!selectedAvatar) {
+      if (avatarError) {
+        avatarError.innerText = "Please choose an avatar.";
       }
 
       valid = false;

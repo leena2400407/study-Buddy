@@ -196,3 +196,64 @@ body {
     transform: translateY(-2px);
     background: linear-gradient(135deg, #dc2626, #b91c1c);
 }
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.avatar-option {
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  background: rgba(20, 15, 46, 0.95);
+  border-radius: 16px;
+  padding: 12px 8px;
+  cursor: pointer;
+  color: #eee9ff;
+  transition: 0.25s ease;
+}
+
+.avatar-option img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 8px;
+  border: 2px solid rgba(168, 85, 247, 0.28);
+}
+
+.avatar-option span {
+  display: block;
+  font-size: 12px;
+  text-align: center;
+}
+
+.avatar-option:hover {
+  transform: translateY(-3px);
+  border-color: rgba(168, 85, 247, 0.7);
+}
+
+.avatar-option.selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
+  background: rgba(88, 28, 135, 0.55);
+}
+
+.avatar-empty {
+  grid-column: 1 / -1;
+  color: #f472b6;
+  font-size: 13px;
+}
+
+.avatar {
+  overflow: hidden;
+}
+
+.profile-avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}

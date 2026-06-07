@@ -11,7 +11,8 @@ const adminPages = {
   scores: 1,
   events: 1,
   universities: 1,
-  resources: 1
+  resources: 1,
+  avatars: 1
 };
 
 function renderPagination(tabName, pagination, loadFunctionName) {
@@ -59,6 +60,7 @@ function changeAdminPage(tabName, direction, totalPages, loadFunctionName) {
   if (loadFunctionName === "loadEvents") loadEvents();
   if (loadFunctionName === "loadUniversities") loadUniversities();
   if (loadFunctionName === "loadResources") loadResources();
+  if (loadFunctionName === "loadAvatars") loadAvatars();
 }
 
 tabButtons.forEach(button => {
@@ -88,6 +90,7 @@ function loadTabData(tabName) {
   if (tabName === "events") loadEvents();
   if (tabName === "universities") loadUniversities();
   if (tabName === "resources") loadResources();
+  if (tabName === "avatars") loadAvatars();
 }
 
 async function fetchAdminData(url) {
@@ -116,6 +119,7 @@ async function loadOverview() {
     ${statCard("Events", overview.eventsCount)}
     ${statCard("Universities", overview.universitiesCount)}
     ${statCard("Resources", overview.resourcesCount)}
+    ${statCard("Avatars", overview.avatarsCount)}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
@@ -610,6 +614,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const universityForm = document.getElementById("universityForm");
   const userForm = document.getElementById("userForm");
   const resourceForm = document.getElementById("resourceForm");
+  const avatarForm = document.getElementById("avatarForm");
+
 
   if (eventForm) {
     eventForm.addEventListener("submit", saveEvent);
@@ -625,6 +631,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 if (resourceForm) {
   resourceForm.addEventListener("submit", saveResource);
+}
+
+if (avatarForm) {
+  avatarForm.addEventListener("submit", saveAvatar);
 }
 });
 
@@ -1465,5 +1475,132 @@ async function deleteResource(categoryId) {
 
   } catch (error) {
     showToast("Server error while deleting resource category.", "error");
+  }
+}
+
+async function loadAvatars() {
+  const box = document.getElementById("avatarsTable");
+
+  try {
+    const data = await fetchAdminData(`/admin/api/avatars?page=${adminPages.avatars}&limit=${adminLimit}`);
+    const avatars = Array.isArray(data.avatars) ? data.avatars : [];
+
+    if (avatars.length === 0) {
+      box.innerHTML = `<div class="empty-box">No avatars uploaded yet.</div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="avatar-admin-grid">
+        ${avatars.map(avatar => `
+          <div class="avatar-admin-card">
+            <img src="${escapeHTML(avatar.imagePath)}" alt="${escapeHTML(avatar.name || "Avatar")}">
+
+            <h3>${escapeHTML(avatar.name || "Avatar")}</h3>
+
+            <p>${escapeHTML(avatar.imagePath || "-")}</p>
+
+            <button class="danger-btn" onclick="deleteAvatar('${avatar._id}')">
+              Delete
+            </button>
+          </div>
+        `).join("")}
+      </div>
+
+      ${renderPagination("avatars", data.pagination, "loadAvatars")}
+    `;
+
+  } catch (error) {
+    box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function saveAvatar(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("avatarName").value.trim();
+  const fileInput = document.getElementById("avatarImage");
+
+  if (!name) {
+    showToast("Avatar name is required.", "error");
+    return;
+  }
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    showToast("Choose an avatar image.", "error");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  if (!allowedTypes.includes(file.type)) {
+    showToast("Only JPG, PNG, and WEBP images are allowed.", "error");
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast("Avatar image must be less than 2MB.", "error");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("avatarImage", file);
+
+  try {
+    const response = await fetch("/admin/api/avatars", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not upload avatar.", "error");
+      return;
+    }
+
+    showToast("Avatar uploaded successfully.", "success");
+    resetAvatarForm();
+    loadAvatars();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while uploading avatar.", "error");
+  }
+}
+
+function resetAvatarForm() {
+  const form = document.getElementById("avatarForm");
+
+  if (form) {
+    form.reset();
+  }
+}
+
+async function deleteAvatar(avatarId) {
+  const confirmDelete = confirm("Delete this avatar? Users who already selected it will keep its old path.");
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/api/avatars/${avatarId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not delete avatar.", "error");
+      return;
+    }
+
+    showToast("Avatar deleted successfully.", "success");
+    loadAvatars();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while deleting avatar.", "error");
   }
 }

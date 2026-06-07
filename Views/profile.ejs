@@ -65,10 +65,13 @@
       <div class="hero-left">
         <div class="avatar-wrap">
           <div class="avatar-ring"></div>
-
-          <div class="avatar">
-            <%= getInitials(user.fullName || user.username) %>
-          </div>
+            <div class="avatar">
+              <% if (user && user.avatar) { %>
+              <img src="<%= user.avatar %>" alt="Profile Avatar" class="avatar-img">
+              <% } else { %>
+              <%= getInitials(user.fullName || user.username) %>
+              <% } %>
+            </div>
         </div>
 
         <div class="hero-info">

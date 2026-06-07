@@ -79,6 +79,37 @@
         </div>
 
         <div class="input-group">
+  <label>Choose Avatar</label>
+
+  <input 
+    type="hidden" 
+    id="selectedAvatar" 
+    name="avatar" 
+    value="<%= oldInput && oldInput.avatar ? oldInput.avatar : '' %>"
+  >
+
+  <div id="avatarPicker" class="avatar-picker">
+    <% if (typeof avatars !== "undefined" && avatars.length > 0) { %>
+      <% avatars.forEach(function(avatar) { %>
+        <button 
+          type="button"
+          class="avatar-option <%= oldInput && oldInput.avatar === avatar.imagePath ? 'selected' : '' %>"
+          data-avatar-path="<%= avatar.imagePath %>"
+          onclick="selectSignupAvatar(this)"
+        >
+          <img src="<%= avatar.imagePath %>" alt="<%= avatar.name %>">
+          <span><%= avatar.name %></span>
+        </button>
+      <% }) %>
+    <% } else { %>
+      <p class="avatar-empty">No avatars available yet. Ask admin to upload avatars.</p>
+    <% } %>
+  </div>
+
+  <div id="avatarError" class="error"></div>
+</div>
+
+        <div class="input-group">
           <label for="new-password">Password</label>
           <input type="password" id="new-password" name="password" placeholder="Create a password">
           <div id="passwordError" class="error"></div>

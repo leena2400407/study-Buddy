@@ -583,3 +583,37 @@ td {
     align-items: stretch;
   }
 }
+.avatar-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+}
+
+.avatar-admin-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(15, 16, 40, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+}
+
+.avatar-admin-card img {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid rgba(168, 85, 247, 0.45);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.22);
+}
+
+.avatar-admin-card h3 {
+  margin: 12px 0 6px;
+  color: #ffffff;
+}
+
+.avatar-admin-card p {
+  margin: 0 0 14px;
+  color: #a8a8c7;
+  font-size: 12px;
+  word-break: break-all;
+}

@@ -18,6 +18,9 @@ const ResourceCategory = require("./models/resources");
 const crypto = require("crypto");
 const MatchRequest = require("./models/MatchReq");
 const Chat = require("./models/chat");
+const multer = require("multer");
+const fs = require("fs");
+const Avatar = require("./models/Avatar");
 require("dotenv").config();
 
 const app = express();
@@ -28,6 +31,40 @@ app.use(
 );
 
 connectDB();
+
+const avatarUploadDir = path.join(__dirname, "Public", "uploads", "avatars");
+
+if (!fs.existsSync(avatarUploadDir)) {
+  fs.mkdirSync(avatarUploadDir, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, avatarUploadDir);
+  },
+
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeName = `avatar-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, safeName);
+  }
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: {
+    fileSize: 2 * 1024 * 1024
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error("Only JPG, PNG, and WEBP images are allowed."));
+    }
+
+    cb(null, true);
+  }
+});
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -314,6 +351,7 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
     const eventsCount = await Event.countDocuments();
     const universitiesCount = await University.countDocuments();
     const resourcesCount = await ResourceCategory.countDocuments();
+    const avatarsCount = await Avatar.countDocuments();
 
     res.json({
       success: true,
@@ -324,7 +362,8 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
         gameScoresCount,
         eventsCount,
         universitiesCount,
-        resourcesCount
+        resourcesCount,
+        avatarsCount
       }
     });
   } catch (error) {
@@ -333,6 +372,135 @@ app.get("/admin/api/overview", requireAdminApi, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not load admin overview."
+    });
+  }
+});
+
+app.get("/api/avatars", async (req, res) => {
+  try {
+    const avatars = await Avatar.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      avatars
+    });
+
+  } catch (error) {
+    console.error("Load avatars error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load avatars."
+    });
+  }
+});
+
+app.get("/admin/api/avatars", requireAdminApi, async (req, res) => {
+  try {
+    const { page, limit, skip } = getPagination(req.query);
+
+    const totalItems = await Avatar.countDocuments();
+
+    const avatars = await Avatar.find()
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    return res.json({
+      success: true,
+      avatars,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error("Admin avatars error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load avatars."
+    });
+  }
+});
+
+app.post("/admin/api/avatars", requireAdminApi, avatarUpload.single("avatarImage"), async (req, res) => {
+  try {
+    const name = String(req.body.name || "").trim();
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Avatar name is required."
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Avatar image is required."
+      });
+    }
+
+    const imagePath = `/uploads/avatars/${req.file.filename}`;
+
+    const avatar = await Avatar.create({
+      name,
+      imagePath
+    });
+
+    return res.json({
+      success: true,
+      message: "Avatar uploaded successfully.",
+      avatar
+    });
+
+  } catch (error) {
+    console.error("Upload avatar error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Could not upload avatar."
+    });
+  }
+});
+
+app.delete("/admin/api/avatars/:avatarId", requireAdminApi, async (req, res) => {
+  try {
+    const { avatarId } = req.params;
+
+    const avatar = await Avatar.findByIdAndDelete(avatarId);
+
+    if (!avatar) {
+      return res.status(404).json({
+        success: false,
+        message: "Avatar was not found."
+      });
+    }
+
+    const filePath = path.join(__dirname, "Public", avatar.imagePath);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return res.json({
+      success: true,
+      message: "Avatar deleted successfully."
+    });
+
+  } catch (error) {
+    console.error("Delete avatar error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not delete avatar."
     });
   }
 });
@@ -1623,6 +1791,7 @@ app.post("/login", authLimiter,async (req, res) => {
       university: user.university,
       major: user.major,
       gender: user.gender,
+      avatar: user.avatar || "",
       role: user.role || "student"
     };
 
@@ -1644,20 +1813,42 @@ app.post("/login", authLimiter,async (req, res) => {
   }
 });
 
-function renderSignupError(res, message, oldInput) {
+async function renderSignupError(res, message, oldInput) {
+  const avatars = await Avatar.find()
+    .sort({ createdAt: 1 })
+    .lean();
+
   return res.status(400).render("signup", {
     error: [message],
     success: [],
-    oldInput
+    oldInput,
+    avatars
   });
 }
 
-app.get("/signup", (req, res) => {
-  res.render("signup", {
-    oldInput: {},
-    error: [],
-    success: []
-  });
+app.get("/signup", async (req, res) => {
+  try {
+    const avatars = await Avatar.find()
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.render("signup", {
+      oldInput: {},
+      error: [],
+      success: [],
+      avatars
+    });
+
+  } catch (error) {
+    console.error("Signup avatars load error:", error);
+
+    res.render("signup", {
+      oldInput: {},
+      error: [],
+      success: [],
+      avatars: []
+    });
+  }
 });
 
 app.post("/signup", authLimiter, async (req, res) => {
@@ -1670,7 +1861,8 @@ app.post("/signup", authLimiter, async (req, res) => {
       major,
       email,
       password,
-      confirmPassword
+      confirmPassword,
+      avatar
     } = req.body;
 
     const cleanedFullName = String(fullName || "").trim().replace(/\s+/g, " ");
@@ -1681,6 +1873,7 @@ app.post("/signup", authLimiter, async (req, res) => {
     const cleanedEmail = String(email || "").trim().toLowerCase();
     const cleanedPassword = String(password || "");
     const cleanedConfirmPassword = String(confirmPassword || "");
+    const cleanedAvatar = String(avatar || "").trim();
 
     const oldInput = {
       fullName: cleanedFullName,
@@ -1688,7 +1881,8 @@ app.post("/signup", authLimiter, async (req, res) => {
       gender: cleanedGenderRaw,
       university: cleanedUniversity,
       major: cleanedMajor,
-      email: cleanedEmail
+      email: cleanedEmail,
+      avatar: cleanedAvatar
     };
 
     let finalGender = "";
@@ -1784,6 +1978,18 @@ app.post("/signup", authLimiter, async (req, res) => {
       );
     }
 
+    if (!cleanedAvatar) {
+      return await renderSignupError(res, "Please choose an avatar.", oldInput);
+    }
+
+    const selectedAvatar = await Avatar.findOne({
+     imagePath: cleanedAvatar
+    }).lean();
+
+    if (!selectedAvatar) {
+      return await renderSignupError(res, "Please choose a valid avatar.", oldInput);
+    }
+
     const hashedPassword = await bcrypt.hash(cleanedPassword, 10);
 
     await User.create({
@@ -1794,6 +2000,7 @@ app.post("/signup", authLimiter, async (req, res) => {
       major: cleanedMajor,
       email: cleanedEmail,
       password: hashedPassword,
+      avatar: selectedAvatar.imagePath,
       role: "student"
     });
 
@@ -1958,6 +2165,7 @@ app.post("/profile/update-info", requirePageAuth, async (req, res) => {
       gender: updatedUser.gender,
       university: updatedUser.university,
       major: updatedUser.major,
+      avatar: updatedUser.avatar || req.session.user.avatar || "",
       role: req.session.user.role || "student"
     };
 

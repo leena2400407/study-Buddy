@@ -2081,3 +2081,12 @@ body.cylinder-body.cylinder-dark-theme .nav-menu-morph__line {
         top: 13px !important;
     }
 }
+
+.profile-avatar-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 24px;
+}
