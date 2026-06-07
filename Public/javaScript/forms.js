@@ -1,16 +1,18 @@
 //====================================================
 // Utility function for redirect
 function getRedirectUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const redirect = urlParams.get('redirect');
-    const page = urlParams.get('page');
-    if (redirect) {
-        return redirect + (page ? '?page=' + page : '');
-    }
-    return 'profile.html';
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirect = urlParams.get("redirect");
+  const page = urlParams.get("page");
+
+  if (redirect) {
+    return redirect + (page ? "?page=" + page : "");
+  }
+
+  return "profile.html";
 }
 
-//===============================================================
+//====================================================
 const signupForm = document.getElementById("signup-form");
 
 if (signupForm) {
@@ -44,19 +46,10 @@ if (signupForm) {
     if (fullNameError) fullNameError.innerText = "";
     if (usernameError) usernameError.innerText = "";
 
-    const allowedUniversityDomains = [
-        "miuegypt.edu.eg",
-        "ecu.edu.eg",
-        "cis.asu.edu.eg",
-        "student.guc.edu.eg",
-    ];
-
-const emailDomain = email.split("@")[1]?.toLowerCase();
-
-const isAllowedUniversityEmail = allowedUniversityDomains.includes(emailDomain);
-const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
-const usernameRegex = /^[A-Za-z_]{3,20}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
+    const usernameRegex = /^[A-Za-z_]{3,20}$/;
 
     if (
       !fullName ||
@@ -76,21 +69,36 @@ const usernameRegex = /^[A-Za-z_]{3,20}$/;
 
       valid = false;
     }
-    if (!fullNameRegex.test(fullName)) {
-       if (fullNameError) {
-         fullNameError.innerText = "Full name must include first and last name using letters only.";}
-         valid = false;}
-         if (!usernameRegex.test(username)) {
-          if (usernameError) {
-            usernameError.innerText = "Username must be 3-20 characters and only contain letters and underscores.";
-          }
-          valid = false;
-        }
 
-    if (!passwordRegex.test(password)) {
+    if (fullName && !fullNameRegex.test(fullName)) {
+      if (fullNameError) {
+        fullNameError.innerText = "Full name must include first and last name using letters only.";
+      }
+
+      valid = false;
+    }
+
+    if (username && !usernameRegex.test(username)) {
+      if (usernameError) {
+        usernameError.innerText = "Username must be 3-20 characters and only contain letters and underscores.";
+      }
+
+      valid = false;
+    }
+
+    if (email && !emailRegex.test(email)) {
+      if (emailError) {
+        emailError.innerText = "Please enter a valid email.";
+      }
+
+      valid = false;
+    }
+
+    if (password && !passwordRegex.test(password)) {
       if (passwordError) {
         passwordError.innerText = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
       }
+
       valid = false;
     }
 
