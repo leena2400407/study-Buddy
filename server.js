@@ -1240,9 +1240,65 @@ app.delete("/admin/api/event-registrations/:registrationId", requireAdminApi, as
       });
     }
 
+    const relatedEvent = await Event.findOne({
+      title: deletedRegistration.tournamentName
+    });
+
+    if (relatedEvent && relatedEvent.bracket) {
+      const removedId = String(registrationId);
+
+      relatedEvent.bracket.roundOf8 = (relatedEvent.bracket.roundOf8 || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      relatedEvent.bracket.semiFinal = (relatedEvent.bracket.semiFinal || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      relatedEvent.bracket.final = (relatedEvent.bracket.final || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      if (
+        relatedEvent.bracket.winner &&
+        String(relatedEvent.bracket.winner.registrationId || "") === removedId
+      ) {
+        relatedEvent.bracket.winner = {
+          registrationId: null,
+          teamName: ""
+        };
+      }
+
+      await relatedEvent.save();
+    }
+
     return res.json({
       success: true,
-      message: "Team removed successfully."
+      message: "Team removed successfully and cleared from bracket."
     });
 
   } catch (error) {
@@ -1251,6 +1307,46 @@ app.delete("/admin/api/event-registrations/:registrationId", requireAdminApi, as
     return res.status(500).json({
       success: false,
       message: "Could not remove team."
+    });
+  }
+});
+
+app.patch("/admin/api/events/:eventId/bracket/reset", requireAdminApi, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    event.bracket = {
+      roundOf8: [],
+      semiFinal: [],
+      final: [],
+      winner: {
+        teamName: "",
+        registrationId: null
+      }
+    };
+
+    await event.save();
+
+    return res.json({
+      success: true,
+      message: "Bracket reset successfully."
+    });
+
+  } catch (error) {
+    console.error("Admin reset bracket error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not reset bracket."
     });
   }
 });

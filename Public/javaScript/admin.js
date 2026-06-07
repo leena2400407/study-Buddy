@@ -869,6 +869,10 @@ function ensureBracketModal() {
             Save Bracket
           </button>
 
+           <button type="button" class="danger-btn" onclick="resetBracketEditor()">
+             Reset Bracket
+          </button>
+
           <button type="button" class="danger-btn" onclick="closeBracketEditor()">
             Cancel
           </button>
@@ -1076,6 +1080,39 @@ async function saveBracketEditor() {
 
   } catch (error) {
     showToast("Server error while saving bracket.", "error");
+  }
+}
+
+async function resetBracketEditor() {
+  if (!currentBracketEventId) {
+    showToast("No event selected.", "error");
+    return;
+  }
+
+  const confirmReset = confirm(
+    "Reset this bracket? This clears Round of 8, Semi Final, Final, and Winner. It will not delete registrations."
+  );
+
+  if (!confirmReset) return;
+
+  try {
+    const response = await fetch(`/admin/api/events/${currentBracketEventId}/bracket/reset`, {
+      method: "PATCH"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not reset bracket.", "error");
+      return;
+    }
+
+    showToast("Bracket reset successfully.", "success");
+    closeBracketEditor();
+    loadEvents();
+
+  } catch (error) {
+    showToast("Server error while resetting bracket.", "error");
   }
 }
 
