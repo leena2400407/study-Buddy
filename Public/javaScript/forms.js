@@ -163,3 +163,20 @@ if (signupForm) {
     }
   });
 }
+document.querySelectorAll(".password-eye").forEach((button) => {
+  button.addEventListener("click", function () {
+    const inputId = this.getAttribute("data-target");
+    const input = document.getElementById(inputId);
+
+    if (!input) return;
+
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+
+    this.classList.toggle("showing", isHidden);
+    this.setAttribute(
+      "aria-label",
+      isHidden ? "Hide password" : "Show password"
+    );
+  });
+});

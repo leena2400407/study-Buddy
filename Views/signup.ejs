@@ -109,18 +109,38 @@
   <div id="avatarError" class="error"></div>
 </div>
 
-        <div class="input-group">
-          <label for="new-password">Password</label>
-          <input type="password" id="new-password" name="password" placeholder="Create a password">
-          <div id="passwordError" class="error"></div>
-        </div>
+       <div class="input-group">
+  <label for="new-password">Password</label>
 
-        <div class="input-group">
-          <label for="confirm-password">Confirm Password</label>
-          <input type="password" id="confirm-password" name="confirmPassword" placeholder="Type password again" >
-          <div id="confirmError" class="error"></div>
-        </div>
+  <div class="password-wrap">
+    <input 
+      type="password" 
+      id="new-password" 
+      name="password" 
+      placeholder="Create a password"
+    >
+  <button type="button" class="password-eye" data-target="new-password" aria-label="Show password"></button>
+  </div>
 
+  <div id="passwordError" class="error"></div>
+</div>
+       
+<div class="input-group">
+  <label for="confirm-password">Confirm Password</label>
+
+  <div class="password-wrap">
+    <input 
+      type="password" 
+      id="confirm-password" 
+      name="confirmPassword" 
+      placeholder="Type password again"
+    >
+
+    <button type="button" class="password-eye" data-target="confirm-password" aria-label="Show password"></button>
+  </div>
+
+  <div id="confirmError" class="error"></div>
+</div>
         <button type="submit" class="login-btn">Sign Up</button>
       </form>
 
