@@ -325,7 +325,6 @@ app.use(express.json());
 
 // Static files
 // Static files
-app.use(express.static(path.join(__dirname, "Public")));
 app.use("/javaScript", express.static(path.join(__dirname, "puplic", "js")));
 // Session setup
 app.use(
