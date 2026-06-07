@@ -36,6 +36,22 @@ app.use(
   })
 );
 
+const BASE_URL =
+  process.env.BASE_URL ||
+  (process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : `http://localhost:${process.env.PORT || 8080}`);
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 connectDB();
 
 const avatarUploadDir = path.join(__dirname, "Public", "uploads", "avatars");
@@ -69,6 +85,28 @@ const avatarUpload = multer({
     }
 
     cb(null, true);
+  }
+});
+app.get("/test-email", async (req, res) => {
+  try {
+    const mailer = createEmailTransporter();
+
+    await mailer.sendMail({
+      from: `Study Buddy <${getEmailUser()}>`,
+      to: getEmailUser(),
+      subject: "Railway email test",
+      html: `
+        <h2>Email works</h2>
+        <p>BASE_URL is: ${BASE_URL}</p>
+        <p>Test link:</p>
+        <a href="${BASE_URL}">${BASE_URL}</a>
+      `
+    });
+
+    res.send("Email sent successfully");
+  } catch (err) {
+    console.error("EMAIL ERROR:", err);
+    res.status(500).send("Email failed: " + err.message);
   }
 });
 
@@ -2179,8 +2217,7 @@ app.post("/forgot-password", authLimiter, async (req, res) => {
       expiresAt: Date.now() + 15 * 60 * 1000
     });
 
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
-    const resetLink = `${baseUrl}/reset-password/${token}`;
+    const resetLink = `${BASE_URL}/reset-password/${token}`;
 
     await sendPasswordResetLinkEmail(user.email, user.fullName, resetLink);
 
@@ -3332,10 +3369,8 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       emailToken
     });
 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-
-    const acceptLink = `${baseUrl}/matching/request/${matchRequest._id}/accept?token=${emailToken}`;
-    const rejectLink = `${baseUrl}/matching/request/${matchRequest._id}/reject?token=${emailToken}`;
+    const acceptLink = `${BASE_URL}/matching/request/${matchRequest._id}/accept?token=${emailToken}`;
+    const rejectLink = `${BASE_URL}/matching/request/${matchRequest._id}/reject?token=${emailToken}`;
 
     await sendMatchRequestEmail({
       to: receiverProfile.email,
