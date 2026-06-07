@@ -4,6 +4,12 @@ let myWeakSubjects = [];
 let myStrongSubjects = [];
 let currentMatches = [];
 
+const MATCHING_LAST_SEARCH_KEY = "studyBuddyLastMatchingSearch";
+let lastMatchesJSON = "";
+let matchingLiveRefreshTimer = null;
+let studyListIsSaved = false;
+const LOGIN_REDIRECT_DELAY = 2200;
+
 function isLoggedIn() {
   return Boolean(
     window.MATCHING_PAGE_DATA && window.MATCHING_PAGE_DATA.isLoggedIn
@@ -17,18 +23,16 @@ function requireLogin(message = "Please login first.") {
 
   showToast(message, "error");
 
-  setTimeout(() => {
+  clearTimeout(window.studyBuddyLoginRedirectTimer);
+
+  window.studyBuddyLoginRedirectTimer = setTimeout(() => {
     window.location.href = "/login?returnTo=/matching";
-  }, 1200);
+  }, LOGIN_REDIRECT_DELAY);
 
   return false;
 }
 
 async function loadSubjects() {
-  if (!requireLogin("Please login before using matching.")) {
-    return;
-  }
-
   try {
     const response = await fetch("/api/matching/subjects", {
       cache: "no-store"
@@ -37,14 +41,14 @@ async function loadSubjects() {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-      showToast(data.message || "Could not load subjects.", "error");
+      renderSubjectDropdowns([]);
       return;
     }
 
     renderSubjectDropdowns(data.subjects || []);
   } catch (error) {
     console.error("Load subjects error:", error);
-    showToast("Server error while loading subjects.", "error");
+    renderSubjectDropdowns([]);
   }
 }
 
@@ -69,7 +73,11 @@ function renderSubjectDropdowns(subjects) {
 }
 
 async function loadMyProfile() {
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn()) {
+    studyListIsSaved = false;
+    renderProfileList();
+    return;
+  }
 
   try {
     const response = await fetch("/api/matching/profile", {
@@ -86,18 +94,22 @@ async function loadMyProfile() {
       myStrongSubjects = Array.isArray(data.profile.strongSubjects)
         ? data.profile.strongSubjects
         : [];
+
+      studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
+    } else {
+      studyListIsSaved = false;
     }
 
     renderProfileList();
   } catch (error) {
     console.error("Load profile error:", error);
+    studyListIsSaved = false;
     renderProfileList();
   }
 }
 
 function addSelectedSubject(type) {
-  if (!requireLogin("Please login first.")) return;
-
+  // Guests can prepare the list visually. Login is required only when saving/searching.
   const weakSelect = document.getElementById("weakSubjectSelect");
   const strongSelect = document.getElementById("strongSubjectSelect");
 
@@ -138,6 +150,7 @@ function addSelectedSubject(type) {
     strongSelect.value = "";
   }
 
+  studyListIsSaved = false;
   renderProfileList();
 }
 
@@ -148,6 +161,7 @@ function removeSubject(subject, type) {
     myStrongSubjects = myStrongSubjects.filter(item => item !== subject);
   }
 
+  studyListIsSaved = false;
   renderProfileList();
 }
 
@@ -185,10 +199,11 @@ function renderProfileList() {
 }
 
 async function saveStudyList() {
-  if (!requireLogin("Please login before saving your study list.")) return;
+  if (!requireLogin("Please login to build your study list.")) return;
 
   if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
-    showToast("Add at least one weak or strong subject.", "warning");
+    studyListIsSaved = false;
+    showToast("Add at least one weak or strong subject before building your list.", "warning");
     return;
   }
 
@@ -207,18 +222,21 @@ async function saveStudyList() {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-      showToast(data.message || "Could not save your list.", "error");
+      studyListIsSaved = false;
+      showToast(data.message || "Could not build your list.", "error");
       return;
     }
 
     myWeakSubjects = data.profile.weakSubjects || [];
     myStrongSubjects = data.profile.strongSubjects || [];
+    studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
 
     renderProfileList();
-    showToast("Study list saved.", "success");
+    showToast("Study list built. Now you can search for matches.", "success");
   } catch (error) {
     console.error("Save study list error:", error);
-    showToast("Server error while saving list.", "error");
+    studyListIsSaved = false;
+    showToast("Server error while building list.", "error");
   }
 }
 
@@ -249,6 +267,9 @@ async function clearStudyList() {
     currentMatches = [];
     selectedWeakSubject = "";
     selectedStrongSubject = "";
+
+    clearMatchingSearchState();
+    studyListIsSaved = false;
 
     renderProfileList();
     renderMatches();
@@ -307,6 +328,7 @@ async function searchMatches() {
   try {
     const response = await fetch("/api/matching/search", {
       method: "POST",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json"
       },
@@ -320,13 +342,18 @@ async function searchMatches() {
 
     if (!response.ok || !data.success) {
       currentMatches = [];
+      lastMatchesJSON = "";
       renderMatches();
       showToast(data.message || "Could not search matches.", "error");
       return;
     }
 
     currentMatches = Array.isArray(data.matches) ? data.matches : [];
+    lastMatchesJSON = JSON.stringify(currentMatches);
+
+    saveMatchingSearchState();
     renderMatches();
+    startMatchingLiveRefresh();
 
     if (currentMatches.length === 0) {
       showToast("No matching students found yet.", "warning");
@@ -336,6 +363,7 @@ async function searchMatches() {
   } catch (error) {
     console.error("Search matches error:", error);
     currentMatches = [];
+    lastMatchesJSON = "";
     renderMatches();
     showToast("Server error while searching matches.", "error");
   }
@@ -521,8 +549,9 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
       return;
     }
 
-    showToast(data.message || `Match request sent to ${name}.`, "success");
+     showToast(data.message || `Match request sent to ${name}.`, "success");
     await loadMyRequests();
+    await refreshSavedMatches(true);
   } catch (error) {
     console.error("Send match request error:", error);
     showToast("Server error while sending match request.", "error");
@@ -533,6 +562,11 @@ async function loadMyRequests() {
   const requestsGrid = document.getElementById("requestsGrid");
 
   if (!requestsGrid) return;
+
+  if (!isLoggedIn()) {
+    renderEmptyRequests();
+    return;
+  }
 
   try {
     const response = await fetch("/api/matching/requests", {
@@ -606,9 +640,9 @@ function renderRequests(requests) {
           </div>
         </div>
 
-        ${
-          status === "accepted" && request.chat
-            ? `<button class="btn-match" onclick="window.location.href='/matching/chat/${escapeJS(request.chat)}'">
+                        ${
+          ["accepted", "rescheduled", "matched"].includes(status) && request.chat
+            ? `<button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
                 Open Chat
               </button>`
             : status === "pending" && request.direction === "sent"
@@ -617,7 +651,7 @@ function renderRequests(requests) {
                 </button>`
               : status === "pending" && request.direction === "received"
                 ? `<div class="request-actions">
-                    <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}')">
+                    <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}', '${escapeJS(otherName)}')">
                       Accept
                     </button>
 
@@ -680,7 +714,7 @@ async function cancelMatchRequest(requestId) {
   }
 }
 
-async function acceptMatchRequest(requestId) {
+async function acceptMatchRequest(requestId, otherName = "Study Partner") {
   if (!requireLogin("Please login first.")) {
     return;
   }
@@ -706,14 +740,13 @@ async function acceptMatchRequest(requestId) {
 
     showToast(data.message || "Request accepted.", "success");
 
+    await loadMyRequests();
+
     if (data.chatId) {
-      setTimeout(() => {
-        window.location.href = `/matching/chat/${data.chatId}`;
-      }, 700);
+      openMatchingChatPopup(data.chatId, otherName);
       return;
     }
 
-    await loadMyRequests();
   } catch (error) {
     console.error("Accept match request error:", error);
     showToast("Server error while accepting request.", "error");
@@ -787,22 +820,563 @@ function escapeJS(value) {
   return String(value)
     .replaceAll("\\", "\\\\")
     .replaceAll("'", "\\'")
-    .replaceAll('"', '\\"');
+    .replaceAll('"', '\\"')
+    .replaceAll("\n", "\\n")
+    .replaceAll("\r", "\\r");
+}
+
+function saveMatchingSearchState() {
+  if (!isLoggedIn()) return;
+
+  if (myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
+    return;
+  }
+
+  sessionStorage.setItem(
+    MATCHING_LAST_SEARCH_KEY,
+    JSON.stringify({
+      weakSubjects: myWeakSubjects,
+      strongSubjects: myStrongSubjects,
+      selectedWeakSubject,
+      selectedStrongSubject,
+      savedAt: Date.now()
+    })
+  );
+}
+
+function getMatchingSearchState() {
+  try {
+    const rawData = sessionStorage.getItem(MATCHING_LAST_SEARCH_KEY);
+
+    if (!rawData) return null;
+
+    const data = JSON.parse(rawData);
+
+    const weakSubjects = Array.isArray(data.weakSubjects)
+      ? data.weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
+      : [];
+
+    const strongSubjects = Array.isArray(data.strongSubjects)
+      ? data.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
+      : [];
+
+    if (weakSubjects.length === 0 || strongSubjects.length === 0) {
+      return null;
+    }
+
+    return {
+      weakSubjects,
+      strongSubjects,
+      selectedWeakSubject: data.selectedWeakSubject || "",
+      selectedStrongSubject: data.selectedStrongSubject || ""
+    };
+  } catch (error) {
+    console.error("Read matching search state error:", error);
+    return null;
+  }
+}
+
+function restoreMatchingSearchState() {
+  const savedSearch = getMatchingSearchState();
+
+  if (!savedSearch) {
+    return false;
+  }
+
+  myWeakSubjects = savedSearch.weakSubjects;
+  myStrongSubjects = savedSearch.strongSubjects;
+  selectedWeakSubject = savedSearch.selectedWeakSubject;
+  selectedStrongSubject = savedSearch.selectedStrongSubject;
+
+  renderProfileList();
+
+  return true;
+}
+
+function clearMatchingSearchState() {
+  sessionStorage.removeItem(MATCHING_LAST_SEARCH_KEY);
+  lastMatchesJSON = "";
+}
+
+async function refreshSavedMatches(silent = true) {
+  if (!isLoggedIn()) return;
+
+  const savedSearch = getMatchingSearchState();
+
+  if (!savedSearch) return;
+
+  myWeakSubjects = savedSearch.weakSubjects;
+  myStrongSubjects = savedSearch.strongSubjects;
+  selectedWeakSubject = savedSearch.selectedWeakSubject;
+  selectedStrongSubject = savedSearch.selectedStrongSubject;
+
+  renderProfileList();
+
+  try {
+    const response = await fetch("/api/matching/search", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        weakSubjects: myWeakSubjects,
+        strongSubjects: myStrongSubjects
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      if (!silent) {
+        showToast(data.message || "Could not refresh matches.", "error");
+      }
+
+      return;
+    }
+
+    const freshMatches = Array.isArray(data.matches) ? data.matches : [];
+    const freshMatchesJSON = JSON.stringify(freshMatches);
+
+    if (freshMatchesJSON !== lastMatchesJSON) {
+      currentMatches = freshMatches;
+      lastMatchesJSON = freshMatchesJSON;
+      renderMatches();
+    }
+  } catch (error) {
+    console.error("Live refresh matches error:", error);
+
+    if (!silent) {
+      showToast("Server error while refreshing matches.", "error");
+    }
+  }
+}
+
+function startMatchingLiveRefresh() {
+  clearInterval(matchingLiveRefreshTimer);
+
+  matchingLiveRefreshTimer = setInterval(() => {
+    if (!isLoggedIn()) return;
+
+    loadMyRequests();
+    refreshSavedMatches(true);
+  }, 5000);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadSubjects();
+  await loadMyProfile();
+
+  restoreMatchingSearchState();
+
+  await loadMyRequests();
+  await refreshSavedMatches(true);
+
+  startMatchingLiveRefresh();
+});
+
+window.addEventListener("pageshow", async () => {
+  await loadMyProfile();
+
+  restoreMatchingSearchState();
+
+  await loadMyRequests();
+  await refreshSavedMatches(true);
+
+  startMatchingLiveRefresh();
+});
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.hidden || !isLoggedIn()) return;
+
+  await loadMyRequests();
+  await refreshSavedMatches(true);
+});
+
+
+let activePopupChatId = "";
+let popupCurrentUserId = "";
+let popupCurrentRequest = null;
+let popupLastMessagesJSON = "";
+let popupRefreshTimer = null;
+
+function openMatchingChatPopup(chatIdValue, partnerNameValue = "Study Partner") {
+  if (!chatIdValue) return;
+
+  activePopupChatId = String(chatIdValue);
+  popupLastMessagesJSON = "";
+
+  const popup = document.getElementById("matchingChatPopup");
+  const mini = document.getElementById("matchingChatMini");
+  const title = document.getElementById("popupChatPartnerName");
+  const avatar = document.getElementById("popupChatAvatar");
+  const input = document.getElementById("popupMessageInput");
+
+  const cleanName = String(partnerNameValue || "Study Partner").trim() || "Study Partner";
+
+  if (title) title.textContent = cleanName;
+  if (avatar) avatar.textContent = cleanName.charAt(0).toUpperCase();
+
+  if (mini) mini.classList.add("hidden");
+  if (popup) popup.classList.remove("hidden");
+
+  loadPopupMessages();
+  startPopupRefresh();
+
+  setTimeout(() => {
+    if (input) input.focus();
+  }, 150);
+}
+
+function startPopupRefresh() {
+  clearInterval(popupRefreshTimer);
+
+  popupRefreshTimer = setInterval(() => {
+    if (activePopupChatId) {
+      loadPopupMessages();
+    }
+  }, 3000);
+}
+
+function closeMatchingChatPopup(event) {
+  if (event) event.stopPropagation();
+
+  activePopupChatId = "";
+  popupCurrentUserId = "";
+  popupCurrentRequest = null;
+  popupLastMessagesJSON = "";
+
+  clearInterval(popupRefreshTimer);
+
+  const popup = document.getElementById("matchingChatPopup");
+  const mini = document.getElementById("matchingChatMini");
+  const messagesBox = document.getElementById("popupMessagesBox");
+  const schedulePanel = document.getElementById("popupSchedulePanel");
+  const messageInput = document.getElementById("popupMessageInput");
+  const scheduleInput = document.getElementById("popupScheduleDateTime");
+
+  if (popup) popup.classList.add("hidden");
+  if (mini) mini.classList.add("hidden");
+  if (schedulePanel) schedulePanel.classList.add("hidden");
+
+  if (messagesBox) {
+    messagesBox.innerHTML = `<div class="popup-empty-chat">Open a chat to start messaging.</div>`;
+  }
+
+  if (messageInput) messageInput.value = "";
+  if (scheduleInput) scheduleInput.value = "";
+}
+
+function minimizeMatchingChatPopup(event) {
+  if (event) event.stopPropagation();
+
+  const popup = document.getElementById("matchingChatPopup");
+  const mini = document.getElementById("matchingChatMini");
+
+  if (popup) popup.classList.add("hidden");
+  if (mini && activePopupChatId) mini.classList.remove("hidden");
+}
+
+function expandMatchingChatPopup() {
+  const popup = document.getElementById("matchingChatPopup");
+  const mini = document.getElementById("matchingChatMini");
+
+  if (mini) mini.classList.add("hidden");
+
+  if (popup && activePopupChatId) {
+    popup.classList.remove("hidden");
+    loadPopupMessages();
+  }
+}
+
+async function loadPopupMessages() {
+  if (!activePopupChatId) return;
+
+  const messagesBox = document.getElementById("popupMessagesBox");
+  if (!messagesBox) return;
+
+  try {
+    const response = await fetch(`/api/matching/chat/${activePopupChatId}/messages`, {
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      messagesBox.innerHTML = `
+        <div class="popup-empty-chat">
+          ${escapeHTML(data.message || "Could not load messages.")}
+        </div>
+      `;
+      return;
+    }
+
+    popupCurrentUserId = data.currentUserId || "";
+    popupCurrentRequest = data.request || null;
+
+    const messages = Array.isArray(data.messages) ? data.messages : [];
+    const requestInfo = popupCurrentRequest ? JSON.stringify(popupCurrentRequest) : "";
+    const newMessagesJSON = JSON.stringify(messages) + requestInfo;
+
+    if (newMessagesJSON === popupLastMessagesJSON) {
+      return;
+    }
+
+    popupLastMessagesJSON = newMessagesJSON;
+
+    renderPopupMessages(messages);
+
+  } catch (error) {
+    console.error("Popup chat load error:", error);
+
+    messagesBox.innerHTML = `
+      <div class="popup-empty-chat">
+        Server error while loading messages.
+      </div>
+    `;
+  }
+}
+
+function renderPopupMessages(messages) {
+  const messagesBox = document.getElementById("popupMessagesBox");
+  if (!messagesBox) return;
+
+  let statusHTML = "";
+
+  if (popupCurrentRequest && popupCurrentRequest.scheduledAt && !popupCurrentRequest.emailSentAt) {
+    statusHTML = `
+      <div class="popup-meeting-status">
+        <strong>Meeting Scheduled</strong>
+        <p>Email will be sent at ${escapeHTML(formatPopupFullDate(popupCurrentRequest.scheduledAt))}.</p>
+      </div>
+    `;
+  }
+
+  if (popupCurrentRequest && popupCurrentRequest.emailSentAt) {
+    statusHTML = `
+      <div class="popup-meeting-status sent">
+        <strong>Meeting Link Sent</strong>
+        <p>The meeting email was sent to both students.</p>
+      </div>
+    `;
+  }
+
+  if (!messages.length) {
+    messagesBox.innerHTML = `
+      ${statusHTML}
+      <div class="popup-empty-chat">
+        No messages yet. Start the conversation.
+      </div>
+    `;
+    return;
+  }
+
+  messagesBox.innerHTML = `
+    ${statusHTML}
+    ${messages.map(message => {
+      const isMine = String(message.sender) === String(popupCurrentUserId);
+
+      return `
+        <div class="popup-message-row ${isMine ? "mine" : "theirs"}">
+          <div class="popup-message-bubble">
+            <div class="popup-message-name">
+              ${escapeHTML(message.senderName || "Student")}
+            </div>
+
+            <div class="popup-message-text">
+              ${escapeHTML(message.text || "")}
+            </div>
+
+            <div class="popup-message-time">
+              ${formatPopupTime(message.createdAt)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  messagesBox.scrollTop = messagesBox.scrollHeight;
+}
+
+async function sendPopupMessage(event) {
+  event.preventDefault();
+
+  if (!activePopupChatId) return;
+
+  const input = document.getElementById("popupMessageInput");
+  if (!input) return;
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  input.disabled = true;
+
+  try {
+    const response = await fetch(`/api/matching/chat/${activePopupChatId}/message`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not send message.", "error");
+      return;
+    }
+
+    input.value = "";
+    await loadPopupMessages();
+
+  } catch (error) {
+    console.error("Popup send message error:", error);
+    showToast("Server error while sending message.", "error");
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+function showPopupSchedulePanel() {
+  const panel = document.getElementById("popupSchedulePanel");
+
+  if (panel) {
+    panel.classList.remove("hidden");
+  }
+}
+
+function hidePopupSchedulePanel() {
+  const panel = document.getElementById("popupSchedulePanel");
+
+  if (panel) {
+    panel.classList.add("hidden");
+  }
+}
+
+async function submitPopupSchedule() {
+  if (!activePopupChatId) return;
+
+  const input = document.getElementById("popupScheduleDateTime");
+  if (!input) return;
+
+  if (!input.value) {
+    showToast("Please choose a meeting date and time.", "warning");
+    return;
+  }
+
+  const selectedDate = new Date(input.value);
+
+  if (Number.isNaN(selectedDate.getTime())) {
+    showToast("Invalid date and time.", "error");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/matching/chat/${activePopupChatId}/schedule`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        scheduledAt: selectedDate.toISOString()
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not schedule meeting.", "error");
+      return;
+    }
+
+    showToast(data.message || "Meeting scheduled.", "success");
+
+    hidePopupSchedulePanel();
+    input.value = "";
+
+    await loadPopupMessages();
+    await loadMyRequests();
+
+  } catch (error) {
+    console.error("Popup schedule error:", error);
+    showToast("Server error while scheduling meeting.", "error");
+  }
+}
+
+async function popupMatchNow() {
+  if (!activePopupChatId) return;
+
+  const confirmStart = confirm("Send the meeting link email to both students now?");
+
+  if (!confirmStart) return;
+
+  try {
+    const response = await fetch(`/api/matching/chat/${activePopupChatId}/match-now`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not start match now.", "error");
+      return;
+    }
+
+    showToast(data.message || "Meeting email sent.", "success");
+
+    await loadPopupMessages();
+    await loadMyRequests();
+
+  } catch (error) {
+    console.error("Popup match now error:", error);
+    showToast("Server error while starting match now.", "error");
+  }
+}
+
+function formatPopupTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatPopupFullDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadSubjects();
-  loadMyProfile();
-  loadMyRequests();
-});
+  const popupChatForm = document.getElementById("popupChatForm");
 
-window.addEventListener("pageshow", () => {
-  loadMyProfile();
-  loadMyRequests();
-});
-
-setInterval(() => {
-  if (isLoggedIn()) {
-    loadMyRequests();
+  if (popupChatForm) {
+    popupChatForm.addEventListener("submit", sendPopupMessage);
   }
-}, 5000);
+});
