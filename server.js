@@ -921,7 +921,7 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
 
     const cleanedGender = String(gender || "").trim().toLowerCase();
     fullName = fullName.replace(/\s+/g, " ");
-    const fullNameRegex = /^[A-Za-z]+[0-9]*$/;
+    const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
 
     if (!fullNameRegex.test(fullName)) {
        return res.status(400).json({
