@@ -834,3 +834,98 @@ textarea {
   padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
+
+.profile-remove-list {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-removable-subject {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 46px;
+  padding: 10px 12px 10px 16px;
+  border-radius: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.profile-removable-subject span {
+  color: #f6f7ff;
+  font-weight: 850;
+  font-size: 0.92rem;
+}
+
+.profile-removable-subject button {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 13px;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  background: rgba(255, 95, 122, 0.18);
+  border: 1px solid rgba(255, 95, 122, 0.34);
+  transition: 0.25s ease;
+}
+
+.profile-removable-subject button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 95, 122, 0.28);
+}
+
+.weak-remove-item {
+  border-color: rgba(255, 107, 138, 0.25);
+}
+
+.strong-remove-item {
+  border-color: rgba(92, 255, 176, 0.25);
+}
+
+.competition-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.competition-forfeit-form {
+  margin: 0;
+}
+
+.competition-edit-btn {
+  margin-left: 0;
+}
+
+.competition-forfeit-btn {
+  border: 1px solid rgba(255, 95, 122, 0.35);
+  background: rgba(255, 95, 122, 0.16);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.competition-forfeit-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 95, 122, 0.28);
+}
+
+@media (max-width: 680px) {
+  .competition-top {
+    align-items: flex-start;
+  }
+
+  .competition-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .competition-edit-btn,
+  .competition-forfeit-btn {
+    width: 100%;
+  }
+}

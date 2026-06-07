@@ -1990,20 +1990,20 @@ app.post("/profile/update-study-list", requirePageAuth, async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    const weakSubjects = cleanSubjects(
-      String(req.body.weakSubjects || "")
-        .split(",")
-    );
+    const weakInput = Array.isArray(req.body.weakSubjects)
+      ? req.body.weakSubjects
+      : req.body.weakSubjects
+        ? [req.body.weakSubjects]
+        : [];
 
-    const strongSubjects = cleanSubjects(
-      String(req.body.strongSubjects || "")
-        .split(",")
-    );
+    const strongInput = Array.isArray(req.body.strongSubjects)
+      ? req.body.strongSubjects
+      : req.body.strongSubjects
+        ? [req.body.strongSubjects]
+        : [];
 
-    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
-      req.flash("error", "Add at least one weak subject or one strong subject.");
-      return res.redirect("/profile#study");
-    }
+    const weakSubjects = cleanSubjects(weakInput);
+    const strongSubjects = cleanSubjects(strongInput);
 
     if (weakSubjects.length > 20 || strongSubjects.length > 20) {
       req.flash("error", "You can add maximum 20 weak subjects and 20 strong subjects.");
@@ -2016,6 +2016,15 @@ app.post("/profile/update-study-list", requirePageAuth, async (req, res) => {
 
     if (tooLongSubject) {
       req.flash("error", "Each subject must be 40 characters or less.");
+      return res.redirect("/profile#study");
+    }
+
+    const duplicateSubject = weakSubjects.find(subject => {
+      return strongSubjects.includes(subject);
+    });
+
+    if (duplicateSubject) {
+      req.flash("error", "The same subject cannot be both weak and strong.");
       return res.redirect("/profile#study");
     }
 
@@ -2128,6 +2137,88 @@ app.post("/profile/competition/:registrationId/update", requirePageAuth, async (
     res.redirect("/profile");
   }
 });
+
+
+app.post("/profile/competition/:registrationId/forfeit", requirePageAuth, async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+
+    const deletedRegistration = await EventRegistration.findOneAndDelete({
+      _id: registrationId,
+      user: req.session.user.id
+    });
+
+    if (!deletedRegistration) {
+      req.flash("error", "Competition registration was not found.");
+      return res.redirect("/profile");
+    }
+
+    const relatedEvent = await Event.findOne({
+      title: deletedRegistration.tournamentName
+    });
+
+    if (relatedEvent && relatedEvent.bracket) {
+      const removedId = String(registrationId);
+
+      relatedEvent.bracket.roundOf8 = (relatedEvent.bracket.roundOf8 || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      relatedEvent.bracket.semiFinal = (relatedEvent.bracket.semiFinal || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      relatedEvent.bracket.final = (relatedEvent.bracket.final || []).map(slot => {
+        if (String(slot.registrationId || "") === removedId) {
+          return {
+            slot: slot.slot,
+            registrationId: null,
+            teamName: ""
+          };
+        }
+
+        return slot;
+      });
+
+      if (
+        relatedEvent.bracket.winner &&
+        String(relatedEvent.bracket.winner.registrationId || "") === removedId
+      ) {
+        relatedEvent.bracket.winner = {
+          registrationId: null,
+          teamName: ""
+        };
+      }
+
+      await relatedEvent.save();
+    }
+
+    req.flash("success", "You have been removed from the competition.");
+    res.redirect("/profile");
+
+  } catch (error) {
+    console.error("Forfeit competition error:", error);
+    req.flash("error", "Could not forfeit competition.");
+    res.redirect("/profile");
+  }
+});
+
 
 app.get("/logout", (req, res) => {
   req.session.destroy(() => {

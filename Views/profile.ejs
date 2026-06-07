@@ -6,7 +6,7 @@
 
   <title>Study Buddy Profile</title>
 
-  <link rel="stylesheet" href="/css/profile.css" />
+  <link rel="stylesheet" href="/css/profile.css?v=2" />
 </head>
 
 <body>
@@ -246,23 +246,59 @@
         </div>
 
         <form class="edit-form hidden" id="studyEditForm" action="/profile/update-study-list" method="POST">
-          <div class="form-group">
-            <label>Subjects I Need Help With</label>
-            <textarea name="weakSubjects" rows="4" placeholder="Example: Network, OS, Calculus"><%= weakSubjects.join(", ") %></textarea>
-            <small>Write subjects separated by commas.</small>
-          </div>
+  <div class="form-group">
+    <label>Subjects I Need Help With</label>
 
-          <div class="form-group">
-            <label>Subjects I Can Help With</label>
-            <textarea name="strongSubjects" rows="4" placeholder="Example: Math, Data Structure, Algorithm"><%= strongSubjects.join(", ") %></textarea>
-            <small>Write subjects separated by commas.</small>
-          </div>
+    <% if (weakSubjects.length === 0) { %>
+      <p class="muted-text">No weak subjects to remove.</p>
+    <% } else { %>
+      <div class="profile-remove-list" data-empty-text="No weak subjects left.">
+        <% weakSubjects.forEach(subject => { %>
+          <div class="profile-removable-subject weak-remove-item">
+            <input type="hidden" name="weakSubjects" value="<%= subject %>" />
 
-          <div class="edit-actions">
-            <button type="submit" class="primary-btn small">Save Study List</button>
-            <button type="button" class="ghost-btn small" id="cancelStudyBtn">Cancel</button>
+            <span>Need: <%= subject %></span>
+
+            <button type="button" onclick="removeProfileSubject(this)">
+              Remove
+            </button>
           </div>
-        </form>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <small>You can only remove courses here. Add courses from the Matching page dropdown.</small>
+  </div>
+
+  <div class="form-group">
+    <label>Subjects I Can Help With</label>
+
+    <% if (strongSubjects.length === 0) { %>
+      <p class="muted-text">No strong subjects to remove.</p>
+    <% } else { %>
+      <div class="profile-remove-list" data-empty-text="No strong subjects left.">
+        <% strongSubjects.forEach(subject => { %>
+          <div class="profile-removable-subject strong-remove-item">
+            <input type="hidden" name="strongSubjects" value="<%= subject %>" />
+
+            <span>Teach: <%= subject %></span>
+
+            <button type="button" onclick="removeProfileSubject(this)">
+              Remove
+            </button>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <small>You can only remove courses here. Add courses from the Matching page dropdown.</small>
+  </div>
+
+  <div class="edit-actions">
+    <button type="submit" class="primary-btn small">Save Study List</button>
+    <button type="button" class="ghost-btn small" id="cancelStudyBtn">Cancel</button>
+  </div>
+</form>
       </div>
 
     </section>
@@ -302,13 +338,26 @@
                   <h3><%= item.tournamentName || "Competition" %></h3>
                 </div>
 
-                <button
-                  type="button"
-                  class="competition-edit-btn"
-                   onclick="toggleCompetitionEdit('<%= item._id %>')"
-                    >
-                    Edit
-                    </button>
+                <div class="competition-actions">
+  <button
+    type="button"
+    class="competition-edit-btn"
+    onclick="toggleCompetitionEdit('<%= item._id %>')"
+  >
+    Edit
+  </button>
+
+  <form
+    class="competition-forfeit-form"
+    action="/profile/competition/<%= item._id %>/forfeit"
+    method="POST"
+    onsubmit="return confirmForfeitCompetition()"
+  >
+    <button type="submit" class="competition-forfeit-btn">
+      Forfeit
+    </button>
+  </form>
+</div>
 
               </div>
             <div class="competition-info">
@@ -406,6 +455,6 @@
 
   </main>
 
-  <script src="/javaScript/profile.js"></script>
+  <script src="/javaScript/profile.js?v2"></script>
 </body>
 </html>
