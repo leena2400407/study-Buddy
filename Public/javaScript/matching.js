@@ -3,11 +3,13 @@ let selectedStrongSubject = "";
 let myWeakSubjects = [];
 let myStrongSubjects = [];
 let currentMatches = [];
+let matchingSearchHasRun = false;
 
 const MATCHING_LAST_SEARCH_KEY = "studyBuddyLastMatchingSearch";
 let lastMatchesJSON = "";
 let matchingLiveRefreshTimer = null;
 let studyListIsSaved = false;
+let studyListHasLocalChanges = false;
 const LOGIN_REDIRECT_DELAY = 2200;
 
 function isLoggedIn() {
@@ -72,11 +74,16 @@ function renderSubjectDropdowns(subjects) {
   });
 }
 
-async function loadMyProfile() {
+async function loadMyProfile(options = {}) {
+  const force = Boolean(options.force);
+
   if (!isLoggedIn()) {
-    studyListIsSaved = false;
-    renderProfileList();
-    return;
+    resetMatchingPageAfterLogout();
+    return false;
+  }
+
+  if (studyListHasLocalChanges && !force) {
+    return true;
   }
 
   try {
@@ -84,7 +91,12 @@ async function loadMyProfile() {
       cache: "no-store"
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data || !response.ok) {
+      resetMatchingPageAfterLogout();
+      return false;
+    }
 
     if (data.success && data.profile) {
       myWeakSubjects = Array.isArray(data.profile.weakSubjects)
@@ -97,19 +109,22 @@ async function loadMyProfile() {
 
       studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
     } else {
+      myWeakSubjects = [];
+      myStrongSubjects = [];
       studyListIsSaved = false;
     }
 
+    studyListHasLocalChanges = false;
     renderProfileList();
+    return true;
   } catch (error) {
     console.error("Load profile error:", error);
-    studyListIsSaved = false;
-    renderProfileList();
+    resetMatchingPageAfterLogout();
+    return false;
   }
 }
 
 function addSelectedSubject(type) {
-  // Guests can prepare the list visually. Login is required only when saving/searching.
   const weakSelect = document.getElementById("weakSubjectSelect");
   const strongSelect = document.getElementById("strongSubjectSelect");
 
@@ -151,7 +166,11 @@ function addSelectedSubject(type) {
   }
 
   studyListIsSaved = false;
+  studyListHasLocalChanges = true;
+
+  stopSavedMatchRefresh();
   renderProfileList();
+  renderNoSearchState();
 }
 
 function removeSubject(subject, type) {
@@ -162,7 +181,11 @@ function removeSubject(subject, type) {
   }
 
   studyListIsSaved = false;
+  studyListHasLocalChanges = true;
+
+  stopSavedMatchRefresh();
   renderProfileList();
+  renderNoSearchState();
 }
 
 function renderProfileList() {
@@ -203,7 +226,7 @@ async function saveStudyList() {
 
   if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
     studyListIsSaved = false;
-    showToast("Add at least one weak or strong subject before building your list.", "warning");
+    showToast("Add at least one weak or strong subject before saving your list.", "warning");
     return;
   }
 
@@ -219,24 +242,40 @@ async function saveStudyList() {
       })
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
 
-    if (!response.ok || !data.success) {
-      studyListIsSaved = false;
-      showToast(data.message || "Could not build your list.", "error");
+    if (!data) {
+      resetMatchingPageAfterLogout();
       return;
     }
 
-    myWeakSubjects = data.profile.weakSubjects || [];
-    myStrongSubjects = data.profile.strongSubjects || [];
+    if (!response.ok || !data.success) {
+      studyListIsSaved = false;
+      showToast(data.message || "Could not save your list.", "error");
+      return;
+    }
+
+    myWeakSubjects = Array.isArray(data.profile.weakSubjects)
+      ? data.profile.weakSubjects
+      : [];
+
+    myStrongSubjects = Array.isArray(data.profile.strongSubjects)
+      ? data.profile.strongSubjects
+      : [];
+
     studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
+    studyListHasLocalChanges = false;
+
+    stopSavedMatchRefresh();
 
     renderProfileList();
-    showToast("Study list built. Now you can search for matches.", "success");
+    renderNoSearchState();
+
+    showToast("Study list saved. Now search for matches.", "success");
   } catch (error) {
     console.error("Save study list error:", error);
     studyListIsSaved = false;
-    showToast("Server error while building list.", "error");
+    showToast("Server error while saving list.", "error");
   }
 }
 
@@ -255,7 +294,12 @@ async function clearStudyList() {
       }
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       showToast(data.message || "Could not clear list.", "error");
@@ -264,15 +308,15 @@ async function clearStudyList() {
 
     myWeakSubjects = [];
     myStrongSubjects = [];
-    currentMatches = [];
     selectedWeakSubject = "";
     selectedStrongSubject = "";
-
-    clearMatchingSearchState();
     studyListIsSaved = false;
+    studyListHasLocalChanges = false;
+
+    stopSavedMatchRefresh();
 
     renderProfileList();
-    renderMatches();
+    renderNoSearchState();
 
     showToast("Study list cleared.", "success");
   } catch (error) {
@@ -303,6 +347,8 @@ async function searchMatches() {
     if (!myWeakSubjects.includes(selectedWeakSubject)) {
       myWeakSubjects.push(selectedWeakSubject);
     }
+
+    weakSelect.value = "";
   }
 
   if (selectedStrongSubject) {
@@ -314,12 +360,20 @@ async function searchMatches() {
     if (!myStrongSubjects.includes(selectedStrongSubject)) {
       myStrongSubjects.push(selectedStrongSubject);
     }
+
+    strongSelect.value = "";
+  }
+
+  if (selectedWeakSubject || selectedStrongSubject) {
+    studyListIsSaved = false;
+    studyListHasLocalChanges = true;
   }
 
   renderProfileList();
 
   if (myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
-    showToast("Add at least one weak subject and one strong subject.", "warning");
+    showToast("Add at least one weak subject and one strong subject before searching.", "warning");
+    renderNoSearchState();
     return;
   }
 
@@ -338,11 +392,17 @@ async function searchMatches() {
       })
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       currentMatches = [];
       lastMatchesJSON = "";
+      matchingSearchHasRun = true;
       renderMatches();
       showToast(data.message || "Could not search matches.", "error");
       return;
@@ -350,8 +410,9 @@ async function searchMatches() {
 
     currentMatches = Array.isArray(data.matches) ? data.matches : [];
     lastMatchesJSON = JSON.stringify(currentMatches);
+    matchingSearchHasRun = true;
 
-    saveMatchingSearchState();
+    saveMatchingSearchState(myWeakSubjects, myStrongSubjects);
     renderMatches();
     startMatchingLiveRefresh();
 
@@ -364,6 +425,7 @@ async function searchMatches() {
     console.error("Search matches error:", error);
     currentMatches = [];
     lastMatchesJSON = "";
+    matchingSearchHasRun = true;
     renderMatches();
     showToast("Server error while searching matches.", "error");
   }
@@ -383,10 +445,33 @@ function renderLoadingMatches() {
   `;
 }
 
+function renderNoSearchState() {
+  const matchesGrid = document.getElementById("matchesGrid");
+
+  currentMatches = [];
+  lastMatchesJSON = "";
+  matchingSearchHasRun = false;
+
+  if (!matchesGrid) return;
+
+  matchesGrid.innerHTML = `
+    <div class="empty-state-card">
+      <div class="empty-icon">🔎</div>
+      <h3>No search yet</h3>
+      <p>Add subjects to your study list, save it, then search for matches.</p>
+    </div>
+  `;
+}
+
 function renderMatches() {
   const matchesGrid = document.getElementById("matchesGrid");
 
   if (!matchesGrid) return;
+
+  if (!matchingSearchHasRun) {
+    renderNoSearchState();
+    return;
+  }
 
   if (!currentMatches.length) {
     matchesGrid.innerHTML = `
@@ -542,14 +627,19 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
       })
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       showToast(data.message || "Could not send match request.", "error");
       return;
     }
 
-     showToast(data.message || `Match request sent to ${name}.`, "success");
+    showToast(data.message || `Match request sent to ${name}.`, "success");
     await loadMyRequests();
     await refreshSavedMatches(true);
   } catch (error) {
@@ -561,11 +651,11 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
 async function loadMyRequests() {
   const requestsGrid = document.getElementById("requestsGrid");
 
-  if (!requestsGrid) return;
+  if (!requestsGrid) return false;
 
   if (!isLoggedIn()) {
     renderEmptyRequests();
-    return;
+    return false;
   }
 
   try {
@@ -575,20 +665,27 @@ async function loadMyRequests() {
 
     if (response.status === 404) {
       renderEmptyRequests();
-      return;
+      return true;
     }
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return false;
+    }
 
     if (!response.ok || !data.success) {
       renderEmptyRequests();
-      return;
+      return true;
     }
 
     renderRequests(data.requests || []);
+    return true;
   } catch (error) {
     console.error("Load requests error:", error);
     renderEmptyRequests();
+    return true;
   }
 }
 
@@ -640,7 +737,7 @@ function renderRequests(requests) {
           </div>
         </div>
 
-                        ${
+        ${
           ["accepted", "rescheduled", "matched"].includes(status) && request.chat
             ? `<button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
                 Open Chat
@@ -699,7 +796,12 @@ async function cancelMatchRequest(requestId) {
       }
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       showToast(data.message || "Could not cancel request.", "error");
@@ -708,6 +810,7 @@ async function cancelMatchRequest(requestId) {
 
     showToast(data.message || "Request cancelled.", "success");
     await loadMyRequests();
+    await refreshSavedMatches(true);
   } catch (error) {
     console.error("Cancel match request error:", error);
     showToast("Server error while cancelling request.", "error");
@@ -731,7 +834,12 @@ async function acceptMatchRequest(requestId, otherName = "Study Partner") {
       }
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       showToast(data.message || "Could not accept request.", "error");
@@ -746,7 +854,6 @@ async function acceptMatchRequest(requestId, otherName = "Study Partner") {
       openMatchingChatPopup(data.chatId, otherName);
       return;
     }
-
   } catch (error) {
     console.error("Accept match request error:", error);
     showToast("Server error while accepting request.", "error");
@@ -770,7 +877,12 @@ async function rejectMatchRequest(requestId) {
       }
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       showToast(data.message || "Could not reject request.", "error");
@@ -779,6 +891,7 @@ async function rejectMatchRequest(requestId) {
 
     showToast(data.message || "Request rejected.", "success");
     await loadMyRequests();
+    await refreshSavedMatches(true);
   } catch (error) {
     console.error("Reject match request error:", error);
     showToast("Server error while rejecting request.", "error");
@@ -825,18 +938,77 @@ function escapeJS(value) {
     .replaceAll("\r", "\\r");
 }
 
-function saveMatchingSearchState() {
+function setMatchingLoggedOutFlag() {
+  if (window.MATCHING_PAGE_DATA) {
+    window.MATCHING_PAGE_DATA.isLoggedIn = false;
+  }
+}
+
+async function readJSONOrLogout(response) {
+  if (response.status === 401 || response.status === 403 || response.redirected) {
+    setMatchingLoggedOutFlag();
+    return null;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    setMatchingLoggedOutFlag();
+    return null;
+  }
+
+  return response.json();
+}
+
+function resetMatchingPageAfterLogout() {
+  myWeakSubjects = [];
+  myStrongSubjects = [];
+  selectedWeakSubject = "";
+  selectedStrongSubject = "";
+  studyListIsSaved = false;
+  studyListHasLocalChanges = false;
+
+  stopSavedMatchRefresh();
+  renderProfileList();
+  renderNoSearchState();
+  renderEmptyRequests();
+
+  if (typeof closeMatchingChatPopup === "function") {
+    closeMatchingChatPopup();
+  }
+}
+
+function stopSavedMatchRefresh() {
+  clearInterval(matchingLiveRefreshTimer);
+  matchingLiveRefreshTimer = null;
+
+  sessionStorage.removeItem(MATCHING_LAST_SEARCH_KEY);
+
+  currentMatches = [];
+  lastMatchesJSON = "";
+  matchingSearchHasRun = false;
+}
+
+function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects = myStrongSubjects) {
   if (!isLoggedIn()) return;
 
-  if (myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
+  const cleanWeakSubjects = Array.isArray(weakSubjects)
+    ? weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
+    : [];
+
+  const cleanStrongSubjects = Array.isArray(strongSubjects)
+    ? strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
+    : [];
+
+  if (cleanWeakSubjects.length === 0 || cleanStrongSubjects.length === 0) {
     return;
   }
 
   sessionStorage.setItem(
     MATCHING_LAST_SEARCH_KEY,
     JSON.stringify({
-      weakSubjects: myWeakSubjects,
-      strongSubjects: myStrongSubjects,
+      weakSubjects: cleanWeakSubjects,
+      strongSubjects: cleanStrongSubjects,
       selectedWeakSubject,
       selectedStrongSubject,
       savedAt: Date.now()
@@ -883,34 +1055,28 @@ function restoreMatchingSearchState() {
     return false;
   }
 
-  myWeakSubjects = savedSearch.weakSubjects;
-  myStrongSubjects = savedSearch.strongSubjects;
-  selectedWeakSubject = savedSearch.selectedWeakSubject;
-  selectedStrongSubject = savedSearch.selectedStrongSubject;
-
-  renderProfileList();
+  selectedWeakSubject = savedSearch.selectedWeakSubject || "";
+  selectedStrongSubject = savedSearch.selectedStrongSubject || "";
 
   return true;
 }
 
 function clearMatchingSearchState() {
-  sessionStorage.removeItem(MATCHING_LAST_SEARCH_KEY);
-  lastMatchesJSON = "";
+  stopSavedMatchRefresh();
 }
 
 async function refreshSavedMatches(silent = true) {
-  if (!isLoggedIn()) return;
+  if (!isLoggedIn()) {
+    resetMatchingPageAfterLogout();
+    return;
+  }
 
   const savedSearch = getMatchingSearchState();
 
   if (!savedSearch) return;
 
-  myWeakSubjects = savedSearch.weakSubjects;
-  myStrongSubjects = savedSearch.strongSubjects;
-  selectedWeakSubject = savedSearch.selectedWeakSubject;
-  selectedStrongSubject = savedSearch.selectedStrongSubject;
-
-  renderProfileList();
+  selectedWeakSubject = savedSearch.selectedWeakSubject || "";
+  selectedStrongSubject = savedSearch.selectedStrongSubject || "";
 
   try {
     const response = await fetch("/api/matching/search", {
@@ -920,12 +1086,17 @@ async function refreshSavedMatches(silent = true) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        weakSubjects: myWeakSubjects,
-        strongSubjects: myStrongSubjects
+        weakSubjects: savedSearch.weakSubjects,
+        strongSubjects: savedSearch.strongSubjects
       })
     });
 
-    const data = await response.json();
+    const data = await readJSONOrLogout(response);
+
+    if (!data) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
     if (!response.ok || !data.success) {
       if (!silent) {
@@ -941,6 +1112,7 @@ async function refreshSavedMatches(silent = true) {
     if (freshMatchesJSON !== lastMatchesJSON) {
       currentMatches = freshMatches;
       lastMatchesJSON = freshMatchesJSON;
+      matchingSearchHasRun = true;
       renderMatches();
     }
   } catch (error) {
@@ -955,44 +1127,53 @@ async function refreshSavedMatches(silent = true) {
 function startMatchingLiveRefresh() {
   clearInterval(matchingLiveRefreshTimer);
 
-  matchingLiveRefreshTimer = setInterval(() => {
-    if (!isLoggedIn()) return;
+  matchingLiveRefreshTimer = setInterval(async () => {
+    if (!isLoggedIn()) {
+      resetMatchingPageAfterLogout();
+      return;
+    }
 
-    loadMyRequests();
-    refreshSavedMatches(true);
+    const stillLoggedIn = await loadMyRequests();
+
+    if (stillLoggedIn) {
+      await refreshSavedMatches(true);
+    }
   }, 5000);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadSubjects();
-  await loadMyProfile();
 
-  restoreMatchingSearchState();
+  const stillLoggedIn = await loadMyProfile({ force: true });
 
-  await loadMyRequests();
-  await refreshSavedMatches(true);
-
-  startMatchingLiveRefresh();
+  if (stillLoggedIn) {
+    restoreMatchingSearchState();
+    await loadMyRequests();
+    await refreshSavedMatches(true);
+    startMatchingLiveRefresh();
+  }
 });
 
 window.addEventListener("pageshow", async () => {
-  await loadMyProfile();
+  const stillLoggedIn = await loadMyProfile();
 
-  restoreMatchingSearchState();
-
-  await loadMyRequests();
-  await refreshSavedMatches(true);
-
-  startMatchingLiveRefresh();
+  if (stillLoggedIn) {
+    restoreMatchingSearchState();
+    await loadMyRequests();
+    await refreshSavedMatches(true);
+    startMatchingLiveRefresh();
+  }
 });
 
 document.addEventListener("visibilitychange", async () => {
-  if (document.hidden || !isLoggedIn()) return;
+  if (document.hidden) return;
 
-  await loadMyRequests();
-  await refreshSavedMatches(true);
+  const stillLoggedIn = await loadMyRequests();
+
+  if (stillLoggedIn) {
+    await refreshSavedMatches(true);
+  }
 });
-
 
 let activePopupChatId = "";
 let popupCurrentUserId = "";
@@ -1125,7 +1306,6 @@ async function loadPopupMessages() {
     popupLastMessagesJSON = newMessagesJSON;
 
     renderPopupMessages(messages);
-
   } catch (error) {
     console.error("Popup chat load error:", error);
 
@@ -1231,7 +1411,6 @@ async function sendPopupMessage(event) {
 
     input.value = "";
     await loadPopupMessages();
-
   } catch (error) {
     console.error("Popup send message error:", error);
     showToast("Server error while sending message.", "error");
@@ -1300,7 +1479,6 @@ async function submitPopupSchedule() {
 
     await loadPopupMessages();
     await loadMyRequests();
-
   } catch (error) {
     console.error("Popup schedule error:", error);
     showToast("Server error while scheduling meeting.", "error");
@@ -1333,7 +1511,6 @@ async function popupMatchNow() {
 
     await loadPopupMessages();
     await loadMyRequests();
-
   } catch (error) {
     console.error("Popup match now error:", error);
     showToast("Server error while starting match now.", "error");
@@ -1379,4 +1556,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (popupChatForm) {
     popupChatForm.addEventListener("submit", sendPopupMessage);
   }
-});
+}); 
