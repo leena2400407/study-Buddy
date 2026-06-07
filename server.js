@@ -324,8 +324,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Static files
-// Static files
-app.use("/javaScript", express.static(path.join(__dirname, "puplic", "js")));
+app.use("/css", express.static(path.join(__dirname, "Public", "css")));
+app.use("/javascript", express.static(path.join(__dirname, "Public", "javascript")));
+app.use("/assests", express.static(path.join(__dirname, "Public", "assests")));
+app.use("/uploads/avatars", express.static(path.join(__dirname, "Public", "uploads", "avatars")));
 // Session setup
 app.use(
   session({
