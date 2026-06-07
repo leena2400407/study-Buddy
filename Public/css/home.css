@@ -43,9 +43,213 @@ body {
     transition: background 1s ease;
 }
 
+
 /* ============================================================
-   CYLINDER BACKGROUND
+   STATIC CENTER GLASS NAVBAR ABOVE CYLINDER
    ============================================================ */
+
+body.cylinder-body .top-nav {
+    position: fixed;
+    top: 28px;
+    left: 75%;
+    right: auto;
+    transform: translateX(-50%);
+    z-index: 1700;
+    pointer-events: auto;
+}
+
+body.cylinder-body .cylinder-scroll-nav {
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+}
+
+/* Hide the old round cylinder toggle button */
+body.cylinder-body .nav-cylinder-toggle {
+    display: none;
+}
+
+/* Make the nav always visible/static */
+body.cylinder-body .nav-scroll-panel,
+body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+
+    width: auto;
+    min-width: 340px;
+    height: 42px;
+
+    transform: none;
+    transform-origin: center;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+
+    padding: 0 32px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.50),
+            rgba(235, 239, 255, 0.30),
+            rgba(255, 255, 255, 0.42)
+        );
+
+    backdrop-filter: blur(22px) saturate(1.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        inset 0 -1px 0 rgba(7, 23, 217, 0.10);
+
+    overflow: visible;
+
+    transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+}
+
+/* Remove the old cylinder end-cap shape */
+body.cylinder-body .nav-scroll-panel::before {
+    display: none;
+}
+
+/* Soft glass shine */
+body.cylinder-body .nav-scroll-panel::after {
+    content: "";
+    position: absolute;
+    inset: 7px 14px;
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.35),
+            transparent 38%,
+            rgba(255, 255, 255, 0.18)
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Keep nav items above the glass shine */
+body.cylinder-body .nav-scroll-panel > * {
+    position: relative;
+    z-index: 2;
+}
+
+body.cylinder-body .home-link,
+body.cylinder-body .profile-link,
+body.cylinder-body .login-link,
+body.cylinder-body .dropbtn {
+    font-size: 1.05rem;
+    padding: 12px 16px;
+    color: rgba(16, 20, 35, 0.92);
+    border-radius: 999px;
+}
+
+body.cylinder-body .home-link:hover,
+body.cylinder-body .profile-link:hover,
+body.cylinder-body .login-link:hover,
+body.cylinder-body .dropbtn:hover {
+    background: rgba(7, 23, 217, 0.10);
+    color: #0717d9;
+    transform: translateY(-2px);
+}
+
+/* Dropdowns centered better under the static navbar */
+body.cylinder-body .dropdown-content,
+body.cylinder-body .profile-card {
+    top: calc(100% + 18px);
+}
+
+/* Responsive version */
+@media (max-width: 760px) {
+    body.cylinder-body .top-nav {
+        top: 18px;
+        width: calc(100vw - 24px);
+    }
+
+    body.cylinder-body .nav-scroll-panel,
+    body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+        width: 100%;
+        min-width: 0;
+        height: 62px;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 0 14px;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    body.cylinder-body .home-link,
+    body.cylinder-body .profile-link,
+    body.cylinder-body .login-link,
+    body.cylinder-body .dropbtn {
+        font-size: 0.92rem;
+        padding: 10px 11px;
+        white-space: nowrap;
+    }
+}
+
+/* ============================================================
+   SMALLER NAV HOVER HALO
+   ============================================================ */
+
+body.cylinder-body .home-link,
+body.cylinder-body .profile-link,
+body.cylinder-body .login-link,
+body.cylinder-body .dropbtn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+/* Remove the big full-button blue hover */
+body.cylinder-body .home-link:hover,
+body.cylinder-body .profile-link:hover,
+body.cylinder-body .login-link:hover,
+body.cylinder-body .dropbtn:hover {
+    background: transparent !important;
+    color: #0717d9;
+    transform: translateY(-1px);
+}
+
+/* Smaller blue hover area */
+body.cylinder-body .home-link::before,
+body.cylinder-body .profile-link::before,
+body.cylinder-body .login-link::before,
+body.cylinder-body .dropbtn::before {
+    content: "";
+    position: absolute;
+    inset: 9px 10px;
+    border-radius: 999px;
+    background: rgba(7, 23, 217, 0.08);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    transform: scale(0.88);
+}
+
+body.cylinder-body .home-link:hover::before,
+body.cylinder-body .profile-link:hover::before,
+body.cylinder-body .login-link:hover::before,
+body.cylinder-body .dropbtn:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
 
 body.cylinder-body {
     --accent: #013a73;
@@ -265,27 +469,6 @@ body.cylinder-body .particle {
     z-index: 10;
 }
 
-.logo-placeholder {
-    width: 160px;
-    height: 160px;
-    margin: 0 auto 30px auto;
-    background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 900;
-    font-size: 28px;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    z-index: 10;
-}
-
-.logo-placeholder:hover {
-    transform: scale(1.15) rotate(-5deg);
-    box-shadow: 0 0 30px rgba(240, 240, 255, 0.7);
-}
 
 h1.title {
     font-family: 'Sora', sans-serif;
@@ -1030,5 +1213,444 @@ body.cylinder-body .control-btn:hover {
     .nav-scroll-panel::before {
         height: 38px;
         top: 7px;
+    }
+
+    
+}
+
+
+/* ============================================================
+   CYLINDER THEME SWITCH BUTTON + DARK THEME
+   ============================================================ */
+
+/* Make enough room for the new switch on the far right */
+body.cylinder-body .nav-scroll-panel,
+body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+    min-width: 430px;
+    gap: 14px;
+    padding: 0 18px 0 28px;
+}
+
+/* ============================================================
+   CLEANER THEME BUTTON: sun / moon switch
+   ============================================================ */
+
+/* Keep navbar balanced after adding the switch */
+body.cylinder-body .nav-scroll-panel,
+body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+    min-width: 450px;
+    gap: 13px;
+    padding: 0 16px 0 28px;
+}
+
+/* THEME BUTTON: switch itself */
+.theme-toggle {
+    flex: 0 0 auto;
+    width: 74px;
+    height: 34px;
+    padding: 0;
+    margin-left: 4px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 5;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The pill shape */
+.theme-toggle__track {
+    position: relative;
+    width: 70px;
+    height: 30px;
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ffd21c 0%,
+            #ffd21c 48%,
+            #f7c916 100%
+        );
+
+    border: 1.5px solid rgba(20, 22, 28, 0.72);
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+    overflow: hidden;
+
+    transition:
+        background 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+/* The moving circle */
+.theme-toggle__knob {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+
+    transform: translateY(-50%);
+
+    background: #ff9828;
+    border: 3px solid #ffe436;
+
+    box-shadow:
+        0 2px 7px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+
+    z-index: 4;
+
+    transition:
+        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+/* Icons spacing */
+.theme-toggle__icon {
+    position: absolute;
+    top: 50%;
+
+    width: 17px;
+    height: 17px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-50%);
+
+    pointer-events: none;
+    z-index: 3;
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.35s ease,
+        color 0.35s ease;
+}
+
+/* Sun icon sits clearly on the left side */
+.theme-toggle__sun {
+    left: 7px;
+    color: #fff3a3;
+    opacity: 0.95;
+}
+
+/* Moon icon sits clearly on the far right side */
+.theme-toggle__moon {
+    right: 9px;
+    color: rgba(47, 50, 58, 0.72);
+    opacity: 0.85;
+}
+
+/* Hover effect but not bulky */
+.theme-toggle:hover .theme-toggle__track {
+    box-shadow:
+        0 5px 13px rgba(0, 0, 0, 0.18),
+        0 0 10px rgba(255, 211, 42, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.theme-toggle:active .theme-toggle__knob {
+    transform: translateY(-50%) scale(0.92);
+}
+
+/* Dark mode switch state */
+.theme-toggle.is-dark .theme-toggle__track {
+    background:
+        linear-gradient(
+            90deg,
+            #8f939b 0%,
+            #777c85 45%,
+            #686d75 100%
+        );
+
+    border-color: rgba(15, 17, 23, 0.82);
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.theme-toggle.is-dark .theme-toggle__knob {
+    transform: translate(40px, -50%);
+
+    background: #cfd3d9;
+    border-color: #7f858e;
+
+    box-shadow:
+        0 2px 7px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.theme-toggle.is-dark:active .theme-toggle__knob {
+    transform: translate(40px, -50%) scale(0.92);
+}
+
+/* In dark mode, sun becomes quiet and moon becomes the main icon */
+.theme-toggle.is-dark .theme-toggle__sun {
+    opacity: 0.55;
+    color: rgba(245, 247, 255, 0.72);
+}
+
+.theme-toggle.is-dark .theme-toggle__moon {
+    opacity: 0.95;
+    color: #f1f4fb;
+}
+
+/* Mobile size */
+@media (max-width: 560px) {
+    .theme-toggle {
+        width: 66px;
+        height: 32px;
+    }
+
+    .theme-toggle__track {
+        width: 62px;
+        height: 28px;
+    }
+
+    .theme-toggle__knob {
+        width: 20px;
+        height: 20px;
+    }
+
+    .theme-toggle.is-dark .theme-toggle__knob {
+        transform: translate(34px, -50%);
+    }
+
+    .theme-toggle.is-dark:active .theme-toggle__knob {
+        transform: translate(34px, -50%) scale(0.92);
+    }
+}
+
+/* DARK THEME COLORS: edit the values in this block to change the cylinder dark palette. */
+html.cylinder-dark-theme-root body.cylinder-body,
+body.cylinder-body.cylinder-dark-theme {
+    --accent: #8fa7ff;
+    --accent-2: #b58cff;
+    --accent-3: #66d9ff;
+    --text: #edf2ff;
+    --muted: #aeb9d6;
+    --glass: rgba(9, 13, 32, 0.62);
+    --glass-bd: rgba(143, 167, 255, 0.24);
+    --portal-bg: #02030d;
+
+    background:
+        radial-gradient(ellipse at -10% -12%, rgba(100, 69, 190, 0.50) 0%, rgba(23, 13, 54, 0.42) 32%, transparent 58%),
+        radial-gradient(ellipse at 20% 108%, rgba(18, 58, 118, 0.76) 0%, rgba(7, 17, 55, 0.68) 34%, transparent 55%),
+        radial-gradient(ellipse at 92% 112%, rgba(66, 105, 200, 0.32) 0%, rgba(25, 32, 88, 0.28) 34%, transparent 60%),
+        linear-gradient(
+            180deg,
+            #060713 0%,
+            #0a0d20 22%,
+            #101632 43%,
+            #101b46 58%,
+            #07163c 76%,
+            #030719 100%
+        );
+    color: var(--text);
+}
+
+/* Dark theme background shapes */
+html.cylinder-dark-theme-root body.cylinder-body::before,
+body.cylinder-body.cylinder-dark-theme::before {
+    background:
+        linear-gradient(
+            155deg,
+            rgba(47, 22, 112, 0.96) 0%,
+            rgba(31, 18, 87, 0.92) 34%,
+            rgba(16, 31, 101, 0.88) 58%,
+            rgba(6, 16, 54, 0.86) 100%
+        );
+    opacity: 0.75;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body::after,
+body.cylinder-body.cylinder-dark-theme::after {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(80, 45, 145, 0.42) 0%,
+            rgba(40, 24, 94, 0.36) 42%,
+            rgba(16, 24, 76, 0.30) 100%
+        );
+    opacity: 0.58;
+}
+
+/* Dark theme navbar glass */
+html.cylinder-dark-theme-root body.cylinder-body .nav-scroll-panel,
+html.cylinder-dark-theme-root body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel,
+body.cylinder-body.cylinder-dark-theme .nav-scroll-panel,
+body.cylinder-body.cylinder-dark-theme .cylinder-scroll-nav.is-open .nav-scroll-panel {
+    border-color: rgba(255, 255, 255, 0.16);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(13, 17, 39, 0.70),
+            rgba(26, 31, 69, 0.48),
+            rgba(11, 16, 38, 0.66)
+        );
+    box-shadow:
+        0 20px 54px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 rgba(143, 167, 255, 0.12);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .nav-scroll-panel::after,
+body.cylinder-body.cylinder-dark-theme .nav-scroll-panel::after {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.16),
+            transparent 38%,
+            rgba(143, 167, 255, 0.12)
+        );
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .home-link,
+html.cylinder-dark-theme-root body.cylinder-body .profile-link,
+html.cylinder-dark-theme-root body.cylinder-body .login-link,
+html.cylinder-dark-theme-root body.cylinder-body .dropbtn,
+body.cylinder-body.cylinder-dark-theme .home-link,
+body.cylinder-body.cylinder-dark-theme .profile-link,
+body.cylinder-body.cylinder-dark-theme .login-link,
+body.cylinder-body.cylinder-dark-theme .dropbtn {
+    color: rgba(238, 242, 255, 0.94);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .home-link:hover,
+html.cylinder-dark-theme-root body.cylinder-body .profile-link:hover,
+html.cylinder-dark-theme-root body.cylinder-body .login-link:hover,
+html.cylinder-dark-theme-root body.cylinder-body .dropbtn:hover,
+body.cylinder-body.cylinder-dark-theme .home-link:hover,
+body.cylinder-body.cylinder-dark-theme .profile-link:hover,
+body.cylinder-body.cylinder-dark-theme .login-link:hover,
+body.cylinder-body.cylinder-dark-theme .dropbtn:hover {
+    color: #b9c8ff;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .home-link::before,
+html.cylinder-dark-theme-root body.cylinder-body .profile-link::before,
+html.cylinder-dark-theme-root body.cylinder-body .login-link::before,
+html.cylinder-dark-theme-root body.cylinder-body .dropbtn::before,
+body.cylinder-body.cylinder-dark-theme .home-link::before,
+body.cylinder-body.cylinder-dark-theme .profile-link::before,
+body.cylinder-body.cylinder-dark-theme .login-link::before,
+body.cylinder-body.cylinder-dark-theme .dropbtn::before {
+    background: rgba(143, 167, 255, 0.14);
+}
+
+/* Dark theme dropdowns and profile card */
+html.cylinder-dark-theme-root body.cylinder-body .dropdown-content,
+html.cylinder-dark-theme-root body.cylinder-body .profile-card,
+body.cylinder-body.cylinder-dark-theme .dropdown-content,
+body.cylinder-body.cylinder-dark-theme .profile-card {
+    color: #edf2ff;
+    background: rgba(14, 18, 42, 0.94);
+    border-color: rgba(143, 167, 255, 0.18);
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.44);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .dropdown-content a,
+body.cylinder-body.cylinder-dark-theme .dropdown-content a {
+    color: #edf2ff;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .dropdown-content a:hover,
+body.cylinder-body.cylinder-dark-theme .dropdown-content a:hover {
+    background: rgba(143, 167, 255, 0.14);
+    color: #b9c8ff;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .profile-name,
+html.cylinder-dark-theme-root body.cylinder-body .profile-info strong,
+body.cylinder-body.cylinder-dark-theme .profile-name,
+body.cylinder-body.cylinder-dark-theme .profile-info strong {
+    color: #edf2ff;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .profile-info,
+body.cylinder-body.cylinder-dark-theme .profile-info {
+    color: #aeb9d6;
+}
+
+/* Dark theme cylinder cards */
+html.cylinder-dark-theme-root body.cylinder-body .Cylinder__cell,
+body.cylinder-body.cylinder-dark-theme .Cylinder__cell {
+    border-color: rgba(143, 167, 255, 0.20);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.58);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .Cylinder__cell.is-active,
+body.cylinder-body.cylinder-dark-theme .Cylinder__cell.is-active {
+    border-color: rgba(143, 167, 255, 0.52);
+    box-shadow:
+        0 24px 68px rgba(0, 0, 0, 0.62),
+        0 0 34px rgba(143, 167, 255, 0.24);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .cell__overlay,
+body.cylinder-body.cylinder-dark-theme .cell__overlay {
+    background: linear-gradient(180deg, rgba(3, 5, 16, 0.18) 0%, rgba(4, 6, 20, 0.44) 52%, rgba(3, 5, 16, 0.88) 100%);
+}
+
+/* Dark theme controls */
+html.cylinder-dark-theme-root body.cylinder-body .control-btn,
+body.cylinder-body.cylinder-dark-theme .control-btn {
+    background: rgba(13, 17, 39, 0.70);
+    border-color: rgba(143, 167, 255, 0.22);
+    color: #dfe6ff;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.30);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .control-btn:hover,
+body.cylinder-body.cylinder-dark-theme .control-btn:hover {
+    background: rgba(143, 167, 255, 0.22);
+    color: #ffffff;
+    border-color: rgba(143, 167, 255, 0.44);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38);
+}
+
+body.cylinder-body.card-launched .theme-toggle {
+    pointer-events: none;
+}
+
+@media (max-width: 760px) {
+    body.cylinder-body .nav-scroll-panel,
+    body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+        min-width: 0;
+    }
+
+    .theme-toggle {
+        width: 58px;
+        height: 31px;
+    }
+
+    .theme-toggle__track {
+        width: 58px;
+        height: 31px;
+    }
+
+    .theme-toggle__knob {
+        width: 23px;
+        height: 23px;
+    }
+
+    .theme-toggle.is-dark .theme-toggle__knob {
+        transform: translateX(27px);
     }
 }
