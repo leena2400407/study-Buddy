@@ -1751,25 +1751,7 @@ app.post("/signup", authLimiter, async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(cleanedEmail)) {
-      return renderSignupError(res, "Please enter a valid email.", oldInput);
-    }
-
-    const allowedUniversityDomains = [
-      "miuegypt.edu.eg",
-      "giu-uni.de",
-      "ecu.edu.eg",
-      "cis.asu.edu.eg",
-      "student.guc.edu.eg"
-    ];
-
-    const emailDomain = cleanedEmail.split("@")[1];
-
-    if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
-      return renderSignupError(
-        res,
-        "Please use your official university email.",
-        oldInput
-      );
+    return renderSignupError(res, "Please enter a valid email.", oldInput);
     }
 
     const passwordRegex =
