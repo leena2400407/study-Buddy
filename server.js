@@ -24,6 +24,9 @@ const Avatar = require("./models/Avatar");
 require("dotenv").config();
 
 const app = express();
+
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: false
@@ -109,18 +112,43 @@ const getEmailPass = () => {
   return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
 };
 
+const getEmailUser = () => {
+  return String(process.env.EMAIL_USER || "").trim();
+};
+
+const getEmailPass = () => {
+  return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
+};
+
 const createEmailTransporter = () => {
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
       user: getEmailUser(),
       pass: getEmailPass()
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000
+    requireTLS: true,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000
   });
 };
+
+console.log("EMAIL_USER exists:", !!getEmailUser());
+console.log("EMAIL_PASS exists:", !!getEmailPass());
+console.log("EMAIL_USER value:", getEmailUser());
+
+if (getEmailUser() && getEmailPass()) {
+  createEmailTransporter().verify((error) => {
+    if (error) {
+      console.error("EMAIL TRANSPORTER ERROR:", error);
+    } else {
+      console.log("EMAIL SERVER IS READY TO SEND MESSAGES");
+    }
+  });
+}
 
 console.log("EMAIL_USER exists:", !!getEmailUser());
 console.log("EMAIL_PASS exists:", !!getEmailPass());
@@ -168,7 +196,7 @@ const sendPasswordResetLinkEmail = async (userEmail, fullName, resetLink) => {
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    from: `Study Buddy <${getEmailUser()}>`,
     to: userEmail,
     subject: "Reset your Study Buddy password",
     html: `
