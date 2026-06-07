@@ -4365,6 +4365,15 @@ app.get("/game-landing-page", (req, res) => {
   res.render("game-landing-page");
 });
 
+// Safety redirects for old/wrong links
+app.get("/game", (req, res) => {
+  res.redirect("/blockblast");
+});
+
+app.get("/Game2", (req, res) => {
+  res.redirect("/wordle");
+});
+
 app.get("/blockblast", requirePageAuth, (req, res) => {
   res.render("game");
 });
