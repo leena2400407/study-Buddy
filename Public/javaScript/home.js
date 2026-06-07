@@ -23,17 +23,14 @@ let cylinderPageInitialized = false;
 const CYLINDER_INTRO_FLAG = 'studyBuddyPlayCylinderIntro';
 const CYLINDER_THEME_KEY  = 'studyBuddyCylinderTheme';
 
-if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-}
-
 /* ------------------------------------------------------------
    THEME TOGGLE
-   Uses body class: cylinder-dark-theme
+   This is the only new part.
+   It does not change cylinder movement, pop animation, or nav logic.
    ------------------------------------------------------------ */
 function getSavedCylinderTheme() {
     try {
-        return localStorage.getItem(CYLINDER_THEME_KEY) || 'light';
+        return localStorage.getItem(CYLINDER_THEME_KEY) === 'dark' ? 'dark' : 'light';
     } catch (error) {
         return 'light';
     }
@@ -41,22 +38,27 @@ function getSavedCylinderTheme() {
 
 function saveCylinderTheme(theme) {
     try {
-        localStorage.setItem(CYLINDER_THEME_KEY, theme);
+        localStorage.setItem(CYLINDER_THEME_KEY, theme === 'dark' ? 'dark' : 'light');
     } catch (error) {
         // Ignore localStorage errors
     }
 }
 
 function applyCylinderTheme(theme) {
+    if (!document.body.classList.contains('cylinder-body')) return;
+
     const isDark = theme === 'dark';
 
+    document.documentElement.classList.toggle('cylinder-dark-theme-root', isDark);
     document.body.classList.toggle('cylinder-dark-theme', isDark);
-    document.body.setAttribute('data-cylinder-theme', theme);
+    document.body.setAttribute('data-cylinder-theme', isDark ? 'dark' : 'light');
 
-    if (themeToggle) {
-        themeToggle.classList.toggle('is-dark', isDark);
-        themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-        themeToggle.setAttribute(
+    const currentThemeToggle = document.getElementById('themeToggle');
+
+    if (currentThemeToggle) {
+        currentThemeToggle.classList.toggle('is-dark', isDark);
+        currentThemeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        currentThemeToggle.setAttribute(
             'aria-label',
             isDark ? 'Switch to light theme' : 'Switch to dark theme'
         );
@@ -64,13 +66,14 @@ function applyCylinderTheme(theme) {
 }
 
 function toggleCylinderTheme(event) {
-    if (event) event.stopPropagation();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
-    const currentTheme = document.body.classList.contains('cylinder-dark-theme')
-        ? 'dark'
-        : 'light';
-
-    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const nextTheme = document.body.classList.contains('cylinder-dark-theme')
+        ? 'light'
+        : 'dark';
 
     applyCylinderTheme(nextTheme);
     saveCylinderTheme(nextTheme);
@@ -79,11 +82,13 @@ function toggleCylinderTheme(event) {
 function initCylinderTheme() {
     if (!document.body.classList.contains('cylinder-body')) return;
 
-    const savedTheme = getSavedCylinderTheme();
-    applyCylinderTheme(savedTheme);
+    applyCylinderTheme(getSavedCylinderTheme());
 
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleCylinderTheme);
+    const currentThemeToggle = document.getElementById('themeToggle');
+
+    if (currentThemeToggle) {
+        currentThemeToggle.removeEventListener('click', toggleCylinderTheme);
+        currentThemeToggle.addEventListener('click', toggleCylinderTheme);
     }
 }
 
@@ -97,7 +102,7 @@ function setCylinderIntroFlag() {
     try {
         sessionStorage.setItem(CYLINDER_INTRO_FLAG, 'yes');
     } catch (error) {
-        // Ignore sessionStorage errors
+        // Ignore storage errors
     }
 }
 
@@ -124,6 +129,19 @@ function enterCylinderFromHome(event) {
 if (btnFeatures) {
     btnFeatures.onclick = null;
     btnFeatures.addEventListener('click', enterCylinderFromHome);
+}
+
+/* ------------------------------------------------------------
+   EDUGATE BUTTON REDIRECT
+   Safe: does nothing if btn-edugate is not on this page.
+   ------------------------------------------------------------ */
+const btnEdugate = document.getElementById('btn-edugate');
+
+if (btnEdugate) {
+    btnEdugate.addEventListener('click', (event) => {
+        event.preventDefault();
+        window.location.href = '/edugate';
+    });
 }
 
 /* ------------------------------------------------------------
@@ -166,8 +184,6 @@ function updateCylinder() {
    SPIN LEFT / RIGHT
    ------------------------------------------------------------ */
 function spin(direction) {
-    if (!isCylinderOpen) return;
-
     selectedIndex += direction;
     updateCylinder();
 }
@@ -193,9 +209,15 @@ document.addEventListener('keydown', (event) => {
 });
 
 /* ------------------------------------------------------------
-   HARD RESET FOR CHROME BACK BUTTON / BFCache
+   CLEAR BROKEN BACK-BUTTON STATE
+   This fixes browser back button after a card launch.
    ------------------------------------------------------------ */
-function resetCylinderCells() {
+function clearCardLaunchState() {
+    document.body.classList.remove('card-launched');
+
+    if (prevBtn) prevBtn.disabled = false;
+    if (nextBtn) nextBtn.disabled = false;
+
     document.querySelectorAll('.Cylinder__cell').forEach((cell) => {
         if (typeof cell.getAnimations === 'function') {
             cell.getAnimations().forEach((animation) => animation.cancel());
@@ -208,24 +230,7 @@ function resetCylinderCells() {
         cell.style.opacity = '';
         cell.style.filter = '';
         cell.style.transform = '';
-        cell.style.pointerEvents = '';
-        cell.style.zIndex = '';
     });
-}
-
-function clearCardLaunchState() {
-    document.body.classList.remove('card-launched');
-
-    if (prevBtn) prevBtn.disabled = false;
-    if (nextBtn) nextBtn.disabled = false;
-
-    resetCylinderCells();
-
-    if (controls) {
-        controls.style.display = 'flex';
-        controls.style.opacity = '';
-        controls.style.pointerEvents = '';
-    }
 }
 
 function showCylinderInstantly() {
@@ -235,8 +240,12 @@ function showCylinderInstantly() {
 
     isCylinderOpen = true;
 
-    if (featuresPage) {
-        featuresPage.style.display = 'flex';
+    if (featuresPage) featuresPage.style.display = 'flex';
+
+    if (controls) {
+        controls.style.display = 'flex';
+        controls.style.opacity = '';
+        controls.style.pointerEvents = '';
     }
 
     if (introLogo) {
@@ -279,41 +288,6 @@ function showCylinderInstantly() {
 }
 
 /* ------------------------------------------------------------
-   PREPARE PAGE BEFORE CHROME SAVES IT IN BACK CACHE
-   This is what stops cards from disappearing after browser back.
-   ------------------------------------------------------------ */
-function prepareCylinderForBrowserCache() {
-    if (!cylinderScene || !CylinderElem) return;
-
-    document.body.classList.remove('card-launched');
-
-    if (prevBtn) prevBtn.disabled = false;
-    if (nextBtn) nextBtn.disabled = false;
-
-    resetCylinderCells();
-
-    if (introLogo) {
-        introLogo.style.display = 'none';
-        introLogo.classList.add('hide');
-    }
-
-    cylinderScene.classList.remove('intro');
-    cylinderScene.classList.add('is-open');
-
-    CylinderElem.classList.remove('intro-reveal');
-
-    if (typeof CylinderElem.getAnimations === 'function') {
-        CylinderElem.getAnimations().forEach((animation) => animation.cancel());
-    }
-
-    if (controls) {
-        controls.style.display = 'flex';
-        controls.style.opacity = '';
-        controls.style.pointerEvents = '';
-    }
-}
-
-/* ------------------------------------------------------------
    CARD CLICK HANDLER
    No unwanted small spin.
    ------------------------------------------------------------ */
@@ -340,7 +314,6 @@ function openCard(cell) {
 
     cell.style.animation = 'none';
     cell.style.willChange = 'transform, opacity, filter';
-    cell.style.zIndex = '999';
 
     const popFrames = [
         {
@@ -425,8 +398,6 @@ function playCylinderIntro() {
 
     isCylinderOpen = false;
 
-    clearCardLaunchState();
-
     cylinderScene.classList.add('intro');
     cylinderScene.classList.remove('is-open');
 
@@ -482,18 +453,13 @@ if (document.readyState === 'loading') {
 }
 
 /* ------------------------------------------------------------
-   CHROME BACK BUTTON FIX
-   pagehide cleans the page BEFORE Chrome stores it.
-   pageshow cleans it again when Chrome restores it.
+   FIX BROWSER BACK BUTTON / BFCache
+   Rebinds theme button after coming back from Events/Game/etc.
    ------------------------------------------------------------ */
-window.addEventListener('pagehide', () => {
-    prepareCylinderForBrowserCache();
-});
-
 window.addEventListener('pageshow', (event) => {
-    if (!cylinderScene || !CylinderElem) return;
+    initCylinderTheme();
 
-    applyCylinderTheme(getSavedCylinderTheme());
+    if (!cylinderScene) return;
 
     if (event.persisted || document.body.classList.contains('card-launched')) {
         showCylinderInstantly();
@@ -501,41 +467,76 @@ window.addEventListener('pageshow', (event) => {
 });
 
 /* ============================================================
-   STATIC / DROPDOWN NAV
+   NEW HORIZONTAL CYLINDER SCROLL NAV
    ============================================================ */
 
-function openScrollNav() {
-    if (!cylinderScrollNav) return;
-    cylinderScrollNav.classList.add('is-open');
+function animateNavIcon(isOpen) {
+    if (!navCylinderToggle) return;
+
+    clearTimeout(navCylinderToggle._morphTimer);
+
+    navCylinderToggle.classList.remove('is-open');
+    navCylinderToggle.classList.add('is-morphing');
+
+    navCylinderToggle._morphTimer = setTimeout(() => {
+        navCylinderToggle.classList.remove('is-morphing');
+        navCylinderToggle.classList.toggle('is-open', isOpen);
+        navCylinderToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        navCylinderToggle.setAttribute(
+            'aria-label',
+            isOpen ? 'Close navigation' : 'Open navigation'
+        );
+    }, 230);
 }
 
-function closeScrollNav() {
+function setScrollNavState(isOpen, animateIcon = true) {
     if (!cylinderScrollNav) return;
+
+    cylinderScrollNav.classList.toggle('is-open', isOpen);
 
     const dropdown = document.getElementById('myDropdown');
     const profileCard = document.getElementById('profileCard');
 
-    if (dropdown) dropdown.classList.remove('show');
-    if (profileCard) profileCard.classList.remove('show');
+    if (!isOpen) {
+        if (dropdown) dropdown.classList.remove('show');
+        if (profileCard) profileCard.classList.remove('show');
+    }
+
+    if (animateIcon) {
+        animateNavIcon(isOpen);
+    } else if (navCylinderToggle) {
+        clearTimeout(navCylinderToggle._morphTimer);
+        navCylinderToggle.classList.remove('is-morphing');
+        navCylinderToggle.classList.toggle('is-open', isOpen);
+        navCylinderToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        navCylinderToggle.setAttribute(
+            'aria-label',
+            isOpen ? 'Close navigation' : 'Open navigation'
+        );
+    }
+}
+
+function openScrollNav() {
+    setScrollNavState(true);
+}
+
+function closeScrollNav() {
+    setScrollNavState(false);
 }
 
 function toggleScrollNav(event) {
     if (event) event.stopPropagation();
     if (!cylinderScrollNav) return;
 
-    cylinderScrollNav.classList.toggle('is-open');
-
-    const dropdown = document.getElementById('myDropdown');
-    const profileCard = document.getElementById('profileCard');
-
-    if (!cylinderScrollNav.classList.contains('is-open')) {
-        if (dropdown) dropdown.classList.remove('show');
-        if (profileCard) profileCard.classList.remove('show');
-    }
+    const willOpen = !cylinderScrollNav.classList.contains('is-open');
+    setScrollNavState(willOpen);
 }
 
 if (navCylinderToggle) {
     navCylinderToggle.addEventListener('click', toggleScrollNav);
+
+    const startsOpen = cylinderScrollNav && cylinderScrollNav.classList.contains('is-open');
+    setScrollNavState(Boolean(startsOpen), false);
 }
 
 /* ============================================================

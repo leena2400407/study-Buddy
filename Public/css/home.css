@@ -1654,3 +1654,430 @@ body.cylinder-body.card-launched .theme-toggle {
         transform: translateX(27px);
     }
 }
+
+/* ============================================================
+   TOP RIGHT MORPH NAV ICON
+   Closed = 3 horizontal lines
+   Transition = star / crossing stage
+   Open = 3 vertical lines
+   Navbar design stays the same when open
+   ============================================================ */
+
+body.cylinder-body .top-nav {
+    top: 24px !important;
+    right: 28px !important;
+    left: auto !important;
+    transform: none !important;
+    width: auto !important;
+    z-index: 1800 !important;
+}
+
+body.cylinder-body .cylinder-scroll-nav {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    pointer-events: auto;
+}
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph {
+    display: flex !important;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 3px solid rgba(10, 12, 20, 0.92);
+    border-radius: 16px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.92),
+            rgba(231, 235, 245, 0.86)
+        );
+    color: #111111;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 20;
+    overflow: hidden;
+
+    box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+
+    transition:
+        transform 0.28s ease,
+        box-shadow 0.28s ease,
+        background 0.28s ease,
+        border-color 0.28s ease;
+}
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, 0.22),
+        0 0 22px rgba(7, 23, 217, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph:active {
+    transform: translateY(0) scale(0.96);
+}
+
+.nav-menu-morph__box {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    display: block;
+}
+
+.nav-menu-morph__line {
+    position: absolute;
+    left: 50%;
+    width: 30px;
+    height: 4px;
+    border-radius: 999px;
+    background: #111111;
+    transform-origin: center;
+    transition:
+        top 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        left 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.2s ease;
+}
+
+.nav-menu-morph__line--one {
+    top: 10px;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.nav-menu-morph__line--two {
+    top: 18px;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.nav-menu-morph__line--three {
+    top: 26px;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line {
+    top: 18px;
+    width: 36px;
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--one {
+    left: 50%;
+    transform: translateX(-50%) rotate(38deg);
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--two {
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--three {
+    left: 50%;
+    transform: translateX(-50%) rotate(-38deg);
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line {
+    top: 18px;
+    width: 31px;
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--one {
+    left: 31%;
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--two {
+    left: 50%;
+    transform: translateX(-50%) rotate(90deg);
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--three {
+    left: 69%;
+    transform: translateX(-50%) rotate(90deg);
+}
+
+body.cylinder-body .nav-scroll-panel {
+    position: absolute !important;
+    top: 0 !important;
+    right: 72px !important;
+
+    width: auto !important;
+    min-width: 450px !important;
+    height: 42px !important;
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+
+    transform: translateX(16px) scale(0.96) !important;
+    transform-origin: right center !important;
+
+    transition:
+        opacity 0.28s ease,
+        visibility 0.28s ease,
+        transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.3s ease,
+        box-shadow 0.3s ease !important;
+}
+
+body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateX(0) scale(1) !important;
+
+    min-width: 450px !important;
+    gap: 13px !important;
+    padding: 0 16px 0 28px !important;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .nav-cylinder-toggle.nav-menu-morph,
+body.cylinder-body.cylinder-dark-theme .nav-cylinder-toggle.nav-menu-morph {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17, 23, 48, 0.96),
+            rgba(9, 13, 32, 0.92)
+        );
+    border-color: rgba(160, 184, 255, 0.45);
+    color: #eef3ff;
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.38),
+        0 0 22px rgba(143, 167, 255, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .nav-menu-morph__line,
+body.cylinder-body.cylinder-dark-theme .nav-menu-morph__line {
+    background: #eef3ff;
+}
+
+@media (max-width: 760px) {
+    body.cylinder-body .top-nav {
+        top: 18px !important;
+        right: 16px !important;
+        width: auto !important;
+    }
+
+    body.cylinder-body .nav-cylinder-toggle.nav-menu-morph {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+    }
+
+    .nav-menu-morph__box {
+        width: 34px;
+        height: 34px;
+    }
+
+    .nav-menu-morph__line {
+        width: 27px;
+        height: 3.5px;
+    }
+
+    body.cylinder-body .nav-scroll-panel {
+        top: 60px !important;
+        right: 0 !important;
+        min-width: calc(100vw - 32px) !important;
+        height: 56px !important;
+    }
+
+    body.cylinder-body .cylinder-scroll-nav.is-open .nav-scroll-panel {
+        min-width: calc(100vw - 32px) !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+    }
+}
+/* ============================================================
+   SMALLER / GREY / TRANSLUCENT MORPH NAV ICON OVERRIDE
+   Paste this at the VERY bottom of home.css
+   ============================================================ */
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph {
+    width: 46px !important;
+    height: 46px !important;
+    padding: 0 !important;
+
+    border: 1.4px solid rgba(80, 86, 100, 0.42) !important;
+    border-radius: 13px !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(245, 247, 252, 0.58),
+            rgba(210, 216, 228, 0.34)
+        ) !important;
+
+    backdrop-filter: blur(16px) saturate(1.25) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.25) !important;
+
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+
+    opacity: 0.92 !important;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        opacity 0.25s ease !important;
+}
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph:hover {
+    transform: translateY(-1px) scale(1.03) !important;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.68),
+            rgba(220, 226, 238, 0.42)
+        ) !important;
+
+    border-color: rgba(85, 95, 115, 0.55) !important;
+
+    box-shadow:
+        0 13px 30px rgba(0, 0, 0, 0.15),
+        0 0 16px rgba(120, 135, 160, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+
+    opacity: 1 !important;
+}
+
+body.cylinder-body .nav-cylinder-toggle.nav-menu-morph:active {
+    transform: scale(0.96) !important;
+}
+
+/* Smaller inner icon box */
+.nav-menu-morph__box {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+/* Smaller softer grey lines */
+.nav-menu-morph__line {
+    width: 23px !important;
+    height: 3px !important;
+    border-radius: 999px !important;
+    background: rgba(70, 76, 88, 0.78) !important;
+
+    box-shadow:
+        0 1px 2px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* CLOSED STATE: horizontal lines */
+.nav-menu-morph__line--one {
+    top: 8px !important;
+}
+
+.nav-menu-morph__line--two {
+    top: 14px !important;
+}
+
+.nav-menu-morph__line--three {
+    top: 20px !important;
+}
+
+/* MIDDLE TRANSITION: smaller star/cross stage */
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line {
+    top: 14px !important;
+    width: 27px !important;
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--one {
+    transform: translateX(-50%) rotate(38deg) !important;
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--two {
+    transform: translateX(-50%) rotate(90deg) !important;
+}
+
+.nav-cylinder-toggle.is-morphing .nav-menu-morph__line--three {
+    transform: translateX(-50%) rotate(-38deg) !important;
+}
+
+/* OPEN STATE: vertical lines */
+.nav-cylinder-toggle.is-open .nav-menu-morph__line {
+    top: 14px !important;
+    width: 24px !important;
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--one {
+    left: 32% !important;
+    transform: translateX(-50%) rotate(90deg) !important;
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--two {
+    left: 50% !important;
+    transform: translateX(-50%) rotate(90deg) !important;
+}
+
+.nav-cylinder-toggle.is-open .nav-menu-morph__line--three {
+    left: 68% !important;
+    transform: translateX(-50%) rotate(90deg) !important;
+}
+
+/* Dark theme version: still grey and translucent */
+html.cylinder-dark-theme-root body.cylinder-body .nav-cylinder-toggle.nav-menu-morph,
+body.cylinder-body.cylinder-dark-theme .nav-cylinder-toggle.nav-menu-morph {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(36, 43, 65, 0.58),
+            rgba(12, 17, 35, 0.46)
+        ) !important;
+
+    border-color: rgba(190, 202, 225, 0.25) !important;
+
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.30),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+html.cylinder-dark-theme-root body.cylinder-body .nav-menu-morph__line,
+body.cylinder-body.cylinder-dark-theme .nav-menu-morph__line {
+    background: rgba(220, 226, 240, 0.72) !important;
+}
+
+/* Mobile: even smaller */
+@media (max-width: 760px) {
+    body.cylinder-body .nav-cylinder-toggle.nav-menu-morph {
+        width: 42px !important;
+        height: 42px !important;
+        border-radius: 12px !important;
+    }
+
+    .nav-menu-morph__box {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .nav-menu-morph__line {
+        width: 22px !important;
+        height: 2.8px !important;
+    }
+
+    .nav-menu-morph__line--one {
+        top: 7px !important;
+    }
+
+    .nav-menu-morph__line--two {
+        top: 13px !important;
+    }
+
+    .nav-menu-morph__line--three {
+        top: 19px !important;
+    }
+
+    .nav-cylinder-toggle.is-morphing .nav-menu-morph__line,
+    .nav-cylinder-toggle.is-open .nav-menu-morph__line {
+        top: 13px !important;
+    }
+}
