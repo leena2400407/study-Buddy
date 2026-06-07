@@ -1,0 +1,433 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
+
+:root {
+  --neo-bg: #050711;
+  --neo-border: rgba(255, 255, 255, 0.14);
+  --neo-text: #f8fbff;
+  --neo-muted: #aebbd3;
+  --neo-cyan: #38bdf8;
+  --neo-violet: #a855f7;
+  --neo-pink: #fb7185;
+  --neo-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif !important;
+}
+
+/* =========================
+   HOME PAGE REDESIGN
+========================= */
+
+body.home-redesign {
+  overflow: auto !important;
+  display: block !important;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.22), transparent 28rem),
+    radial-gradient(circle at 88% 16%, rgba(168, 85, 247, 0.2), transparent 30rem),
+    linear-gradient(135deg, #040711, #090d1d 44%, #12071e) !important;
+}
+
+body.home-redesign::before,
+#features-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+#home-page {
+  max-width: min(1180px, 94vw) !important;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0 auto !important;
+  padding: 120px 24px 70px !important;
+
+  display: grid !important;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 42px;
+  align-items: center;
+
+  position: relative !important;
+  text-align: left !important;
+}
+
+#home-page #main-logo {
+  justify-self: center;
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  position: relative;
+}
+
+#home-page #main-logo img {
+  max-width: min(430px, 80vw);
+  height: auto !important;
+  filter: drop-shadow(0 0 40px rgba(56, 189, 248, 0.22));
+  animation: neoFloatLogo 5s ease-in-out infinite;
+}
+
+@keyframes neoFloatLogo {
+  50% {
+    transform: translateY(-14px) rotate(1deg);
+  }
+}
+
+/* =========================
+   TEXT
+========================= */
+
+h1.title,
+.title {
+  font-weight: 950 !important;
+  letter-spacing: -0.06em !important;
+  line-height: 0.9 !important;
+  text-shadow: none !important;
+
+  background: linear-gradient(
+    120deg,
+    #ffffff 5%,
+    #c7f2ff 40%,
+    #d7b4ff 72%,
+    #ffffff
+  ) !important;
+
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+h1.title {
+  font-size: clamp(4.2rem, 11vw, 9rem) !important;
+  margin: 0 !important;
+}
+
+.neo-kicker {
+  display: inline-flex;
+  width: max-content;
+  padding: 8px 12px;
+
+  border: 1px solid var(--neo-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+
+  color: #bdefff;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+}
+
+.neo-home-copy {
+  max-width: 620px;
+  color: var(--neo-muted);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.75;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn-container {
+  justify-content: flex-start !important;
+  gap: 16px !important;
+  flex-wrap: wrap;
+}
+
+button.main-btn {
+  border: 1px solid var(--neo-border) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.18),
+    rgba(168, 85, 247, 0.16)
+  ) !important;
+  color: white !important;
+  box-shadow: 0 14px 40px rgba(56, 189, 248, 0.14);
+  backdrop-filter: blur(18px);
+}
+
+button.main-btn:hover {
+  background: linear-gradient(
+    135deg,
+    var(--neo-cyan),
+    var(--neo-violet)
+  ) !important;
+  color: white !important;
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.36),
+    0 0 35px rgba(56, 189, 248, 0.18);
+}
+
+/* =========================
+   HOME STATS PANEL
+========================= */
+
+.neo-home-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.neo-stat {
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.065);
+  border: 1px solid var(--neo-border);
+  backdrop-filter: blur(16px);
+}
+
+.neo-stat strong {
+  display: block;
+  font-size: 1.7rem;
+}
+
+.neo-stat span {
+  color: var(--neo-muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   CYLINDER PAGE
+   Do NOT overwrite card transforms
+========================= */
+
+#features-page {
+  min-height: 100vh !important;
+  overflow: hidden;
+  position: relative;
+}
+
+.scene {
+  perspective: 1800px !important;
+}
+
+.Cylinder {
+  transition: transform 1.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.Cylinder__cell {
+  border-radius: 36px !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.045)
+  ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow:
+    0 28px 110px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  overflow: hidden;
+  will-change: opacity, box-shadow;
+}
+
+.Cylinder__cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.22), transparent 34%),
+    radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.2), transparent 38%);
+  opacity: 0.75;
+}
+
+.Cylinder__cell::after {
+  content: "OPEN MODULE";
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(4, 7, 17, 0.42);
+
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #dff7ff;
+}
+
+.Cylinder__cell h3,
+.Cylinder__cell p {
+  position: relative;
+  z-index: 1;
+}
+
+.Cylinder__cell h3 {
+  font-size: clamp(2.1rem, 5vw, 4rem) !important;
+  letter-spacing: -0.05em;
+}
+
+.Cylinder__cell p {
+  max-width: 260px;
+  color: #dbeafe !important;
+  line-height: 1.5;
+}
+
+.Cylinder__cell.is-active {
+  border-color: rgba(125, 211, 252, 0.65) !important;
+  box-shadow:
+    0 34px 120px rgba(0, 0, 0, 0.62),
+    0 0 42px rgba(56, 189, 248, 0.23) !important;
+}
+
+.cylinder__lid {
+  background: radial-gradient(
+    circle at 35% 25%,
+    #ffffff,
+    #7dd3fc 18%,
+    #a855f7 54%,
+    #fb7185 100%
+  ) !important;
+  box-shadow:
+    0 0 80px rgba(56, 189, 248, 0.38),
+    inset 0 0 35px rgba(255, 255, 255, 0.3) !important;
+}
+
+.cylinder__lid.lid-launching {
+  transform: translate(-50%, -50%) translateY(-250px) rotateX(90deg) scale(0.72) !important;
+  opacity: 0 !important;
+}
+
+/* =========================
+   CONTROLS
+========================= */
+
+.controls {
+  bottom: 28px !important;
+}
+
+.control-btn {
+  min-width: 138px;
+  border: 1px solid var(--neo-border) !important;
+  background: rgba(4, 7, 17, 0.62) !important;
+  backdrop-filter: blur(15px) !important;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+.top-nav .nav-container {
+  padding: 10px !important;
+  border: 1px solid var(--neo-border);
+  border-radius: 999px;
+  background: rgba(4, 7, 17, 0.54);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--neo-shadow);
+}
+
+.dropdown-content,
+.profile-card {
+  overflow: hidden;
+  border: 1px solid var(--neo-border) !important;
+  border-radius: 22px !important;
+  background: rgba(4, 7, 17, 0.86) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.home-link,
+.login-link,
+.dropbtn,
+.profile-link {
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  color: white !important;
+  cursor: pointer;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+.floating-particle {
+  position: absolute;
+  top: -20px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(125, 211, 252, 0.8);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+  animation: floatUp linear infinite;
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  #home-page {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+    padding-top: 70px !important;
+  }
+
+  #home-page #main-logo {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .btn-container {
+    justify-content: center !important;
+  }
+
+  .neo-home-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .top-nav .nav-container {
+    left: 10px;
+    right: 10px;
+    top: 10px !important;
+    flex-wrap: wrap;
+    border-radius: 24px !important;
+  }
+
+  .Cylinder {
+    width: 78vw !important;
+    height: 58vh !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .neo-home-panel {
+    grid-template-columns: 1fr;
+  }
+
+  h1.title {
+    font-size: 4rem !important;
+  }
+
+  .Cylinder__cell h3 {
+    font-size: 2rem !important;
+  }
+}
