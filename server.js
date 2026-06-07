@@ -277,11 +277,11 @@ app.use((req, res, next) => {
 
 const requireAdminPage = (req, res, next) => {
   if (!req.session.user) {
-    return res.status(404).render("ERROR");
+    return res.redirect("/login?returnTo=/admin");
   }
 
   if (req.session.user.role !== "admin") {
-    return res.status(404).render("ERROR");
+    return res.status(403).render("UNAUTHORIZED");
   }
 
   next();
@@ -3389,18 +3389,88 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
       });
     }
 
+    const registrations = await EventRegistration.find({
+      tournamentName
+    })
+      .sort({ createdAt: 1, _id: 1 })
+      .limit(8)
+      .lean();
+
+    const validRegistrationIds = new Set(
+      registrations.map(registration => String(registration._id))
+    );
+
     const myRegistrationData = await EventRegistration.findOne({
       user: req.session.user.id,
       tournamentName
     }).lean();
 
-    const savedRoundOf8 = eventData.bracket?.roundOf8 || [];
-    const hasSavedBracket = savedRoundOf8.some(slot => slot && slot.teamName);
+    const originalBracket = eventData.bracket || {
+      roundOf8: [],
+      semiFinal: [],
+      final: [],
+      winner: {
+        teamName: "",
+        registrationId: null
+      }
+    };
+
+    function cleanSavedRound(roundData = [], count) {
+      const finalRound = [];
+
+      for (let i = 0; i < count; i++) {
+        const slot =
+          Array.isArray(roundData)
+            ? roundData.find(item => Number(item.slot) === i + 1) || roundData[i] || {}
+            : {};
+
+        const registrationId = String(slot.registrationId || "");
+
+        if (registrationId && validRegistrationIds.has(registrationId)) {
+          finalRound.push({
+            slot: i + 1,
+            registrationId,
+            teamName: slot.teamName || ""
+          });
+        } else {
+          finalRound.push({
+            slot: i + 1,
+            registrationId: null,
+            teamName: ""
+          });
+        }
+      }
+
+      return finalRound;
+    }
+
+    const cleanedBracket = {
+      roundOf8: cleanSavedRound(originalBracket.roundOf8 || [], 8),
+      semiFinal: cleanSavedRound(originalBracket.semiFinal || [], 4),
+      final: cleanSavedRound(originalBracket.final || [], 2),
+      winner: {
+        registrationId: null,
+        teamName: ""
+      }
+    };
+
+    const winnerId = String(originalBracket.winner?.registrationId || "");
+
+    if (winnerId && validRegistrationIds.has(winnerId)) {
+      cleanedBracket.winner = {
+        registrationId: winnerId,
+        teamName: originalBracket.winner?.teamName || ""
+      };
+    }
+
+    const hasCleanSavedRoundOf8 = cleanedBracket.roundOf8.some(slot => {
+      return slot.registrationId && slot.teamName;
+    });
 
     let teams = [];
 
-    if (hasSavedBracket) {
-      teams = savedRoundOf8.map((slot, index) => {
+    if (hasCleanSavedRoundOf8) {
+      teams = cleanedBracket.roundOf8.map((slot, index) => {
         return {
           seed: index + 1,
           teamName: slot.teamName || "Empty Slot",
@@ -3411,13 +3481,6 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
         };
       });
     } else {
-      const registrations = await EventRegistration.find({
-        tournamentName
-      })
-        .sort({ createdAt: 1, _id: 1 })
-        .limit(8)
-        .lean();
-
       teams = registrations.map((registration, index) => {
         return {
           seed: index + 1,
@@ -3453,15 +3516,7 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
       },
       myRegistration,
       teams,
-      bracket: eventData.bracket || {
-        roundOf8: [],
-        semiFinal: [],
-        final: [],
-        winner: {
-          teamName: "",
-          registrationId: null
-        }
-      }
+      bracket: cleanedBracket
     });
 
   } catch (error) {
@@ -3473,6 +3528,7 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
     });
   }
 });
+
 function cleanHumanName(value) {
   return String(value || "")
     .trim()
@@ -4139,6 +4195,9 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
   }
 });
 
+app.get("/cylinder/admin", (req, res) => {
+  return res.status(403).render("UNAUTHORIZED");
+});
 
 app.use((req, res) => {
   res.status(404).render("ERROR");
