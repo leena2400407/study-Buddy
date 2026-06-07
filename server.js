@@ -328,6 +328,7 @@ app.use("/css", express.static(path.join(__dirname, "Public", "css")));
 app.use("/javaScript", express.static(path.join(__dirname, "Public", "javaScript")));
 app.use("/assests", express.static(path.join(__dirname, "Public", "assests")));
 app.use("/uploads/avatars", express.static(path.join(__dirname, "Public", "uploads", "avatars")));
+
 // Session setup
 app.use(
   session({
