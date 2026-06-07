@@ -2424,6 +2424,7 @@ const checkScheduledChatMatches = async () => {
 setInterval(checkScheduledChatMatches, 60 * 1000);
 
 const CS_SUBJECTS = [
+  "None",
   "Programming",
   "Object Oriented Programming",
   "Data Structures",
