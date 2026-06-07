@@ -1,259 +1,471 @@
-const btnFeatures = document.getElementById('btn-features');
-const homePage = document.getElementById('home-page');
-const featuresPage = document.getElementById('features-page');
-const triggerLogo = document.getElementById('trigger-logo');
-const cylinderScene = document.getElementById('cylinder-scene');
-const controls = document.getElementById('controls');
-const CylinderElem = document.getElementById('Cylinder');
-const bgEffects = document.getElementById('bg-effects');
-const resourcesCard = document.getElementById('resources-card');
-const events = document.getElementById('event');
-const gameCell = document.getElementById('game');
-const guid = document.getElementById('guid');
-const ai = document.getElementById('ai');
-const eduGAte = document.getElementById('btn-edugate');
-const game = document.getElementById('btn-game');
-const matching = document.getElementById('btn-matching');
+/* ============================================================
+   STUDY BUDDY — home.js
+   Shared by index.ejs and cylinder.ejs.
+   ============================================================ */
 
+const btnFeatures       = document.getElementById('btn-features');
+const homePage          = document.getElementById('home-page');
+const featuresPage      = document.getElementById('features-page');
+const cylinderScene     = document.getElementById('cylinder-scene');
+const controls          = document.getElementById('controls');
+const CylinderElem      = document.getElementById('Cylinder');
+const bgEffects         = document.getElementById('bg-effects');
+const introLogo         = document.getElementById('intro-logo');
+const navCylinderToggle = document.getElementById('navCylinderToggle');
+const cylinderScrollNav = document.getElementById('cylinderScrollNav');
 
-let selectedIndex = 0;
-const cellCount = 6; 
+let selectedIndex  = 0;
+const cellCount    = 6;
 let isCylinderOpen = false;
+let cylinderPageInitialized = false;
 
-    const bgImages = [
-    '../assests/images/new-event-bg-cy.avif',     // Events (Stadium)
-    '../assests/images/game-GB-CYlinder.jpg',      // Game (Gaming)
-    '../assests/images/resources-bg-cyl.avif', // Resources (Library)
-    '../assests/images/matching.jpg.jpeg',     // Match (Friends)
-    '../assests/images/AI-GB-cy.webp',        // AI Chat (Tech)
-    '../assests/images/guid.jpg.jpeg'      // Guide (Campus)
-];
+const CYLINDER_INTRO_FLAG = 'studyBuddyPlayCylinderIntro';
 
+/* ------------------------------------------------------------
+   SESSION FLAG HELPERS
+   Intro plays ONLY when this flag is set by the index button.
+   ------------------------------------------------------------ */
+function setCylinderIntroFlag() {
+    try {
+        sessionStorage.setItem(CYLINDER_INTRO_FLAG, 'yes');
+    } catch (error) {
+        // Ignore storage errors
+    }
+}
 
+function consumeCylinderIntroFlag() {
+    try {
+        const shouldPlay = sessionStorage.getItem(CYLINDER_INTRO_FLAG) === 'yes';
+        sessionStorage.removeItem(CYLINDER_INTRO_FLAG);
+        return shouldPlay;
+    } catch (error) {
+        return false;
+    }
+}
 
-// Transition from Home to Features Page
+/* ------------------------------------------------------------
+   ENTER CYLINDER FROM INDEX BUTTON ONLY
+   ------------------------------------------------------------ */
+function enterCylinderFromHome(event) {
+    if (event) event.preventDefault();
+
+    setCylinderIntroFlag();
+    window.location.href = '/cylinder';
+}
+
 if (btnFeatures) {
-    btnFeatures.addEventListener('click', () => {
-        homePage.style.display = 'none';
-        featuresPage.style.display = 'flex';
-        cylinderScene.style.display = 'flex'; // <-- Added this to show the 3D scene & lid!
-    });
+    btnFeatures.onclick = null;
+    btnFeatures.addEventListener('click', enterCylinderFromHome);
 }
 
+/* ------------------------------------------------------------
+   OPEN THE CYLINDER
+   ------------------------------------------------------------ */
+function openCylinder() {
+    if (isCylinderOpen) return;
 
-// Trigger 3D Cylinder Scene
-if (triggerLogo) {
-    triggerLogo.addEventListener('click', () => {
-        if(isCylinderOpen) return; 
-        isCylinderOpen = true;
-        
-        // Fade out and remove the START button
-        triggerLogo.style.opacity = '0';
-        
-        setTimeout(() => { 
-            triggerLogo.style.display = 'none'; 
-            
-            // Show controls and trigger the card fade-in
-            controls.style.display = 'flex';
-            cylinderScene.classList.add('is-open'); 
-            
-            // Initialize the view and start background effects
-            updateCylinder();
-            startEffects();
-            
-        }, 400); // <-- Closes the setTimeout and sets the 400ms delay
-    }); 
-} 
+    isCylinderOpen = true;
 
+    if (controls) {
+        controls.style.display = 'flex';
+        controls.style.opacity = '';
+        controls.style.pointerEvents = '';
+    }
+
+    if (cylinderScene) cylinderScene.classList.add('is-open');
+
+    updateCylinder();
+    startEffects();
+}
+
+/* ------------------------------------------------------------
+   ROTATE + HIGHLIGHT THE FRONT CARD
+   ------------------------------------------------------------ */
 function updateCylinder() {
-    if(!isCylinderOpen) return;
-    
-    // Calculate rotation angle
-    let angle = (selectedIndex / cellCount) * -360;
-    CylinderElem.style.transform = `translateZ(-600px) rotateY(${angle}deg)`;
-    
-    // Figure out which card is currently facing the user
-    let activeIdx = ((selectedIndex % cellCount) + cellCount) % cellCount;
+    if (!isCylinderOpen || !CylinderElem) return;
 
-    // Only allow interaction on the active face
+    const angle = (selectedIndex / cellCount) * -360;
+    CylinderElem.style.transform = `translateZ(-560px) rotateY(${angle}deg)`;
+
+    const activeIdx = ((selectedIndex % cellCount) + cellCount) % cellCount;
+
     document.querySelectorAll('.Cylinder__cell').forEach((cell, idx) => {
-        if (idx === activeIdx) {
-            cell.classList.add('is-active');
-        } else {
-            cell.classList.remove('is-active');
-        }
-    });
-    
-    document.body.style.animation = 'none';
-    const activeImage = bgImages[activeIdx] || bgImages[0];
-    
-    // Flipped to make the center clear and the edges dark (Vignette)
-    document.body.style.background = `radial-gradient(circle at center, rgba(10, 18, 34, 0) 30%, rgba(5, 10, 20, 0.95) 80%), url('${activeImage}') center/cover no-repeat`;
-}
-
-// Navigation Listeners
-if (document.getElementById('prev-btn')) {
-    document.getElementById('prev-btn').addEventListener('click', () => { 
-        selectedIndex--; 
-        updateCylinder(); 
+        cell.classList.toggle('is-active', idx === activeIdx);
     });
 }
 
-document.addEventListener('keydown', (event) => { 
+/* ------------------------------------------------------------
+   SPIN LEFT / RIGHT
+   ------------------------------------------------------------ */
+function spin(direction) {
+    selectedIndex += direction;
+    updateCylinder();
+}
+
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+
+if (prevBtn) prevBtn.addEventListener('click', () => spin(-1));
+if (nextBtn) nextBtn.addEventListener('click', () => spin(1));
+
+document.addEventListener('keydown', (event) => {
+    if (!cylinderScene) return;
+
     if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        selectedIndex--;
-        updateCylinder();
+        spin(-1);
     }
+
     if (event.key === 'ArrowRight') {
         event.preventDefault();
-        selectedIndex++;
-        updateCylinder();
+        spin(1);
     }
 });
 
-if (document.getElementById('next-btn')) {
-    document.getElementById('next-btn').addEventListener('click', () => { 
-        selectedIndex++; 
-        updateCylinder(); 
-    });
-}
+/* ------------------------------------------------------------
+   CLEAR BROKEN BACK-BUTTON STATE
+   This fixes browser back button after a card launch.
+   ------------------------------------------------------------ */
+function clearCardLaunchState() {
+    document.body.classList.remove('card-launched');
 
-// Resources Card Link
-if (resourcesCard) {
-    resourcesCard.addEventListener('click', () => {
-        window.location.href = 'resources'; 
-    });
-}
+    if (prevBtn) prevBtn.disabled = false;
+    if (nextBtn) nextBtn.disabled = false;
 
-if (events) {
-    events.addEventListener('click', () => {
-        window.location.href = 'events'; 
-    });
-}
-
-if (gameCell) {
-    gameCell.addEventListener('click', () => {
-        window.location.href = 'game-landing-page';
-    });
-}
-
-if (guid) {
-    guid.addEventListener('click', () => {
-        window.location.href = 'freshman-guid'; 
-    });
-}
-
-if (ai) {
-    ai.addEventListener('click', () => {
-        window.location.href = 'ai'; 
-    });
-}
-
-if (eduGAte) {
-    eduGAte.addEventListener('click', () => {
-        window.location.href = 'eduGate'; 
-    });
-}
-
-if (matching) {
-    matching.addEventListener('click', () => {
-        window.location.href = 'matching'; 
-    });
-}
-window.addEventListener('DOMContentLoaded', () => {
-    
-    if (window.location.hash === '#cylinder') {
-        
-    
-        if (homePage) homePage.style.display = 'none';
-        if (featuresPage) featuresPage.style.display = 'flex';
-        
-        isCylinderOpen = true;
-        if (triggerLogo) triggerLogo.style.display = 'none'; 
-        
-        if (cylinderScene) {
-            cylinderScene.style.display = 'flex';
-            cylinderScene.classList.add('is-open'); // <-- CRITICAL: This makes the cards pop out!
+    document.querySelectorAll('.Cylinder__cell').forEach((cell) => {
+        if (typeof cell.getAnimations === 'function') {
+            cell.getAnimations().forEach((animation) => animation.cancel());
         }
-        
-        if (controls) controls.style.display = 'flex';
-        
-        updateCylinder();
-        startEffects();
+
+        cell.classList.remove('is-poping');
+
+        cell.style.animation = '';
+        cell.style.willChange = '';
+        cell.style.opacity = '';
+        cell.style.filter = '';
+        cell.style.transform = '';
+    });
+}
+
+function showCylinderInstantly() {
+    if (!cylinderScene || !CylinderElem) return;
+
+    clearCardLaunchState();
+
+    isCylinderOpen = true;
+
+    if (featuresPage) featuresPage.style.display = 'flex';
+
+    if (controls) {
+        controls.style.display = 'flex';
+        controls.style.opacity = '';
+        controls.style.pointerEvents = '';
+    }
+
+    if (introLogo) {
+        introLogo.classList.add('hide');
+        introLogo.style.display = 'none';
+    }
+
+    if (typeof CylinderElem.getAnimations === 'function') {
+        CylinderElem.getAnimations().forEach((animation) => animation.cancel());
+    }
+
+    cylinderScene.classList.remove('intro');
+    cylinderScene.classList.add('is-open');
+
+    CylinderElem.classList.remove('intro-reveal');
+
+    const oldTransition = CylinderElem.style.transition;
+
+    CylinderElem.style.transition = 'none';
+    CylinderElem.style.transform = `translateZ(-560px) rotateY(${(selectedIndex / cellCount) * -360}deg)`;
+
+    CylinderElem.offsetHeight;
+
+    CylinderElem.style.transition = oldTransition;
+
+    updateCylinder();
+    startEffects();
+
+    /*
+       Small clean fade when entering cylinder from anywhere
+       except the index Enter Cylinder button.
+    */
+    document.body.style.opacity = '0';
+
+    requestAnimationFrame(() => {
+        document.body.style.transition = 'opacity 0.22s ease';
+        document.body.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+        document.body.style.transition = '';
+        document.body.style.opacity = '';
+    }, 260);
+}
+
+/* ------------------------------------------------------------
+   CARD CLICK HANDLER
+   No unwanted small spin.
+   ------------------------------------------------------------ */
+function openCard(cell) {
+    if (!cell || !cell.classList.contains('is-active')) return;
+
+    const href = cell.getAttribute('data-href');
+    if (!href) return;
+
+    if (cell.classList.contains('is-poping')) return;
+
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
+
+    document.body.classList.add('card-launched');
+
+    const cells = Array.from(document.querySelectorAll('.Cylinder__cell'));
+    const cardIndex = cells.indexOf(cell);
+
+    const cardAngle = cardIndex * (360 / cellCount);
+    const baseTransform = `rotateY(${cardAngle}deg) translateZ(560px)`;
+
+    cell.classList.add('is-poping');
+
+    cell.style.animation = 'none';
+    cell.style.willChange = 'transform, opacity, filter';
+
+    const popFrames = [
+        {
+            transform: `${baseTransform} scale(1)`,
+            opacity: 1,
+            filter: 'brightness(1)'
+        },
+        {
+            transform: `${baseTransform} scale(1.08)`,
+            opacity: 1,
+            filter: 'brightness(1.4)',
+            offset: 0.15
+        },
+        {
+            transform: `${baseTransform} scale(0.02)`,
+            opacity: 0,
+            filter: 'brightness(3)'
+        }
+    ];
+
+    const popTiming = {
+        duration: 1100,
+        easing: 'cubic-bezier(0.6, 0, 0.2, 1)',
+        fill: 'forwards'
+    };
+
+    if (typeof cell.animate === 'function') {
+        cell.animate(popFrames, popTiming);
+    } else {
+        cell.style.transform = `${baseTransform} scale(0.02)`;
+        cell.style.opacity = '0';
+        cell.style.filter = 'brightness(3)';
+    }
+
+    setTimeout(() => {
+        window.location.href = href;
+    }, 1100);
+}
+
+document.querySelectorAll('.Cylinder__cell').forEach((cell) => {
+    cell.addEventListener('click', () => openCard(cell));
+});
+
+/* ------------------------------------------------------------
+   FLOATING PARTICLES
+   ------------------------------------------------------------ */
+let effectsStarted = false;
+
+function startEffects() {
+    if (effectsStarted || !bgEffects) return;
+
+    effectsStarted = true;
+
+    const count = 16;
+
+    for (let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        const size = 3 + Math.random() * 6;
+        const duration = 14 + Math.random() * 16;
+
+        particle.style.left = `${Math.random() * 100}vw`;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.opacity = 0.3 + Math.random() * 0.5;
+        particle.style.animation = `floatUp ${duration}s linear infinite`;
+        particle.style.animationDelay = `-${Math.random() * duration}s`;
+
+        bgEffects.appendChild(particle);
+    }
+}
+
+/* ------------------------------------------------------------
+   INTRO
+   Plays only if user came from index Enter Cylinder button.
+   ------------------------------------------------------------ */
+function playCylinderIntro() {
+    if (!cylinderScene || !CylinderElem) return;
+
+    if (featuresPage) featuresPage.style.display = 'flex';
+
+    isCylinderOpen = false;
+
+    cylinderScene.classList.add('intro');
+    cylinderScene.classList.remove('is-open');
+
+    CylinderElem.classList.add('intro-reveal');
+
+    if (introLogo) {
+        introLogo.style.display = 'flex';
+        introLogo.classList.remove('hide');
+    }
+
+    const introMs = 2100;
+
+    setTimeout(() => {
+        if (introLogo) introLogo.classList.add('hide');
+    }, 1300);
+
+    setTimeout(() => {
+        if (CylinderElem) {
+            if (typeof CylinderElem.getAnimations === 'function') {
+                CylinderElem.getAnimations().forEach((animation) => animation.cancel());
+            }
+
+            CylinderElem.style.transform = 'translateZ(-560px) rotateY(0deg)';
+            CylinderElem.classList.remove('intro-reveal');
+        }
+
+        if (cylinderScene) cylinderScene.classList.remove('intro');
+
+        openCylinder();
+
+        if (introLogo) introLogo.style.display = 'none';
+    }, introMs);
+}
+
+function initCylinderPage() {
+    if (!cylinderScene || cylinderPageInitialized) return;
+
+    cylinderPageInitialized = true;
+
+    const shouldPlayIntro = consumeCylinderIntroFlag();
+
+    if (shouldPlayIntro) {
+        playCylinderIntro();
+    } else {
+        showCylinderInstantly();
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCylinderPage);
+} else {
+    initCylinderPage();
+}
+
+/* ------------------------------------------------------------
+   FIX BROWSER BACK BUTTON / BFCache
+   When browser restores the old page, remove launch classes,
+   remove inline animation styles, and reopen the cylinder normally.
+   ------------------------------------------------------------ */
+window.addEventListener('pageshow', (event) => {
+    if (!cylinderScene) return;
+
+    if (event.persisted || document.body.classList.contains('card-launched')) {
+        showCylinderInstantly();
     }
 });
+
+/* ============================================================
+   NEW HORIZONTAL CYLINDER SCROLL NAV
+   ============================================================ */
+
+function openScrollNav() {
+    if (!cylinderScrollNav) return;
+    cylinderScrollNav.classList.add('is-open');
+}
+
+function closeScrollNav() {
+    if (!cylinderScrollNav) return;
+    cylinderScrollNav.classList.remove('is-open');
+
+    const dropdown = document.getElementById('myDropdown');
+    const profileCard = document.getElementById('profileCard');
+
+    if (dropdown) dropdown.classList.remove('show');
+    if (profileCard) profileCard.classList.remove('show');
+}
+
+function toggleScrollNav(event) {
+    if (event) event.stopPropagation();
+    if (!cylinderScrollNav) return;
+
+    cylinderScrollNav.classList.toggle('is-open');
+
+    const dropdown = document.getElementById('myDropdown');
+    const profileCard = document.getElementById('profileCard');
+
+    if (!cylinderScrollNav.classList.contains('is-open')) {
+        if (dropdown) dropdown.classList.remove('show');
+        if (profileCard) profileCard.classList.remove('show');
+    }
+}
+
+if (navCylinderToggle) {
+    navCylinderToggle.addEventListener('click', toggleScrollNav);
+}
+
+/* ============================================================
+   NAV / UI HELPERS
+   ============================================================ */
+
 function goHome() {
-    // 1. Hide the features section
-    if (document.getElementById('features-page')) {
-        document.getElementById('features-page').style.display = 'none';
-    }
-    
-    // 2. Show the home section (use 'block' or 'flex' depending on your CSS)
-    if (document.getElementById('home-page')) {
-        document.getElementById('home-page').style.display = 'block';
-    }
-    
-    // 3. Optional: Reset the URL hash
+    if (featuresPage) featuresPage.style.display = 'none';
+    if (homePage) homePage.style.display = 'block';
+
     window.location.hash = 'home-page';
 }
-// Toggle the dropdown visibility
+
 function toggleDropdown() {
-    const dropdown = document.getElementById("myDropdown");
-    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    const dropdown = document.getElementById('myDropdown');
+    if (!dropdown) return;
+
+    dropdown.classList.toggle('show');
 }
 
-// Function to return to the landing page
-function goHome() {
-    document.getElementById('features-page').style.display = 'none';
-    document.getElementById('home-page').style.display = 'block';
-}
-
-// Function to navigate to specific cells
-function scrollToCell(cellId) {
-    const targetCell = document.getElementById(cellId);
-    if (targetCell) {
-        // Close dropdown after click
-        document.getElementById("myDropdown").style.display = "none";
-        
-        // Logic to rotate your 3D cylinder would go here
-        // For now, we will highlight the cell
-        targetCell.style.boxShadow = "0 0 20px #fff";
-        setTimeout(() => targetCell.style.boxShadow = "none", 2000);
-        
-        console.log("Navigating to: " + cellId);
-    }
-}
-
-// Close the dropdown if the user clicks outside of it
-window.onclick = function(event) {
-    if (!event.target.matches('.dropbtn')) {
-        var dropdowns = document.getElementsByClassName("dropdown-content");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.style.display === "block") {
-                openDropdown.style.display = "none";
-            }
-        }
-    }
-}
 function toggleProfile() {
-        var profileCard = document.getElementById("profileCard");
-        
-        // Toggle between hidden and flex (flex keeps everything centered!)
-        if (profileCard.style.display === "flex") {
-            profileCard.style.display = "none";
-        } else {
-            profileCard.style.display = "flex";
-        }
+    const profileCard = document.getElementById('profileCard');
+    if (!profileCard) return;
+
+    profileCard.classList.toggle('show');
+}
+
+window.addEventListener('click', (event) => {
+    if (!event.target.closest('.cylinder-scroll-nav')) {
+        closeScrollNav();
+        return;
     }
 
-    // This closes the card if you click anywhere else on the page
-    window.onclick = function(event) {
-        if (!event.target.closest('.profile-dropdown')) {
-            var profileCard = document.getElementById("profileCard");
-            if (profileCard && profileCard.style.display === "flex") {
-                profileCard.style.display = "none";
-            }
-        }
+    if (!event.target.closest('.dropdown')) {
+        const dropdown = document.getElementById('myDropdown');
+        if (dropdown) dropdown.classList.remove('show');
     }
+
+    if (!event.target.closest('.profile-dropdown')) {
+        const profileCard = document.getElementById('profileCard');
+        if (profileCard) profileCard.classList.remove('show');
+    }
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeScrollNav();
+    }
+});
