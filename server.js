@@ -19,9 +19,12 @@ const crypto = require("crypto");
 const MatchRequest = require("./models/MatchReq");
 const Chat = require("./models/chat");
 const multer = require("multer");
+const dns = require("node:dns");
 const fs = require("fs");
 const Avatar = require("./models/Avatar");
 require("dotenv").config();
+
+dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
 
@@ -115,13 +118,16 @@ const getEmailPass = () => {
 const createEmailTransporter = () => {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
+    family: 4,
     auth: {
       user: getEmailUser(),
       pass: getEmailPass()
     },
-    requireTLS: true,
+    tls: {
+      servername: "smtp.gmail.com"
+    },
     connectionTimeout: 30000,
     greetingTimeout: 30000,
     socketTimeout: 30000
