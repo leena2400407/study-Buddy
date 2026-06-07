@@ -161,6 +161,86 @@
     </section>
 
   </section>
+        </section>
+
+  <!-- Matching chat popup - bottom right like Gmail compose -->
+  <div id="matchingChatPopup" class="matching-chat-popup hidden">
+    <div class="matching-chat-popup-header">
+      <div class="popup-chat-user">
+        <div id="popupChatAvatar" class="popup-chat-avatar">S</div>
+
+        <div>
+          <p>Study Buddy Chat</p>
+          <h3 id="popupChatPartnerName">Study Partner</h3>
+        </div>
+      </div>
+
+      <div class="popup-chat-controls">
+        <button type="button" onclick="minimizeMatchingChatPopup(event)">−</button>
+        <button type="button" onclick="closeMatchingChatPopup(event)">×</button>
+      </div>
+    </div>
+
+    <div id="popupMessagesBox" class="popup-messages-box">
+      <div class="popup-empty-chat">Open a chat to start messaging.</div>
+    </div>
+
+    <div id="popupSchedulePanel" class="popup-schedule-panel hidden">
+      <div class="popup-schedule-head">
+        <div>
+          <p>Schedule Meeting</p>
+          <h3>Choose meeting time</h3>
+        </div>
+
+        <button type="button" onclick="hidePopupSchedulePanel()">×</button>
+      </div>
+
+      <label for="popupScheduleDateTime">Meeting date and time</label>
+
+      <input id="popupScheduleDateTime" type="datetime-local" />
+
+      <div class="popup-schedule-actions">
+        <button type="button" class="popup-cancel-btn" onclick="hidePopupSchedulePanel()">
+          Cancel
+        </button>
+
+        <button type="button" class="popup-send-schedule-btn" onclick="submitPopupSchedule()">
+          Send Schedule
+        </button>
+      </div>
+    </div>
+
+    <form id="popupChatForm" class="popup-chat-form">
+      <input
+        id="popupMessageInput"
+        type="text"
+        placeholder="Write your message..."
+        maxlength="1000"
+        autocomplete="off"
+      />
+
+      <button type="submit" class="popup-send-btn">Send</button>
+
+      <button type="button" class="popup-schedule-btn" onclick="showPopupSchedulePanel()">
+        Schedule
+      </button>
+
+      <button type="button" class="popup-match-now-btn" onclick="popupMatchNow()">
+        Match Now
+      </button>
+    </form>
+  </div>
+
+  <button
+    id="matchingChatMini"
+    class="matching-chat-mini hidden"
+    type="button"
+    onclick="expandMatchingChatPopup()"
+  >
+    💬 Study Chat
+  </button>
+
+  <div class="toast" id="toast"></div>
 
   <div class="toast" id="toast"></div>
 
@@ -170,6 +250,6 @@
     };
   </script>
 
-  <script src="/javaScript/matching.js?v=5"></script>
+  <script src="/javaScript/matching.js?v=6"></script>
 </body>
 </html>
