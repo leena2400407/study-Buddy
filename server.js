@@ -1751,7 +1751,25 @@ app.post("/signup", authLimiter, async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(cleanedEmail)) {
-    return renderSignupError(res, "Please enter a valid email.", oldInput);
+      return renderSignupError(res, "Please enter a valid email.", oldInput);
+    }
+
+    const allowedUniversityDomains = [
+      "miuegypt.edu.eg",
+      "giu-uni.de",
+      "ecu.edu.eg",
+      "cis.asu.edu.eg",
+      "student.guc.edu.eg"
+    ];
+
+    const emailDomain = cleanedEmail.split("@")[1];
+
+    if (!emailDomain || !allowedUniversityDomains.includes(emailDomain)) {
+      return renderSignupError(
+        res,
+        "Please use your official university email.",
+        oldInput
+      );
     }
 
     const passwordRegex =
@@ -3473,30 +3491,10 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
     });
   }
 });
-function cleanHumanName(value) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ");
-}
-
-function isLettersOnlyName(value) {
-  const cleaned = cleanHumanName(value);
-
-  const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-
-  return nameRegex.test(cleaned);
-}
-
-function cleanTeamName(value) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ");
-}
 
 app.post("/events/register", requireAuth, async (req, res) => {
   try {
-    const { tournamentName, players } = req.body;
-    const teamName = cleanTeamName(req.body.teamName);
+    const { tournamentName, teamName, players } = req.body;
 
     if (!tournamentName || !teamName || !Array.isArray(players) || players.length === 0) {
       return res.status(400).json({
@@ -3541,19 +3539,6 @@ app.post("/events/register", requireAuth, async (req, res) => {
     }
   });
 }
-const duplicateTeam = await EventRegistration.findOne({
-  tournamentName,
-  teamName
-})
-  .collation({ locale: "en", strength: 2 })
-  .lean();
-
-if (duplicateTeam) {
-  return res.status(400).json({
-    success: false,
-    message: "This team name is already registered in this tournament. Please choose another team name."
-  });
-}
 
     const maxPlayers = Number(eventData.maxPlayers) || 10;
 
@@ -3566,7 +3551,7 @@ if (duplicateTeam) {
 
     const captain = players[0];
 
-    const captainName = cleanHumanName(captain?.name);
+    const captainName = String(captain?.name || "").trim();
     const captainEmail = String(captain?.email || "").trim().toLowerCase();
 
     if (!captainName || !captainEmail) {
@@ -3575,13 +3560,6 @@ if (duplicateTeam) {
         message: "Captain name and email are required."
       });
     }
-    if (!isLettersOnlyName(captainName)) {
-  return res.status(400).json({
-    success: false,
-    message: "Captain name must contain letters only. No numbers or symbols allowed."
-  });
-  }
-
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -3592,30 +3570,26 @@ if (duplicateTeam) {
       });
     }
 
-   const cleanedPlayers = players
-  .map((player, index) => {
-    const playerName = cleanHumanName(player.name);
+    const cleanedPlayers = players
+      .map((player, index) => {
+        const playerName = String(player.name || "").trim();
 
-    if (!playerName) return null;
+        if (!playerName) return null;
 
-    return {
-      role: index === 0 ? "captain" : "player",
-      name: playerName,
-      email: index === 0 ? captainEmail : ""
-    };
-  })
-  .filter(Boolean);
+        return {
+          role: index === 0 ? "captain" : "player",
+          name: playerName,
+          email: index === 0 ? captainEmail : ""
+        };
+      })
+      .filter(Boolean);
 
-const invalidPlayer = cleanedPlayers.find(player => {
-  return !isLettersOnlyName(player.name);
-});
-
-if (invalidPlayer) {
-  return res.status(400).json({
-    success: false,
-    message: "Player names must contain letters only. No numbers or symbols allowed."
-  });
-}
+    if (cleanedPlayers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please add at least the captain."
+      });
+    }
 
     await EventRegistration.create({
       user: req.session.user.id,

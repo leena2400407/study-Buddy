@@ -367,27 +367,12 @@ async function loadAndShowBracket(tournamentName) {
     showBracketModal(data);
   }
 }
-function cleanHumanName(value) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ");
-}
-
-function isLettersOnlyName(value) {
-  const cleaned = cleanHumanName(value);
-
-  // Allows: "Ahmed", "Ahmed Mohamed"
-  // Blocks: "Ahmed1", "Ahmed@", "123", "Ahmed_Mohamed"
-  const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-
-  return nameRegex.test(cleaned);
-}
 
 async function submitTeam(event) {
   event.preventDefault();
 
   const submitBtn = document.querySelector("#team-form .submit-btn");
- const teamName = document.getElementById("team-name").value.trim().replace(/\s+/g, " ");
+  const teamName = document.getElementById("team-name").value.trim();
   const playerRows = document.querySelectorAll("#players-container .player-row");
 
   const players = Array.from(playerRows).map((row, index) => {
@@ -417,27 +402,6 @@ async function submitTeam(event) {
     alert("Please fill all player names.");
     return;
   }
-  const isFootballTournament =
-  String(pendingTournamentName || "").toLowerCase().includes("football") ||
-  String(pendingTournamentName || "").toLowerCase().includes("kora");
-
-if (isFootballTournament && players.length < 7) {
-  alert("Football tournament requires at least 7 players.");
-  return;
-}
-
-  const invalidPlayer = players.find(player => {
-  return !isLettersOnlyName(player.name);
-});
-
-if (invalidPlayer) {
-  alert("Player names must contain letters only. No numbers or symbols allowed.");
-  return;
-}
-
-players.forEach(player => {
-  player.name = cleanHumanName(player.name);
-});
 
   try {
     if (submitBtn) {
