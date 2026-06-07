@@ -150,7 +150,7 @@ function closeBracketModal() {
 }
 
 function getBlankTeamText(index) {
-  return index % 2 === 0 ? "Waiting Team" : "BYE / Empty Slot";
+  return "Empty Slot";
 }
 
 function buildBracketTeams(teams) {
@@ -159,11 +159,17 @@ function buildBracketTeams(teams) {
 
   for (let i = 0; i < bracketSize; i++) {
     if (teams[i]) {
-      finalTeams.push(teams[i]);
+      finalTeams.push({
+        seed: i + 1,
+        teamName: teams[i].teamName,
+        captainName: teams[i].captainName || "",
+        isEmpty: false,
+        isMine: teams[i].isMine || false
+      });
     } else {
       finalTeams.push({
         seed: i + 1,
-        teamName: getBlankTeamText(i),
+        teamName: "Empty Slot",
         captainName: "",
         isEmpty: true,
         isMine: false
@@ -224,6 +230,49 @@ function createEmptyRoundHTML(title, count) {
   return html;
 }
 
+function createSavedRoundHTML(title, roundData, count) {
+  const savedRound = Array.isArray(roundData) ? roundData : [];
+
+  let html = `<div class="bracket-round">
+    <h3>${title}</h3>
+  `;
+
+  for (let i = 0; i < count; i++) {
+    const item = savedRound.find(slot => Number(slot.slot) === i + 1) || savedRound[i] || {};
+    const teamName = item.teamName || "Waiting";
+
+    html += `
+      <div class="bracket-match future-match">
+        <div class="bracket-team ${teamName === "Waiting" ? "empty-team" : ""}">
+          <span>${teamName === "Waiting" ? "Winner" : `#${i + 1}`}</span>
+          <strong>${teamName}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function createWinnerHTML(winner) {
+  const winnerName = winner && winner.teamName ? winner.teamName : "Waiting";
+
+  return `
+    <div class="bracket-round">
+      <h3>Winner</h3>
+
+      <div class="bracket-match future-match winner-match">
+        <div class="bracket-team ${winnerName === "Waiting" ? "empty-team" : "winner-team"}">
+          <span>${winnerName === "Waiting" ? "Winner" : "Champion"}</span>
+          <strong>${winnerName}</strong>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function showBracketModal(data) {
   const eventData = data.event || {};
   const teams = Array.isArray(data.teams) ? data.teams : [];
@@ -255,14 +304,35 @@ function showBracketModal(data) {
     bracketTeamCount.innerText = `${teams.length} team${teams.length === 1 ? "" : "s"} registered`;
   }
 
-  const roundOneTeams = buildBracketTeams(teams);
+ const savedBracket = data.bracket || {};
+
+const savedRoundOf8 = Array.isArray(savedBracket.roundOf8)
+  ? savedBracket.roundOf8
+  : [];
+
+const hasSavedRoundOf8 = savedRoundOf8.some(slot => {
+  return slot && slot.teamName;
+});
+
+const roundOneTeams = hasSavedRoundOf8
+  ? buildBracketTeams(
+      savedRoundOf8.map((slot, index) => {
+        return {
+          seed: index + 1,
+          teamName: slot.teamName || "Empty Slot",
+          captainName: "",
+          isMine: false
+        };
+      })
+    )
+  : buildBracketTeams(teams);
 
   bracketArea.innerHTML = `
-    ${createRoundOneHTML(roundOneTeams)}
-    ${createEmptyRoundHTML("Semi Final", 4)}
-    ${createEmptyRoundHTML("Final", 2)}
-    ${createEmptyRoundHTML("Winner", 1)}
-  `;
+  ${createRoundOneHTML(roundOneTeams)}
+  ${createSavedRoundHTML("Semi Final", savedBracket.semiFinal, 4)}
+  ${createSavedRoundHTML("Final", savedBracket.final, 2)}
+  ${createWinnerHTML(savedBracket.winner)}
+`;
 
   if (locationBtn) {
     const link = eventData.detailsLink || "";

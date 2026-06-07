@@ -168,10 +168,14 @@ async function loadUsers() {
               <td>${escapeHTML(user.gender || "-")}</td>
               <td><span class="badge">${escapeHTML(user.role || "student")}</span></td>
               <td>
-                <button class="danger-btn" onclick="deleteUser('${user._id}')">
-                  Delete
-                </button>
-              </td>
+              <button class="refresh-btn" onclick='editUser(${JSON.stringify(user)})'>
+                Edit
+              </button>
+
+              <button class="danger-btn" onclick="deleteUser('${user._id}')">
+                Delete
+              </button>
+            </td>
             </tr>
           `).join("")}
         </tbody>
@@ -181,6 +185,77 @@ async function loadUsers() {
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
   }
+}
+
+async function saveUser(event) {
+  event.preventDefault();
+
+  const userId = document.getElementById("userId").value;
+
+  const payload = {
+    fullName: document.getElementById("userFullName").value.trim(),
+    username: document.getElementById("userUsername").value.trim(),
+    email: document.getElementById("userEmail").value.trim(),
+    password: document.getElementById("userPassword").value,
+    gender: document.getElementById("userGender").value,
+    university: document.getElementById("userUniversity").value.trim(),
+    major: document.getElementById("userMajor").value.trim(),
+    role: document.getElementById("userRole").value
+  };
+
+  const url = userId
+    ? `/admin/api/users/${userId}`
+    : "/admin/api/users";
+
+  const method = userId ? "PATCH" : "POST";
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not save user.", "error");
+      return;
+    }
+
+    showToast(data.message, "success");
+    resetUserForm();
+    loadUsers();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while saving user.", "error");
+  }
+}
+
+function editUser(user) {
+  document.getElementById("userId").value = user._id || "";
+  document.getElementById("userFullName").value = user.fullName || "";
+  document.getElementById("userUsername").value = user.username || "";
+  document.getElementById("userEmail").value = user.email || "";
+  document.getElementById("userPassword").value = "";
+  document.getElementById("userGender").value = String(user.gender || "").toLowerCase();
+  document.getElementById("userUniversity").value = user.university || "";
+  document.getElementById("userMajor").value = user.major || "";
+  document.getElementById("userRole").value = user.role || "student";
+
+  const submitBtn = document.getElementById("userSubmitBtn");
+
+  if (submitBtn) {
+    submitBtn.innerText = "Update User";
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 async function deleteUser(userId) {
@@ -279,30 +354,83 @@ async function loadEventRegistrations() {
             <th>Tournament</th>
             <th>Team</th>
             <th>Players</th>
+            <th>Bracket Status</th>
+            <th>Action</th>
           </tr>
         </thead>
+
         <tbody>
-          ${registrations.map(reg => `
+          ${registrations.map((reg, index) => `
             <tr>
               <td>${escapeHTML(reg.fullName || "-")}</td>
               <td>${escapeHTML(reg.email || "-")}</td>
               <td>${escapeHTML(reg.university || "-")}</td>
               <td>${escapeHTML(reg.tournamentName || "-")}</td>
-              <td>${escapeHTML(reg.teamName || "-")}</td>
+              <td>
+                <span class="badge">${escapeHTML(reg.teamName || "-")}</span>
+              </td>
               <td>
                 ${(reg.players || []).map(player => `
-                  <div>${escapeHTML(player.name || "-")} - ${escapeHTML(player.email || "-")}</div>
+                  <div>
+                    ${escapeHTML(player.name || "-")}
+                    ${player.email ? `- ${escapeHTML(player.email)}` : ""}
+                  </div>
                 `).join("") || "-"}
+              </td>
+              <td>
+                ${
+                  index < 8
+                    ? `<span class="badge accepted-badge">In Bracket</span>`
+                    : `<span class="badge waiting-badge">Waiting List</span>`
+                }
+              </td>
+              <td>
+                <button class="danger-btn" onclick="deleteEventRegistration('${reg._id}')">
+                  Remove Team
+                </button>
               </td>
             </tr>
           `).join("")}
         </tbody>
       </table>
 
+      <div class="admin-note-box">
+        First 8 teams are used in the tournament bracket. Remove unwanted teams to choose who stays.
+      </div>
+
       ${renderPagination("registrations", data.pagination, "loadEventRegistrations")}
     `;
   } catch (error) {
     box.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+async function deleteEventRegistration(registrationId) {
+  const confirmDelete = confirm(
+    "Remove this team from the tournament registrations?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`/admin/api/event-registrations/${registrationId}`, {
+      method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      showToast(data.message || "Could not remove team.", "error");
+      return;
+    }
+
+    showToast("Team removed successfully.", "success");
+
+    loadEventRegistrations();
+    loadOverview();
+
+  } catch (error) {
+    showToast("Server error while removing team.", "error");
   }
 }
 
@@ -340,9 +468,24 @@ async function loadEvents() {
               <td>${escapeHTML(event.maxPlayers || 0)}</td>
               <td>${escapeHTML(event.imagePath || "-")}</td>
               <td>
-                <button class="refresh-btn" onclick='editEvent(${JSON.stringify(event)})'>Edit</button>
-                <button class="danger-btn" onclick="deleteEvent('${event._id}')">Delete</button>
-              </td>
+              <button class="refresh-btn" onclick='editEvent(${JSON.stringify(event)})'>
+                Edit
+              </button>
+
+              <button class="danger-btn" onclick="deleteEvent('${event._id}')">
+                Delete
+              </button>
+
+               ${
+                  ["sports", "football", "padel"].includes(String(event.category || "").toLowerCase())
+                  ? `
+                  <button class="refresh-btn" onclick="openBracketEditor('${event._id}')">
+                    Bracket
+                  </button>
+                  `
+                : ""
+                }
+            </td>
             </tr>
           `).join("")}
         </tbody>
@@ -468,9 +611,9 @@ function escapeHTML(value) {
 
 document.addEventListener("DOMContentLoaded", () => {
   const eventForm = document.getElementById("eventForm");
-const universityForm = document.getElementById("universityForm");
-const userForm = document.getElementById("userForm");
-const resourceForm = document.getElementById("resourceForm");
+  const universityForm = document.getElementById("universityForm");
+  const userForm = document.getElementById("userForm");
+  const resourceForm = document.getElementById("resourceForm");
 
   if (eventForm) {
     eventForm.addEventListener("submit", saveEvent);
@@ -683,23 +826,238 @@ async function deleteUniversity(universityId) {
   }
 }
 
-async function saveUser(event) {
-  event.preventDefault();
+
+function resetUserForm() {
+  document.getElementById("userForm").reset();
+  document.getElementById("userId").value = "";
+
+  const submitBtn = document.getElementById("userSubmitBtn");
+
+  if (submitBtn) {
+    submitBtn.innerText = "Create User";
+  }
+}
+
+let currentBracketEventId = "";
+let currentBracketRegistrations = [];
+
+function ensureBracketModal() {
+  let modal = document.getElementById("adminBracketModal");
+
+  if (modal) return modal;
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="adminBracketModal" class="admin-bracket-modal hidden">
+      <div class="admin-bracket-panel">
+        <div class="admin-bracket-head">
+          <div>
+            <h2 id="adminBracketTitle">Bracket Editor</h2>
+            <p id="adminBracketSubtitle">Choose teams and winners</p>
+          </div>
+
+          <button type="button" class="admin-bracket-close" onclick="closeBracketEditor()">
+            ×
+          </button>
+        </div>
+
+        <div id="adminBracketBody" class="admin-bracket-body">
+          Loading...
+        </div>
+
+        <div class="admin-bracket-actions">
+          <button type="button" class="refresh-btn" onclick="saveBracketEditor()">
+            Save Bracket
+          </button>
+
+          <button type="button" class="danger-btn" onclick="closeBracketEditor()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  return document.getElementById("adminBracketModal");
+}
+
+function closeBracketEditor() {
+  const modal = document.getElementById("adminBracketModal");
+
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+
+  currentBracketEventId = "";
+  currentBracketRegistrations = [];
+}
+
+async function openBracketEditor(eventId) {
+  currentBracketEventId = eventId;
+
+  const modal = ensureBracketModal();
+  const body = document.getElementById("adminBracketBody");
+  const title = document.getElementById("adminBracketTitle");
+  const subtitle = document.getElementById("adminBracketSubtitle");
+
+  modal.classList.remove("hidden");
+  body.innerHTML = `<div class="empty-box">Loading bracket...</div>`;
+
+  try {
+    const data = await fetchAdminData(`/admin/api/events/${eventId}/bracket`);
+
+    currentBracketRegistrations = Array.isArray(data.registrations)
+      ? data.registrations
+      : [];
+
+    if (title) {
+      title.innerText = data.event?.title || "Bracket Editor";
+    }
+
+    if (subtitle) {
+      subtitle.innerText = `${currentBracketRegistrations.length} registered team(s)`;
+    }
+
+    renderBracketEditor(data.bracket || {});
+
+  } catch (error) {
+    body.innerHTML = `<div class="empty-box">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+function getBracketTeamOptions(selectedId = "") {
+  let html = `<option value="">Empty Slot</option>`;
+
+  currentBracketRegistrations.forEach(reg => {
+    const id = String(reg._id || "");
+    const teamName = reg.teamName || "Unnamed Team";
+    const captainName = reg.captainName || reg.fullName || "";
+
+    html += `
+      <option 
+        value="${escapeHTML(id)}"
+        data-team-name="${escapeHTML(teamName)}"
+        ${String(selectedId) === id ? "selected" : ""}
+      >
+        ${escapeHTML(teamName)}${captainName ? ` - ${escapeHTML(captainName)}` : ""}
+      </option>
+    `;
+  });
+
+  return html;
+}
+
+function renderBracketRound(title, key, count, savedRound = []) {
+  let html = `
+    <div class="admin-bracket-round">
+      <h3>${escapeHTML(title)}</h3>
+  `;
+
+  for (let i = 0; i < count; i++) {
+    const savedSlot = Array.isArray(savedRound)
+      ? savedRound.find(item => Number(item.slot) === i + 1) || savedRound[i] || {}
+      : {};
+
+    html += `
+      <div class="admin-bracket-field">
+        <label>${escapeHTML(title)} Slot ${i + 1}</label>
+
+        <select id="bracket-${key}-${i + 1}">
+          ${getBracketTeamOptions(savedSlot.registrationId || "")}
+        </select>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
+function renderBracketEditor(bracket) {
+  const body = document.getElementById("adminBracketBody");
+
+  body.innerHTML = `
+    <div class="admin-bracket-grid">
+      ${renderBracketRound("Round of 8", "roundOf8", 8, bracket.roundOf8 || [])}
+      ${renderBracketRound("Semi Final", "semiFinal", 4, bracket.semiFinal || [])}
+      ${renderBracketRound("Final", "final", 2, bracket.final || [])}
+
+      <div class="admin-bracket-round winner-round">
+        <h3>Winner</h3>
+
+        <div class="admin-bracket-field">
+          <label>Winner Team</label>
+
+          <select id="bracket-winner">
+            ${getBracketTeamOptions(bracket.winner?.registrationId || "")}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-note-box">
+      Choose Round of 8 teams, then choose who moves to Semi Final, Final, and Winner.
+    </div>
+  `;
+}
+
+function getSelectedBracketTeam(selectId) {
+  const select = document.getElementById(selectId);
+
+  if (!select) {
+    return {
+      registrationId: null,
+      teamName: ""
+    };
+  }
+
+  const selectedOption = select.options[select.selectedIndex];
+  const registrationId = select.value || null;
+  const teamName = selectedOption?.dataset?.teamName || "";
+
+  return {
+    registrationId,
+    teamName
+  };
+}
+
+function collectBracketRound(key, count) {
+  const round = [];
+
+  for (let i = 1; i <= count; i++) {
+    const selectedTeam = getSelectedBracketTeam(`bracket-${key}-${i}`);
+
+    round.push({
+      slot: i,
+      registrationId: selectedTeam.registrationId,
+      teamName: selectedTeam.teamName
+    });
+  }
+
+  return round;
+}
+
+async function saveBracketEditor() {
+  if (!currentBracketEventId) {
+    showToast("No event selected.", "error");
+    return;
+  }
+
+  const winnerTeam = getSelectedBracketTeam("bracket-winner");
 
   const payload = {
-    fullName: document.getElementById("userFullName").value.trim(),
-    username: document.getElementById("userUsername").value.trim(),
-    email: document.getElementById("userEmail").value.trim(),
-    password: document.getElementById("userPassword").value,
-    gender: document.getElementById("userGender").value,
-    university: document.getElementById("userUniversity").value.trim(),
-    major: document.getElementById("userMajor").value.trim(),
-    role: document.getElementById("userRole").value
+    roundOf8: collectBracketRound("roundOf8", 8),
+    semiFinal: collectBracketRound("semiFinal", 4),
+    final: collectBracketRound("final", 2),
+    winner: {
+      registrationId: winnerTeam.registrationId,
+      teamName: winnerTeam.teamName
+    }
   };
 
   try {
-    const response = await fetch("/admin/api/users", {
-      method: "POST",
+    const response = await fetch(`/admin/api/events/${currentBracketEventId}/bracket`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json"
       },
@@ -709,22 +1067,16 @@ async function saveUser(event) {
     const data = await response.json();
 
     if (!response.ok || !data.success) {
-      showToast(data.message || "Could not create user.", "error");
+      showToast(data.message || "Could not save bracket.", "error");
       return;
     }
 
-    showToast(data.message, "success");
-    resetUserForm();
-    loadUsers();
-    loadOverview();
+    showToast("Bracket saved successfully.", "success");
+    closeBracketEditor();
 
   } catch (error) {
-    showToast("Server error while creating user.", "error");
+    showToast("Server error while saving bracket.", "error");
   }
-}
-
-function resetUserForm() {
-  document.getElementById("userForm").reset();
 }
 
 async function loadResources() {

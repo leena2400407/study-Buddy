@@ -56,38 +56,48 @@
     </section>
 
     <section id="users" class="tab-section">
-       <div class="section-head">
+      <div class="section-head">
         <h2>Users</h2>
         <button class="refresh-btn" onclick="loadUsers()">Refresh</button>
       </div>
 
       <form id="userForm" class="admin-form">
+        <input type="hidden" id="userId">
+
         <input id="userFullName" placeholder="Full name">
         <input id="userUsername" placeholder="Username">
         <input id="userEmail" placeholder="Email">
         <input id="userPassword" type="password" placeholder="Password">
+
         <select id="userGender">
           <option value="">Select gender</option>
-          <option value="male">-</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
-          
-        </select>
-        <input id="userUniversity" placeholder="University">
-        <input id="userMajor" placeholder="Major">
-        <select id="userRole">
-          <option value="student">Normal User</option>
-          <option value="admin">Admin</option>
-        </select>
-        <div class="form-actions">
-          <button type="submit" class="refresh-btn">Create User</button>
-          <button type="button" class="danger-btn" onclick="resetUserForm()">Clear</button>
-        </div>
-      </form>
-      <div id="usersTable" class="table-box">
-         Loading users..
-        </div>
-      </section>
+    </select>
+
+    <input id="userUniversity" placeholder="University">
+    <input id="userMajor" placeholder="Major">
+
+    <select id="userRole">
+      <option value="student">Normal User</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <div class="form-actions">
+      <button type="submit" id="userSubmitBtn" class="refresh-btn">
+        Create User
+      </button>
+
+      <button type="button" class="danger-btn" onclick="resetUserForm()">
+        Clear
+      </button>
+    </div>
+  </form>
+
+  <div id="usersTable" class="table-box">
+    Loading users...
+  </div>
+</section>
 
     <section id="matching" class="tab-section">
       <div class="section-head">
@@ -130,6 +140,7 @@
 
   <form id="eventForm" class="admin-form">
     <input type="hidden" id="eventId">
+    
 
     <input id="eventTitle" placeholder="Event title">
     <input id="eventCategory" placeholder="Category: sports, padel, concert, music">

@@ -519,6 +519,140 @@ app.delete("/admin/api/resources/:categoryId", requireAdminApi, async (req, res)
   }
 });
 
+app.patch("/admin/api/users/:userId", requireAdminApi, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    let {
+      fullName,
+      username,
+      email,
+      password,
+      gender,
+      university,
+      major,
+      role
+    } = req.body;
+
+    fullName = String(fullName || "").trim().replace(/\s+/g, " ");
+    username = String(username || "").trim();
+    email = String(email || "").trim().toLowerCase();
+    password = String(password || "");
+    university = String(university || "").trim();
+    major = String(major || "").trim();
+    role = String(role || "student").trim().toLowerCase();
+
+    const cleanedGender = String(gender || "").trim().toLowerCase();
+
+    if (!fullName || !username || !email || !cleanedGender || !university || !major || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill in all user fields except password."
+      });
+    }
+
+    let finalGender = "";
+
+    if (cleanedGender === "male") {
+      finalGender = "Male";
+    } else if (cleanedGender === "female") {
+      finalGender = "Female";
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Gender must be Male or Female."
+      });
+    }
+
+    if (!["student", "admin"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Role must be student or admin."
+      });
+    }
+
+    const existingUser = await User.findOne({
+      _id: { $ne: userId },
+      $or: [
+        { email },
+        { username }
+      ]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email or username already exists."
+      });
+    }
+
+    const updateData = {
+      fullName,
+      username,
+      email,
+      gender: finalGender,
+      university,
+      major,
+      role
+    };
+
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          success: false,
+          message: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+        });
+      }
+
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      {
+        new: true,
+        runValidators: true
+      }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User was not found."
+      });
+    }
+
+    await StudyProfile.findOneAndUpdate(
+      { user: userId },
+      {
+        fullName: updatedUser.fullName,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        university: updatedUser.university || "",
+        major: updatedUser.major || ""
+      },
+      { new: true }
+    );
+
+    return res.json({
+      success: true,
+      message: "User updated successfully.",
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error("Admin update user error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Could not update user."
+    });
+  }
+});
+
 app.get("/admin/api/users", requireAdminApi, async (req, res) => {
   try {
     const { page, limit, skip } = getPagination(req.query);
@@ -753,6 +887,50 @@ app.get("/admin/api/event-registrations", requireAdminApi, async (req, res) => {
   }
 });
 
+app.get("/admin/api/events/:eventId/bracket", requireAdminApi, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const event = await Event.findById(eventId).lean();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    const registrations = await EventRegistration.find({
+      tournamentName: event.title
+    })
+      .sort({ createdAt: 1, _id: 1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      event,
+      registrations,
+      bracket: event.bracket || {
+        roundOf8: [],
+        semiFinal: [],
+        final: [],
+        winner: {
+          teamName: "",
+          registrationId: null
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error("Admin load event bracket error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load event bracket."
+    });
+  }
+});
+
 app.get("/admin/api/game-scores", requireAdminApi, async (req, res) => {
   try {
     const { page, limit, skip } = getPagination(req.query);
@@ -784,6 +962,75 @@ app.get("/admin/api/game-scores", requireAdminApi, async (req, res) => {
     });
   }
 });
+
+app.patch("/admin/api/events/:eventId/bracket", requireAdminApi, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const {
+      roundOf8,
+      semiFinal,
+      final,
+      winner
+    } = req.body;
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event was not found."
+      });
+    }
+
+    event.bracket = {
+      roundOf8: await buildBracketRound(roundOf8),
+      semiFinal: await buildBracketRound(semiFinal),
+      final: await buildBracketRound(final),
+      winner: {
+        teamName: String(winner?.teamName || "").trim(),
+        registrationId: String(winner?.registrationId || "").trim() || null
+      }
+    };
+
+    await event.save();
+
+    return res.json({
+      success: true,
+      message: "Bracket saved successfully.",
+      bracket: event.bracket
+    });
+
+  } catch (error) {
+    console.error("Admin save event bracket error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not save bracket."
+    });
+  }
+});
+
+async function buildBracketRound(roundData = []) {
+  if (!Array.isArray(roundData)) return [];
+
+  const finalRound = [];
+
+  for (let i = 0; i < roundData.length; i++) {
+    const item = roundData[i];
+
+    const registrationId = String(item.registrationId || "").trim();
+    const teamName = String(item.teamName || "").trim();
+
+    finalRound.push({
+      slot: Number(item.slot) || i + 1,
+      registrationId: registrationId || null,
+      teamName
+    });
+  }
+
+  return finalRound;
+}
 
 app.get("/admin/api/events", requireAdminApi, async (req, res) => {
   try {
@@ -976,6 +1223,34 @@ app.delete("/admin/api/events/:eventId", requireAdminApi, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Could not delete event."
+    });
+  }
+});
+
+app.delete("/admin/api/event-registrations/:registrationId", requireAdminApi, async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+
+    const deletedRegistration = await EventRegistration.findByIdAndDelete(registrationId);
+
+    if (!deletedRegistration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration was not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Team removed successfully."
+    });
+
+  } catch (error) {
+    console.error("Admin delete event registration error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not remove team."
     });
   }
 });
@@ -3036,29 +3311,60 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
       });
     }
 
-    const registrations = await EventRegistration.find({
+    const myRegistrationData = await EventRegistration.findOne({
+      user: req.session.user.id,
       tournamentName
-    })
-      .sort({ createdAt: 1 })
-      .lean();
+    }).lean();
 
-    const teams = registrations.map((registration, index) => {
-      return {
-        seed: index + 1,
-        teamName: registration.teamName,
-        captainName: registration.captainName,
-        captainEmail: registration.captainEmail,
-        players: registration.players || [],
-        isMine: String(registration.user) === String(req.session.user.id),
-        createdAt: registration.createdAt
-      };
-    });
+    const savedRoundOf8 = eventData.bracket?.roundOf8 || [];
+    const hasSavedBracket = savedRoundOf8.some(slot => slot && slot.teamName);
 
-    const myRegistration = teams.find(team => team.isMine) || null;
+    let teams = [];
+
+    if (hasSavedBracket) {
+      teams = savedRoundOf8.map((slot, index) => {
+        return {
+          seed: index + 1,
+          teamName: slot.teamName || "Empty Slot",
+          captainName: "",
+          captainEmail: "",
+          players: [],
+          isMine: String(slot.registrationId || "") === String(myRegistrationData?._id || "")
+        };
+      });
+    } else {
+      const registrations = await EventRegistration.find({
+        tournamentName
+      })
+        .sort({ createdAt: 1, _id: 1 })
+        .limit(8)
+        .lean();
+
+      teams = registrations.map((registration, index) => {
+        return {
+          seed: index + 1,
+          teamName: registration.teamName,
+          captainName: registration.captainName,
+          captainEmail: registration.captainEmail,
+          players: registration.players || [],
+          isMine: String(registration.user) === String(req.session.user.id)
+        };
+      });
+    }
+
+    const myRegistration = myRegistrationData
+      ? {
+          teamName: myRegistrationData.teamName,
+          captainName: myRegistrationData.captainName,
+          captainEmail: myRegistrationData.captainEmail,
+          players: myRegistrationData.players || [],
+          createdAt: myRegistrationData.createdAt
+        }
+      : null;
 
     return res.json({
       success: true,
-      registered: !!myRegistration,
+      registered: !!myRegistrationData,
       event: {
         title: eventData.title,
         category: eventData.category,
@@ -3068,7 +3374,16 @@ app.get("/api/events/bracket", requireAuth, async (req, res) => {
         maxPlayers: eventData.maxPlayers
       },
       myRegistration,
-      teams
+      teams,
+      bracket: eventData.bracket || {
+        roundOf8: [],
+        semiFinal: [],
+        final: [],
+        winner: {
+          teamName: "",
+          registrationId: null
+        }
+      }
     });
 
   } catch (error) {

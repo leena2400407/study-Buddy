@@ -25,11 +25,6 @@
           Study Partner
         </h1>
 
-        <p class="hero-text">
-          Build your study list using fixed subjects, save it, then find students from your same
-          university and major who can help you.
-        </p>
-
         <% if (!user) { %>
           <p class="login-warning">
             You must be logged in before searching for study matches.
@@ -38,25 +33,34 @@
       </div>
     </section>
 
-    <section class="match-flow reveal-on-scroll">
-      <div class="flow-card">
-        <span>01</span>
-        <strong>Build your list</strong>
-        <p>Add one or more subjects you need help with and one or more subjects you can teach.</p>
-      </div>
+    <div class="panel-card meet-rules-panel">
+          <p class="section-label rules-label">MATCH RULES</p>
 
-      <div class="flow-card">
-        <span>02</span>
-        <strong>Send request</strong>
-        <p>Choose a matched student and send them a study request by email and in-app.</p>
-      </div>
+          <h2>Study Match Rules</h2>
 
-      <div class="flow-card">
-        <span>03</span>
-        <strong>Start chatting</strong>
-        <p>If the student accepts, a private study chat opens between both of you.</p>
-      </div>
-    </section>
+          <div class="rules-list">
+            <div class="rule-item">
+              <p>1. You can only match with students from your same university and major.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>2. Match requests are sent by email and also appear inside the website.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>3. Chat opens only after the other student accepts your request.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>4. Use the chat for studying only.</p>
+            </div>
+
+            <div class="rule-item">
+              <p>5. Be respectful and clear about what you need help with.</p>
+            </div>
+          </div>
+        </div>
+        <br>
 
     <section class="dashboard reveal-on-scroll">
 
@@ -114,35 +118,6 @@
 
           </div>
         </div>
-
-        <div class="panel-card meet-rules-panel">
-          <p class="section-label rules-label">MATCH RULES</p>
-
-          <h2>Study Match Rules</h2>
-
-          <div class="rules-list">
-            <div class="rule-item">
-              <p>1. You can only match with students from your same university and major.</p>
-            </div>
-
-            <div class="rule-item">
-              <p>2. Match requests are sent by email and also appear inside the website.</p>
-            </div>
-
-            <div class="rule-item">
-              <p>3. Chat opens only after the other student accepts your request.</p>
-            </div>
-
-            <div class="rule-item">
-              <p>4. Use the chat for studying only.</p>
-            </div>
-
-            <div class="rule-item">
-              <p>5. Be respectful and clear about what you need help with.</p>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <div class="right-panel">

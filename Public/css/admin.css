@@ -347,3 +347,128 @@ td {
   cursor: not-allowed;
   transform: none;
 }
+.admin-bracket-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.admin-bracket-modal.hidden {
+  display: none;
+}
+
+.admin-bracket-panel {
+  width: min(1180px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 24px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.admin-bracket-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.admin-bracket-head h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 28px;
+}
+
+.admin-bracket-head p {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+.admin-bracket-close {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.admin-bracket-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  gap: 18px;
+}
+
+.admin-bracket-round {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.admin-bracket-round h3 {
+  margin: 0 0 14px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.admin-bracket-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.admin-bracket-field label {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.admin-bracket-field select {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  outline: none;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.82);
+  color: #ffffff;
+  padding: 11px 12px;
+}
+
+.admin-bracket-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.admin-note-box {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+}
+
+@media (max-width: 1000px) {
+  .admin-bracket-grid {
+    grid-template-columns: repeat(2, minmax(210px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-bracket-grid {
+    grid-template-columns: 1fr;
+  }
+}

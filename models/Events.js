@@ -1,5 +1,28 @@
 const mongoose = require("mongoose");
 
+const bracketTeamSchema = new mongoose.Schema(
+  {
+    slot: {
+      type: Number,
+      required: true
+    },
+
+    registrationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "EventRegistration",
+      default: null
+    },
+
+    teamName: {
+      type: String,
+      default: ""
+    }
+  },
+  {
+    _id: false
+  }
+);
+
 const eventSchema = new mongoose.Schema(
   {
     title: {
@@ -38,6 +61,36 @@ const eventSchema = new mongoose.Schema(
     maxPlayers: {
       type: Number,
       default: 10
+    },
+
+    bracket: {
+      roundOf8: {
+        type: [bracketTeamSchema],
+        default: []
+      },
+
+      semiFinal: {
+        type: [bracketTeamSchema],
+        default: []
+      },
+
+      final: {
+        type: [bracketTeamSchema],
+        default: []
+      },
+
+      winner: {
+        teamName: {
+          type: String,
+          default: ""
+        },
+
+        registrationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "EventRegistration",
+          default: null
+        }
+      }
     }
   },
   {
@@ -46,21 +99,3 @@ const eventSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Event", eventSchema);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
