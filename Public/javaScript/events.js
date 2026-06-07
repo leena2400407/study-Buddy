@@ -80,6 +80,7 @@ function openRegistrationForm(name, maxPlayersFromDatabase) {
     addBtn.style.display = maxP <= 1 ? "none" : "block";
   }
 
+ forceLettersOnlyInputs();
   document.getElementById("registration-modal").classList.remove("hidden");
 }
 
@@ -106,7 +107,8 @@ function addPlayer() {
     </div>
   `);
 
-  updatePlayerNumbers();
+ updatePlayerNumbers();
+  forceLettersOnlyInputs();
 }
 
 function removePlayer(button) {
@@ -381,6 +383,18 @@ function isLettersOnlyName(value) {
   const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
 
   return nameRegex.test(cleaned);
+}
+function forceLettersOnlyInputs() {
+  document.querySelectorAll(".player-name").forEach(input => {
+    input.setAttribute("pattern", "[A-Za-z ]+");
+    input.setAttribute("title", "Letters only. No numbers or symbols.");
+
+    input.oninput = function () {
+      this.value = this.value
+        .replace(/[^A-Za-z\s]/g, "")
+        .replace(/\s+/g, " ");
+    };
+  });
 }
 
 async function submitTeam(event) {
