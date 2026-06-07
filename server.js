@@ -131,6 +131,50 @@ const sendSignupEmail = async (userEmail, fullName) => {
     `
   });
 };
+const sendPasswordResetLinkEmail = async (userEmail, fullName, resetLink) => {
+  const transporter = createEmailTransporter();
+
+  await transporter.sendMail({
+    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: "Reset your Study Buddy password",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;">
+        <h2>Reset Your Password</h2>
+
+        <p>Hello ${fullName || "Student"},</p>
+
+        <p>You requested to reset your Study Buddy password.</p>
+
+        <p>Click the button below to confirm your new password.</p>
+
+        <a href="${resetLink}" 
+           target="_blank"
+           style="
+            display: inline-block;
+            margin-top: 14px;
+            padding: 14px 22px;
+            background: #7c3aed;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+           ">
+          Confirm New Password
+        </a>
+
+        <p style="margin-top: 18px;">
+          This link will expire in 15 minutes.
+        </p>
+
+        <p>If you did not request this, ignore this email.</p>
+
+        <br>
+        <p><strong>Study Buddy Team</strong></p>
+      </div>
+    `
+  });
+};
 
 const sendEventRegistrationEmail = async ({
   to,
@@ -2024,6 +2068,154 @@ app.post("/signup", authLimiter, async (req, res) => {
         email: req.body.email || ""
       }
     );
+  }
+});
+const passwordResetTokens = new Map();
+app.get("/forgot-password", (req, res) => {
+  res.render("forgot-password", {
+    error: [],
+    success: []
+  });
+});
+
+app.get("/forget-password", (req, res) => {
+  res.redirect("/forgot-password");
+});
+
+app.post("/forgot-password", authLimiter, async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).render("forgot-password", {
+        error: ["Please enter your email."],
+        success: []
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).render("forgot-password", {
+        error: ["No account found with this email."],
+        success: []
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    passwordResetTokens.set(token, {
+      email: user.email,
+      expiresAt: Date.now() + 15 * 60 * 1000
+    });
+
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    const resetLink = `${baseUrl}/reset-password/${token}`;
+
+    await sendPasswordResetLinkEmail(user.email, user.fullName, resetLink);
+
+    return res.render("forgot-password", {
+      error: [],
+      success: ["Password reset link sent to your email."]
+    });
+
+  } catch (error) {
+    console.error("Forgot password error:", error);
+
+    return res.status(500).render("forgot-password", {
+      error: ["Something went wrong. Please try again."],
+      success: []
+    });
+  }
+});
+
+app.get("/reset-password/:token", (req, res) => {
+  const token = String(req.params.token || "");
+  const resetData = passwordResetTokens.get(token);
+
+  if (!resetData) {
+    req.flash("error", "Reset link is invalid or expired.");
+    return res.redirect("/forgot-password");
+  }
+
+  if (Date.now() > resetData.expiresAt) {
+    passwordResetTokens.delete(token);
+
+    req.flash("error", "Reset link expired. Please request a new link.");
+    return res.redirect("/forgot-password");
+  }
+
+  return res.render("reset-password", {
+    token,
+    error: [],
+    success: []
+  });
+});
+
+app.post("/reset-password/:token", authLimiter, async (req, res) => {
+  try {
+    const token = String(req.params.token || "");
+    const resetData = passwordResetTokens.get(token);
+
+    if (!resetData) {
+      return res.status(400).render("forgot-password", {
+        error: ["Reset link is invalid or expired."],
+        success: []
+      });
+    }
+
+    if (Date.now() > resetData.expiresAt) {
+      passwordResetTokens.delete(token);
+
+      return res.status(400).render("forgot-password", {
+        error: ["Reset link expired. Please request a new link."],
+        success: []
+      });
+    }
+
+    const password = String(req.body.password || "");
+    const confirmPassword = String(req.body.confirmPassword || "");
+
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      return res.status(400).render("reset-password", {
+        token,
+        error: ["Password must be at least 8 characters and include uppercase, lowercase, number, and special character."],
+        success: []
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).render("reset-password", {
+        token,
+        error: ["Passwords do not match."],
+        success: []
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.findOneAndUpdate(
+      { email: resetData.email },
+      { password: hashedPassword },
+      { runValidators: true }
+    );
+
+    passwordResetTokens.delete(token);
+
+    req.flash("success", "Password reset successfully. Please log in.");
+    return res.redirect("/login");
+
+  } catch (error) {
+    console.error("Reset password error:", error);
+
+    return res.status(500).render("reset-password", {
+      token: req.params.token,
+      error: ["Could not reset password."],
+      success: []
+    });
   }
 });
 
