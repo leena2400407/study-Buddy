@@ -489,14 +489,6 @@ function renderMatches() {
     const firstName = name.split(" ")[0];
     const avatarLetter = name.charAt(0).toUpperCase();
 
-    const weakSubjects = Array.isArray(match.weakSubjects)
-      ? match.weakSubjects
-      : [];
-
-    const strongSubjects = Array.isArray(match.strongSubjects)
-      ? match.strongSubjects
-      : [];
-
     const canHelpMe = Array.isArray(match.canHelpMe)
       ? match.canHelpMe
       : [];
@@ -548,32 +540,6 @@ function renderMatches() {
                       <span class="small-tag">${escapeHTML(subject)}</span>
                     `).join("")
                   : `<span class="small-tag empty-tag">Not a swap match</span>`
-              }
-            </div>
-          </div>
-
-          <div class="subject-row">
-            <h5>Their strong subjects</h5>
-            <div class="small-tags">
-              ${
-                strongSubjects.length
-                  ? strongSubjects.map(subject => `
-                      <span class="small-tag">${escapeHTML(subject)}</span>
-                    `).join("")
-                  : `<span class="small-tag empty-tag">No strong subjects</span>`
-              }
-            </div>
-          </div>
-
-          <div class="subject-row">
-            <h5>They need help with</h5>
-            <div class="small-tags">
-              ${
-                weakSubjects.length
-                  ? weakSubjects.map(subject => `
-                      <span class="small-tag">${escapeHTML(subject)}</span>
-                    `).join("")
-                  : `<span class="small-tag empty-tag">No weak subjects</span>`
               }
             </div>
           </div>
