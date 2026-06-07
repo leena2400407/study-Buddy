@@ -39,15 +39,19 @@
         </div>
 
         <div class="input-group">
-          <label for="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            placeholder="Enter password" 
-            required
-          >
-        </div>
+  <label for="password">Password</label>
+
+  <div class="password-wrap">
+    <input 
+      type="password" 
+      id="password" 
+      name="password" 
+      placeholder="Enter password" 
+      required
+    >
+   <button type="button" class="password-eye" data-target="password" aria-label="Show password"></button>
+  </div>
+</div>
 
         <button type="submit" class="login-btn">Login</button>
 
@@ -67,6 +71,6 @@
     </div>
   </div>
 
-  <!-- <script src="../javaScript/forms.js"></script> -->
+  <script src="/javaScript/forms.js"></script>
 </body>
 </html>
