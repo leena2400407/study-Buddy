@@ -101,21 +101,51 @@ const getGeminiAI = async () => {
   });
 };
 
+const getEmailUser = () => {
+  return String(process.env.EMAIL_USER || "").trim();
+};
+
+const getEmailPass = () => {
+  return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
+};
+
 const createEmailTransporter = () => {
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
+      user: getEmailUser(),
+      pass: getEmailPass()
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
 };
 
+console.log("EMAIL_USER exists:", !!getEmailUser());
+console.log("EMAIL_PASS exists:", !!getEmailPass());
+console.log("EMAIL_USER value:", getEmailUser());
+
+if (getEmailUser() && getEmailPass()) {
+  createEmailTransporter().verify((error) => {
+    if (error) {
+      console.error("EMAIL TRANSPORTER ERROR:", error);
+    } else {
+      console.log("EMAIL SERVER IS READY TO SEND MESSAGES");
+    }
+  });
+}
+
 const sendSignupEmail = async (userEmail, fullName) => {
+  if (!getEmailUser() || !getEmailPass()) {
+    console.warn("Signup email was not sent because EMAIL_USER or EMAIL_PASS is missing.");
+    return;
+  }
+
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    from: `Study Buddy <${getEmailUser()}>`,
     to: userEmail,
     subject: "Welcome to Study Buddy",
     html: `
@@ -130,7 +160,10 @@ const sendSignupEmail = async (userEmail, fullName) => {
       </div>
     `
   });
+
+  console.log("Signup email sent successfully to:", userEmail);
 };
+
 const sendPasswordResetLinkEmail = async (userEmail, fullName, resetLink) => {
   const transporter = createEmailTransporter();
 
@@ -2051,7 +2084,12 @@ app.post("/signup", authLimiter, async (req, res) => {
       role: "student"
     });
 
-    await sendSignupEmail(cleanedEmail, cleanedFullName);
+    sendSignupEmail(cleanedEmail, cleanedFullName).catch((emailError) => {
+      console.error("Signup email failed, but account was created:", emailError);
+    });
+
+    req.flash("success", "Account created successfully. Please log in.");
+    return res.redirect("/login");
 
     req.flash("success", "Account created successfully. Please log in.");
     res.redirect("/login");
