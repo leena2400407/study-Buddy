@@ -212,14 +212,48 @@
     <input id="resourceShortName" placeholder="Tab short name: CS">
     <input  type="color" id="resourceColor" name="color" value="#0077b6" class="color-input"/>
 
-    <textarea
-      id="resourceLinksText"
-      class="full-row"
-      placeholder="Write resources one per line like this:
-      CS Arabic Playlist | https://www.youtube.com/@DesoukiEgypt | playlist
-      W3Schools | https://www.w3schools.com/ | website
-      Helper Links | /assests/Links.pdf | pdf"
-    ></textarea>
+    <input type="hidden" id="resourceLinksText">
+
+<div class="resources-builder full-row">
+  <div class="resources-builder-head">
+    <div>
+      <h3>Resources</h3>
+      <p>Add every resource as a clean row instead of writing Title | URL | Type.</p>
+    </div>
+
+    <button type="button" class="refresh-btn small-btn" onclick="addResourceInputRow()">
+      + Add Resource
+    </button>
+  </div>
+
+  <div id="resourceRows" class="resource-rows">
+    <div class="resource-row">
+      <input 
+        type="text" 
+        class="resource-title-input" 
+        placeholder="Resource title"
+      >
+
+      <input 
+        type="url" 
+        class="resource-url-input" 
+        placeholder="Resource URL"
+      >
+
+      <select class="resource-type-input">
+        <option value="website">Website</option>
+        <option value="playlist">Playlist</option>
+        <option value="pdf">PDF</option>
+        <option value="video">Video</option>
+        <option value="tool">Tool</option>
+      </select>
+
+      <button type="button" class="danger-btn small-btn" onclick="removeResourceInputRow(this)">
+        Remove
+      </button>
+    </div>
+  </div>
+</div>
 
     <div class="form-actions">
       <button type="submit" class="refresh-btn">Save Resource Category</button>

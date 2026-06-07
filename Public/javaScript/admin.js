@@ -1168,16 +1168,205 @@ async function loadResources() {
   }
 }
 
+function addResourceInputRow(resource = {}) {
+  const rowsBox = document.getElementById("resourceRows");
+
+  if (!rowsBox) return;
+
+  const title = resource.title || "";
+  const url = resource.url || "";
+  const type = resource.type || "website";
+
+  rowsBox.insertAdjacentHTML("beforeend", `
+    <div class="resource-row">
+      <input type="text" class="resource-title-input" placeholder="Resource title" value="${escapeHTML(title)}" oninput="this.value = cleanLettersOnlyInput(this.value)">
+
+      <input type="text" class="resource-url-input" placeholder="URL or path: https://example.com or /assests/file.pdf" value="${escapeHTML(url)}">
+
+      <select class="resource-type-input">
+        <option value="website" ${type === "website" ? "selected" : ""}>Website</option>
+        <option value="playlist" ${type === "playlist" ? "selected" : ""}>Playlist</option>
+        <option value="pdf" ${type === "pdf" ? "selected" : ""}>PDF</option>
+        <option value="video" ${type === "video" ? "selected" : ""}>Video</option>
+        <option value="tool" ${type === "tool" ? "selected" : ""}>Tool</option>
+      </select>
+
+      <button type="button" class="danger-btn small-btn" onclick="removeResourceInputRow(this)">
+        Remove
+      </button>
+    </div>
+  `);
+}
+
+function removeResourceInputRow(button) {
+  const row = button.closest(".resource-row");
+
+  if (row) {
+    row.remove();
+  }
+
+  const rowsBox = document.getElementById("resourceRows");
+
+  if (rowsBox && rowsBox.children.length === 0) {
+    addResourceInputRow();
+  }
+}
+
+function isValidResourcePathOrUrl(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return false;
+
+  const lowerText = text.toLowerCase();
+
+  if (
+    lowerText.startsWith("javascript:") ||
+    lowerText.startsWith("data:") ||
+    lowerText.startsWith("vbscript:")
+  ) {
+    return false;
+  }
+
+  if (text.startsWith("/")) {
+    return text.length > 1 && !text.includes(" ");
+  }
+
+  try {
+    const url = new URL(text);
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (error) {
+    return false;
+  }
+}
+
+function validateResourceInputs() {
+  const rows = document.querySelectorAll("#resourceRows .resource-row");
+  const allowedTypes = ["website", "playlist", "pdf", "video", "tool"];
+
+  if (rows.length === 0) {
+    showToast("Add at least one resource.", "error");
+    return false;
+  }
+
+  for (let index = 0; index < rows.length; index++) {
+    const row = rows[index];
+
+    const title = row.querySelector(".resource-title-input")?.value.trim() || "";
+    const url = row.querySelector(".resource-url-input")?.value.trim() || "";
+    const type = row.querySelector(".resource-type-input")?.value.trim() || "";
+
+    if (!title && !url) {
+      continue;
+    }
+
+    if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(title)) {
+      showToast(`Resource ${index + 1}: title must contain letters only.`, "error");
+      return false;
+    }
+
+    if (title.length < 2 || title.length > 80) {
+      showToast(`Resource ${index + 1}: title must be 2-80 characters.`, "error");
+      return false;
+    }
+
+    if (!url) {
+      showToast(`Resource ${index + 1}: URL or path is required.`, "error");
+      return false;
+    }
+
+    if (!isValidResourcePathOrUrl(url)) {
+      showToast(`Resource ${index + 1}: enter a valid URL or path.`, "error");
+      return false;
+    }
+
+    if (!allowedTypes.includes(type)) {
+      showToast(`Resource ${index + 1}: invalid type.`, "error");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function buildResourcesTextFromInputs() {
+  const rows = document.querySelectorAll("#resourceRows .resource-row");
+  const lines = [];
+
+  rows.forEach(row => {
+    const title = row.querySelector(".resource-title-input")?.value.trim() || "";
+    const url = row.querySelector(".resource-url-input")?.value.trim() || "";
+    const type = row.querySelector(".resource-type-input")?.value.trim() || "website";
+
+    if (title && url) {
+      lines.push(`${title} | ${url} | ${type}`);
+    }
+  });
+
+  return lines.join("\n");
+}
+
+function resetResourceRows() {
+  const rowsBox = document.getElementById("resourceRows");
+
+  if (!rowsBox) return;
+
+  rowsBox.innerHTML = "";
+  addResourceInputRow();
+}
+
 async function saveResource(event) {
   event.preventDefault();
 
   const resourceId = document.getElementById("resourceId").value;
 
+  const name = document.getElementById("resourceName").value.trim();
+  const shortName = document.getElementById("resourceShortName").value.trim();
+  const color = document.getElementById("resourceColor").value.trim();
+
+  if (!name) {
+    showToast("Category name is required.", "error");
+    return;
+  }
+
+  if (name.length < 2 || name.length > 80) {
+    showToast("Category name must be 2-80 characters.", "error");
+    return;
+  }
+
+  if (!shortName) {
+    showToast("Tab short name is required.", "error");
+    return;
+  }
+
+  if (shortName.length < 1 || shortName.length > 12) {
+    showToast("Tab short name must be 1-12 characters.", "error");
+    return;
+  }
+
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+    showToast("Please choose a valid color.", "error");
+    return;
+  }
+
+  if (!validateResourceInputs()) {
+    return;
+  }
+
+  const resourcesText = buildResourcesTextFromInputs();
+
+  if (!resourcesText) {
+    showToast("Add at least one valid resource.", "error");
+    return;
+  }
+
+  document.getElementById("resourceLinksText").value = resourcesText;
+
   const payload = {
-    name: document.getElementById("resourceName").value.trim(),
-    shortName: document.getElementById("resourceShortName").value.trim(),
-    color: document.getElementById("resourceColor").value.trim(),
-    resourcesText: document.getElementById("resourceLinksText").value.trim()
+    name,
+    shortName,
+    color,
+    resourcesText
   };
 
   const url = resourceId
@@ -1212,17 +1401,34 @@ async function saveResource(event) {
   }
 }
 
+function cleanLettersOnlyInput(value) {
+  return String(value || "")
+    .replace(/[^A-Za-z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trimStart();
+}
+
 function editResource(category) {
   document.getElementById("resourceId").value = category._id || "";
   document.getElementById("resourceName").value = category.name || "";
   document.getElementById("resourceShortName").value = category.shortName || "";
   document.getElementById("resourceColor").value = category.color || "#0077b6";
 
-  document.getElementById("resourceLinksText").value = (category.resources || [])
-    .map(resource => {
-      return `${resource.title || ""} | ${resource.url || ""} | ${resource.type || "website"}`;
-    })
-    .join("\n");
+  const rowsBox = document.getElementById("resourceRows");
+
+  if (rowsBox) {
+    rowsBox.innerHTML = "";
+
+    const resources = Array.isArray(category.resources) ? category.resources : [];
+
+    if (resources.length === 0) {
+      addResourceInputRow();
+    } else {
+      resources.forEach(resource => {
+        addResourceInputRow(resource);
+      });
+    }
+  }
 
   window.scrollTo({
     top: 0,
@@ -1233,6 +1439,7 @@ function editResource(category) {
 function resetResourceForm() {
   document.getElementById("resourceForm").reset();
   document.getElementById("resourceId").value = "";
+  resetResourceRows();
 }
 
 async function deleteResource(categoryId) {
