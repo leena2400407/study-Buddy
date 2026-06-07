@@ -484,3 +484,29 @@ body {
   background: #b994ff;
   transform: rotate(45deg);
 }
+/* Field validation messages under inputs */
+.field-error {
+  display: none;
+  margin-top: 7px;
+  color: #fecaca;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.field-error.show {
+  display: block;
+}
+
+.input-group input.invalid,
+.input-group select.invalid,
+.password-wrap input.invalid {
+  border-color: rgba(239, 68, 68, 0.75) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.input-group input.valid,
+.input-group select.valid,
+.password-wrap input.valid {
+  border-color: rgba(34, 197, 94, 0.65) !important;
+}

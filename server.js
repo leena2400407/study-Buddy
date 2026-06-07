@@ -1026,19 +1026,29 @@ app.post("/admin/api/users", requireAdminApi, async (req, res) => {
     });
   }
 
-    const existingUser = await User.findOne({
-      $or: [
-        { email },
-        { username }
-      ]
-    });
+   const existingUsername = await User.findOne({
+  username: cleanedUsername
+});
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Email or username already exists."
-      });
-    }
+if (existingUsername) {
+  return renderSignupError(
+    res,
+    "Username already exists. Please choose another username.",
+    oldInput
+  );
+}
+
+const existingEmail = await User.findOne({
+  email: cleanedEmail
+});
+
+if (existingEmail) {
+  return renderSignupError(
+    res,
+    "Email already exists. Please login instead.",
+    oldInput
+  );
+}
 
     const hashedPassword = await bcrypt.hash(password, 10);
 

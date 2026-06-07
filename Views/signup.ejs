@@ -17,134 +17,194 @@
     <div class="login-box signup-box">
       <h2>Create an Account</h2>
 
-      <% if (error && error.length > 0) { %>
-        <p class="error"><%= error %></p>
+      <% const pageErrors = typeof error !== "undefined" ? error : []; %>
+      <% const pageSuccess = typeof success !== "undefined" ? success : []; %>
+      <% const old = typeof oldInput !== "undefined" ? oldInput : {}; %>
+
+      <% if (pageErrors && pageErrors.length > 0) { %>
+        <% pageErrors.forEach(function(msg) { %>
+          <p class="error"><%= msg %></p>
+        <% }) %>
       <% } %>
 
-      <% if (success && success.length > 0) { %>
-        <p class="success"><%= success %></p>
+      <% if (pageSuccess && pageSuccess.length > 0) { %>
+        <% pageSuccess.forEach(function(msg) { %>
+          <p class="success"><%= msg %></p>
+        <% }) %>
       <% } %>
+
+      <p id="signup-message" style="display: none; margin-top: 10px;"></p>
 
       <form id="signup-form" action="/signup" method="POST">
+
         <div class="input-group">
           <label for="fullName">Full Name</label>
-          <input type="text" id="fullName" name="fullName" placeholder="Enter your name">
-         
+          <input 
+            type="text" 
+            id="fullName" 
+            name="fullName" 
+            placeholder="Enter your name"
+            value="<%= old.fullName || '' %>"
+          >
+          <small id="fullNameError" class="field-error"></small>
         </div>
 
         <div class="input-group">
           <label for="username">Username</label>
-          <input type="text" id="username" name="username" placeholder="Choose a username" >
-         
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            placeholder="Choose a username"
+            value="<%= old.username || '' %>"
+          >
+          <small id="usernameError" class="field-error"></small>
         </div>
 
         <div class="input-group radio-group">
           <label>Gender</label>
+
           <div class="radio-options">
-            <input type="radio" id="female" name="gender" value="Female" >
+            <input 
+              type="radio" 
+              id="female" 
+              name="gender" 
+              value="Female"
+              <%= old.gender === "female" || old.gender === "Female" ? "checked" : "" %>
+            >
             <label for="female" class="radio-label">Female</label>
 
-            <input type="radio" id="male" name="gender" value="Male">
+            <input 
+              type="radio" 
+              id="male" 
+              name="gender" 
+              value="Male"
+              <%= old.gender === "male" || old.gender === "Male" ? "checked" : "" %>
+            >
             <label for="male" class="radio-label">Male</label>
           </div>
+
+          <small id="genderError" class="field-error"></small>
         </div>
 
         <div class="input-group">
           <label for="university">University</label>
+
           <select id="university" name="university">
-            <option value="" disabled selected>Select your university...</option>
-            <option value="MIU">MIU</option>
-            <option value="GIU">GUC</option>
-            <option value="ACU">ACU (Chinese)</option>
-            <option value="ASU">ASU (Ain Shams)</option>
+            <option value="" disabled <%= !old.university ? "selected" : "" %>>Select your university...</option>
+            <option value="MIU" <%= old.university === "MIU" ? "selected" : "" %>>MIU</option>
+            <option value="GIU" <%= old.university === "GIU" ? "selected" : "" %>>GUC</option>
+            <option value="ACU" <%= old.university === "ACU" ? "selected" : "" %>>ACU (Chinese)</option>
+            <option value="ASU" <%= old.university === "ASU" ? "selected" : "" %>>ASU (Ain Shams)</option>
           </select>
+
+          <small id="universityError" class="field-error"></small>
         </div>
 
         <div class="input-group">
           <label for="major">Major</label>
-          <select id="major" name="major" >
-            <option value="" disabled selected>Select your Major...</option>
-            <option value="cs">Computer Science</option>
-            <option value="B">Business</option>
-            <option value="Bi">Business Informatics</option>
-            <option value="M">Masscom</option>
-            <option value="E">Engineering</option>
+
+          <select id="major" name="major">
+            <option value="" disabled <%= !old.major ? "selected" : "" %>>Select your Major...</option>
+            <option value="cs" <%= old.major === "cs" ? "selected" : "" %>>Computer Science</option>
+            <option value="B" <%= old.major === "B" ? "selected" : "" %>>Business</option>
+            <option value="Bi" <%= old.major === "Bi" ? "selected" : "" %>>Business Informatics</option>
+            <option value="M" <%= old.major === "M" ? "selected" : "" %>>Masscom</option>
+            <option value="E" <%= old.major === "E" ? "selected" : "" %>>Engineering</option>
           </select>
+
+          <small id="majorError" class="field-error"></small>
         </div>
 
         <div class="input-group">
           <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" placeholder="student@uni.edu">
-         
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            placeholder="student@uni.edu"
+            value="<%= old.email || '' %>"
+          >
+          <small id="emailError" class="field-error"></small>
         </div>
 
         <div class="input-group">
-  <label>Choose Avatar</label>
+          <label>Choose Avatar</label>
 
-  <input 
-    type="hidden" 
-    id="selectedAvatar" 
-    name="avatar" 
-    value="<%= oldInput && oldInput.avatar ? oldInput.avatar : '' %>"
-  >
+          <input 
+            type="hidden" 
+            id="selectedAvatar" 
+            name="avatar" 
+            value="<%= old.avatar || '' %>"
+          >
 
-  <div id="avatarPicker" class="avatar-picker">
-    <% if (typeof avatars !== "undefined" && avatars.length > 0) { %>
-      <% avatars.forEach(function(avatar) { %>
-        <button 
-          type="button"
-          class="avatar-option <%= oldInput && oldInput.avatar === avatar.imagePath ? 'selected' : '' %>"
-          data-avatar-path="<%= avatar.imagePath %>"
-          onclick="selectSignupAvatar(this)"
-        >
-          <img src="<%= avatar.imagePath %>" alt="<%= avatar.name %>">
-          <span><%= avatar.name %></span>
-        </button>
-      <% }) %>
-    <% } else { %>
-      <p class="avatar-empty">No avatars available yet. Ask admin to upload avatars.</p>
-    <% } %>
-  </div>
+          <div id="avatarPicker" class="avatar-picker">
+            <% if (typeof avatars !== "undefined" && avatars.length > 0) { %>
+              <% avatars.forEach(function(avatar) { %>
+                <button 
+                  type="button"
+                  class="avatar-option <%= old.avatar === avatar.imagePath ? 'selected' : '' %>"
+                  data-avatar-path="<%= avatar.imagePath %>"
+                  onclick="selectSignupAvatar(this)"
+                >
+                  <img src="<%= avatar.imagePath %>" alt="<%= avatar.name %>">
+                  <span><%= avatar.name %></span>
+                </button>
+              <% }) %>
+            <% } else { %>
+              <p class="avatar-empty">No avatars available yet. Ask admin to upload avatars.</p>
+            <% } %>
+          </div>
 
- 
-</div>
+          <small id="avatarError" class="field-error"></small>
+        </div>
 
-       <div class="input-group">
-  <label for="new-password">Password</label>
+        <div class="input-group">
+          <label for="new-password">Password</label>
 
-  <div class="password-wrap">
-    <input 
-      type="password" 
-      id="new-password" 
-      name="password" 
-      placeholder="Create a password"
-    >
-  <button type="button" class="password-eye" data-target="new-password" aria-label="Show password"></button>
-  </div>
+          <div class="password-wrap">
+            <input 
+              type="password" 
+              id="new-password" 
+              name="password" 
+              placeholder="Create a password"
+            >
 
- 
-</div>
-       
-<div class="input-group">
-  <label for="confirm-password">Confirm Password</label>
+            <button 
+              type="button" 
+              class="password-eye" 
+              data-target="new-password" 
+              aria-label="Show password">
+            </button>
+          </div>
 
-  <div class="password-wrap">
-    <input 
-      type="password" 
-      id="confirm-password" 
-      name="confirmPassword" 
-      placeholder="Type password again"
-    >
+          <small id="passwordError" class="field-error"></small>
+        </div>
 
-    <button type="button" class="password-eye" data-target="confirm-password" aria-label="Show password"></button>
-  </div>
+        <div class="input-group">
+          <label for="confirm-password">Confirm Password</label>
 
-  
-</div>
+          <div class="password-wrap">
+            <input 
+              type="password" 
+              id="confirm-password" 
+              name="confirmPassword" 
+              placeholder="Type password again"
+            >
+
+            <button 
+              type="button" 
+              class="password-eye" 
+              data-target="confirm-password" 
+              aria-label="Show password">
+            </button>
+          </div>
+
+          <small id="confirmError" class="field-error"></small>
+        </div>
+
         <button type="submit" class="login-btn">Sign Up</button>
       </form>
-
-      <p id="signup-message" style="display: none; margin-top: 10px;"></p>
 
       <p style="margin-top: 15px; font-size: 14px;">
         Have an account?
