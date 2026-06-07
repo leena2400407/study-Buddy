@@ -324,10 +324,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Static files
-app.use("/css", express.static(path.join(__dirname, "Public", "css")));
-app.use("/javascript", express.static(path.join(__dirname, "Public", "javascript")));
-app.use("/assests", express.static(path.join(__dirname, "Public", "assests")));
-app.use("/uploads/avatars", express.static(path.join(__dirname, "Public", "uploads", "avatars")));
+// Static files
+const publicPath = path.join(__dirname, "Public");
+
+app.use("/css", express.static(path.join(publicPath, "css")));
+app.use("/javaScript", express.static(path.join(publicPath, "javaScript")));
+app.use("/assests", express.static(path.join(publicPath, "assests")));
+app.use("/uploads", express.static(path.join(publicPath, "uploads")));
+
+// Keep this too, for anything else inside Public
+app.use(express.static(publicPath));
+
+// IMPORTANT: stop missing CSS/JS/images from falling into ERROR.ejs as text/html
+app.use((req, res, next) => {
+  const isStaticAsset = /\.(css|js|png|jpg|jpeg|webp|avif|gif|svg|ico|pdf|woff|woff2|ttf)$/i.test(req.path);
+
+  if (isStaticAsset) {
+    return res
+      .status(404)
+      .type("text/plain")
+      .send(`Static file not found: ${req.path}`);
+  }
+
+  next();
+});
 // Session setup
 app.use(
   session({
