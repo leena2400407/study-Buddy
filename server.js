@@ -115,19 +115,28 @@ const getEmailPass = () => {
   return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
 };
 
+const ipv4Lookup = (hostname, options, callback) => {
+  return dns.lookup(hostname, { family: 4 }, callback);
+};
+
 const createEmailTransporter = () => {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
+
+    lookup: ipv4Lookup,
     family: 4,
+
     auth: {
       user: getEmailUser(),
       pass: getEmailPass()
     },
+
     tls: {
       servername: "smtp.gmail.com"
     },
+
     connectionTimeout: 30000,
     greetingTimeout: 30000,
     socketTimeout: 30000
@@ -256,7 +265,7 @@ const sendEventRegistrationEmail = async ({
     .join("");
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+   from: `Study Buddy <${getEmailUser()}>`,
     to,
     subject: `Registration Confirmed - ${tournamentName}`,
     html: `
@@ -2944,7 +2953,7 @@ const sendChatMatchEmail = async (matchRequest) => {
   `;
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    from: `Study Buddy <${getEmailUser()}>`,
     to: emailList.join(", "),
     subject: "Your Study Buddy Video Room",
     html: emailHtml
