@@ -324,8 +324,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Static files
+// Static files
 app.use(express.static(path.join(__dirname, "Public")));
-
 // Session setup
 app.use(
   session({
