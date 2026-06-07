@@ -394,10 +394,6 @@ async function loadEventRegistrations() {
         </tbody>
       </table>
 
-      <div class="admin-note-box">
-        First 8 teams are used in the tournament bracket. Remove unwanted teams to choose who stays.
-      </div>
-
       ${renderPagination("registrations", data.pagination, "loadEventRegistrations")}
     `;
   } catch (error) {
