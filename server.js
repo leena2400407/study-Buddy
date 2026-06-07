@@ -112,14 +112,6 @@ const getEmailPass = () => {
   return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
 };
 
-const getEmailUser = () => {
-  return String(process.env.EMAIL_USER || "").trim();
-};
-
-const getEmailPass = () => {
-  return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
-};
-
 const createEmailTransporter = () => {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -135,20 +127,6 @@ const createEmailTransporter = () => {
     socketTimeout: 30000
   });
 };
-
-console.log("EMAIL_USER exists:", !!getEmailUser());
-console.log("EMAIL_PASS exists:", !!getEmailPass());
-console.log("EMAIL_USER value:", getEmailUser());
-
-if (getEmailUser() && getEmailPass()) {
-  createEmailTransporter().verify((error) => {
-    if (error) {
-      console.error("EMAIL TRANSPORTER ERROR:", error);
-    } else {
-      console.log("EMAIL SERVER IS READY TO SEND MESSAGES");
-    }
-  });
-}
 
 console.log("EMAIL_USER exists:", !!getEmailUser());
 console.log("EMAIL_PASS exists:", !!getEmailPass());
@@ -191,6 +169,7 @@ const sendSignupEmail = async (userEmail, fullName) => {
 
   console.log("Signup email sent successfully to:", userEmail);
 };
+
 
 const sendPasswordResetLinkEmail = async (userEmail, fullName, resetLink) => {
   const transporter = createEmailTransporter();
@@ -2117,10 +2096,7 @@ app.post("/signup", authLimiter, async (req, res) => {
     });
 
     req.flash("success", "Account created successfully. Please log in.");
-    return res.redirect("/login");
-
-    req.flash("success", "Account created successfully. Please log in.");
-    res.redirect("/login");
+      return res.redirect("/login");
 
   } catch (error) {
     console.error("Signup error:", error);
@@ -2766,7 +2742,7 @@ const sendMatchRequestEmail = async ({
   const transporter = createEmailTransporter();
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
+    from: `Study Buddy <${getEmailUser()}>`,
     to,
     subject: "New Study Buddy Match Request",
     html: `
