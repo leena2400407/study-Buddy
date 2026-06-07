@@ -24,6 +24,9 @@ const Avatar = require("./models/Avatar");
 require("dotenv").config();
 
 const app = express();
+
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: false
@@ -109,17 +112,46 @@ const getEmailPass = () => {
   return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
 };
 
+const getEmailCredentials = () => {
+  const user = getEmailUser();
+  const pass = getEmailPass();
+
+  if (!user || !pass) {
+    throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment variables.");
+  }
+
+  return { user, pass };
+};
+
 const createEmailTransporter = () => {
+  const { user, pass } = getEmailCredentials();
+
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: getEmailUser(),
-      pass: getEmailPass()
+      user,
+      pass
     },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000
   });
+};
+
+const getBaseUrl = (req) => {
+  const envBaseUrl = String(process.env.BASE_URL || "").trim().replace(/\/+$/, "");
+
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  const railwayDomain = String(process.env.RAILWAY_PUBLIC_DOMAIN || "").trim().replace(/\/+$/, "");
+
+  if (railwayDomain) {
+    return `https://${railwayDomain}`;
+  }
+
+  return `${req.protocol}://${req.get("host")}`;
 };
 
 console.log("EMAIL_USER exists:", !!getEmailUser());
@@ -2924,17 +2956,20 @@ const sendChatMatchEmail = async (matchRequest) => {
   `;
 
   await transporter.sendMail({
-    from: `Study Buddy <${process.env.EMAIL_USER}>`,
-    to: emailList.join(", "),
-    subject: "Your Study Buddy Video Room",
-    html: emailHtml
-  });
+  from: `Study Buddy <${getEmailUser()}>`,
+  to: emailList.join(", "),
+  subject: "Your Study Buddy Video Room",
+  html: emailHtml
+});
 
-  return {
-    alreadySent: false,
-    meetingLink: freshRequest.meetingLink
-  };
+freshRequest.emailSentAt = new Date();
+await freshRequest.save();
+
+return {
+  alreadySent: false,
+  meetingLink: freshRequest.meetingLink
 };
+}
 
 const checkScheduledChatMatches = async () => {
   try {
@@ -3303,7 +3338,7 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       emailToken
     });
 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    const baseUrl = getBaseUrl(req);
 
     const acceptLink = `${baseUrl}/matching/request/${matchRequest._id}/accept?token=${emailToken}`;
     const rejectLink = `${baseUrl}/matching/request/${matchRequest._id}/reject?token=${emailToken}`;
