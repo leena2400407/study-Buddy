@@ -295,6 +295,7 @@ app.use(
 );
 
 app.use(flash());
+
 app.use(languageMiddleware);
 
 const authLimiter = rateLimit({

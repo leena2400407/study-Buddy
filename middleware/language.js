@@ -25,7 +25,7 @@ function getNestedValue(obj, key) {
 }
 
 function languageMiddleware(req, res, next) {
-  const selectedLanguage = req.session.lang || "en";
+const selectedLanguage = req.session?.lang || "en";
   const lang = translations[selectedLanguage] ? selectedLanguage : "en";
 
   res.locals.lang = lang;
