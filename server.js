@@ -40,7 +40,7 @@ const BASE_URL =
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : `http://localhost:${process.env.PORT || 8080}`);
 
-
+const matchingRequestLocks = new Set();
 
 connectDB();
 
@@ -3322,6 +3322,9 @@ app.post("/api/matching/search", requireAuth, async (req, res) => {
 });
 
 app.post("/api/matching/request", requireAuth, async (req, res) => {
+  let requestLockKey = "";
+  let lockWasAdded = false;
+
   try {
     const {
       receiverProfileId,
@@ -3429,16 +3432,55 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       });
     }
 
-    const existingPending = await MatchRequest.findOne({
-      sender: sender._id,
-      receiver: receiverProfile.user,
-      status: "pending"
-    });
+        const senderId = String(sender._id);
+    const receiverId = String(receiverProfile.user);
 
-    if (existingPending) {
+    requestLockKey = [senderId, receiverId].sort().join(":");
+
+    if (matchingRequestLocks.has(requestLockKey)) {
+      return res.status(429).json({
+        success: false,
+        message: "A match request is already being sent. Please wait."
+      });
+    }
+
+    matchingRequestLocks.add(requestLockKey);
+    lockWasAdded = true;
+
+    const existingActiveRequest = await MatchRequest.findOne({
+      $or: [
+        {
+          sender: sender._id,
+          receiver: receiverProfile.user
+        },
+        {
+          sender: receiverProfile.user,
+          receiver: sender._id
+        }
+      ],
+      status: {
+        $in: ["pending", "accepted", "rescheduled", "matched"]
+      }
+    }).lean();
+
+    if (existingActiveRequest) {
+      let message = "There is already an active match request with this student.";
+
+      if (existingActiveRequest.status === "pending") {
+        const youSentIt = String(existingActiveRequest.sender) === String(sender._id);
+
+        message = youSentIt
+          ? "You already sent this student a pending request. Wait for them to accept or reject."
+          : "This student already sent you a pending request. Check your requests section.";
+      }
+
+      if (["accepted", "rescheduled", "matched"].includes(existingActiveRequest.status)) {
+        message = "You already have an active chat or match with this student.";
+      }
+
       return res.status(400).json({
         success: false,
-        message: "You already sent a pending request to this student."
+        message
       });
     }
 
@@ -3481,13 +3523,17 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       message: `Match request sent to ${receiverProfile.fullName}.`
     });
 
-  } catch (error) {
+   } catch (error) {
     console.error("Send match request error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Could not send match request."
     });
+  } finally {
+    if (lockWasAdded && requestLockKey) {
+      matchingRequestLocks.delete(requestLockKey);
+    }
   }
 });
 

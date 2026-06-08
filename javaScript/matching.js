@@ -4,13 +4,39 @@ let myWeakSubjects = [];
 let myStrongSubjects = [];
 let currentMatches = [];
 let matchingSearchHasRun = false;
-
+const sendingMatchRequestKeys = new Set();
 const MATCHING_LAST_SEARCH_KEY = "studyBuddyLastMatchingSearch";
 let lastMatchesJSON = "";
 let matchingLiveRefreshTimer = null;
 let studyListIsSaved = false;
 let studyListHasLocalChanges = false;
 const LOGIN_REDIRECT_DELAY = 2200;
+
+function buildMatchRequestKey(receiverProfileId, weakSubject, strongSubject) {
+  return [
+    String(receiverProfileId || "").trim(),
+    String(weakSubject || "").trim(),
+    String(strongSubject || "").trim()
+  ].join("::");
+}
+
+function setMatchRequestButtonsLoading(requestKey, isLoading) {
+  document.querySelectorAll(".btn-match[data-request-key]").forEach(button => {
+    if (button.dataset.requestKey !== requestKey) return;
+
+    if (!button.dataset.originalText) {
+      button.dataset.originalText = button.textContent.trim();
+    }
+
+    button.disabled = isLoading;
+    button.classList.toggle("is-sending", isLoading);
+    button.textContent = isLoading
+      ? "Sending..."
+      : button.dataset.originalText;
+  });
+}
+
+
 
 function normalizeDropdownSubject(value) {
   const subject = String(value || "").trim();
@@ -555,8 +581,13 @@ function renderMatches() {
       ? match.iCanHelpThem
       : [];
 
-       const requestWeakSubject = canHelpMe[0] || "";
+         const requestWeakSubject = canHelpMe[0] || "";
     const requestStrongSubject = iCanHelpThem[0] || "";
+    const requestKey = buildMatchRequestKey(
+      match.profileId,
+      requestWeakSubject,
+      requestStrongSubject
+    );
 
     let requestButtonText = `Send Request to ${firstName}`;
 
@@ -613,8 +644,9 @@ function renderMatches() {
           </div>
         </div>
 
-        <button
+                <button
           class="btn-match"
+          data-request-key="${escapeHTML(requestKey)}"
           onclick="sendMatchRequest('${escapeJS(match.profileId)}', '${escapeJS(name)}', '${escapeJS(requestWeakSubject)}', '${escapeJS(requestStrongSubject)}')"
         >
          ${escapeHTML(requestButtonText)}
@@ -637,14 +669,28 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
   const senderWeakSubject = String(weakSubject || "").trim();
   const senderStrongSubject = String(strongSubject || "").trim();
 
-    if (!senderWeakSubject && !senderStrongSubject) {
+  if (!senderWeakSubject && !senderStrongSubject) {
     showToast("This match is missing a subject.", "warning");
+    return;
+  }
+
+  const requestKey = buildMatchRequestKey(
+    receiverProfileId,
+    senderWeakSubject,
+    senderStrongSubject
+  );
+
+  if (sendingMatchRequestKeys.has(requestKey)) {
+    showToast("Request is already being sent. Please wait.", "warning");
     return;
   }
 
   const confirmSend = confirm(`Send a match request to ${name}?`);
 
   if (!confirmSend) return;
+
+  sendingMatchRequestKeys.add(requestKey);
+  setMatchRequestButtonsLoading(requestKey, true);
 
   try {
     showToast(`Sending request to ${name}...`, "info");
@@ -674,11 +720,16 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
     }
 
     showToast(data.message || `Match request sent to ${name}.`, "success");
+
     await loadMyRequests();
     await refreshSavedMatches(true);
+
   } catch (error) {
     console.error("Send match request error:", error);
     showToast("Server error while sending match request.", "error");
+  } finally {
+    sendingMatchRequestKeys.delete(requestKey);
+    setMatchRequestButtonsLoading(requestKey, false);
   }
 }
 
@@ -785,13 +836,19 @@ function renderRequests(requests) {
 
     let actionHTML = "";
 
-    if (["accepted", "rescheduled", "matched"].includes(status) && request.chat) {
-      actionHTML = `
-        <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
-          Open Chat
-        </button>
-      `;
-    } else if (status === "pending" && direction === "sent") {
+    if (status === "matched") {
+  actionHTML = `
+    <button class="btn-match matched-locked-btn" type="button" disabled>
+      Chat Closed
+    </button>
+  `;
+  } else if (["accepted", "rescheduled"].includes(status) && request.chat) {
+     actionHTML = `
+    <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
+      Open Chat
+    </button>
+  `;
+}else if (status === "pending" && direction === "sent") {
       actionHTML = `
         <button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
           Cancel Request
