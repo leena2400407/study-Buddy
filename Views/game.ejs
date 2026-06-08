@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Block Puzzle</title>
     <link rel="stylesheet" href="/css/game.css">
+    <link rel="stylesheet" href="/css/page-nav.css">
 </head>
 <body>
-    <div class="close-btn" onclick="window.location.href='game-landing-page'" >✖</div>
+    <%- include("page-nav", { activePage: "games", backHref: "/game-landing-page" }) %>
 
     <ul class="bg-shapes" id="bgShapes"></ul>
     <div class="glow-blob glow-blob-1"></div>
@@ -80,6 +81,7 @@
     </div>
     </div>
 
+    <script src="/javaScript/page-nav.js"></script>
     <script src="/javaScript/game.js"></script>
 </body>
 </html>

@@ -5,10 +5,11 @@
   <title>Study Buddy Events</title>
 
   <link rel="stylesheet" href="/css/events.css">
+<link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
-  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+  <%- include("page-nav", { activePage: "events", backHref: "/cylinder#cylinder" }) %>
 
   <div class="dashboard-wrapper">
 
@@ -251,6 +252,7 @@
     };
   </script>
 
+  <script src="/javaScript/page-nav.js"></script>
   <script src="/javaScript/events.js"></script>
 
 </body>

@@ -6,9 +6,11 @@
   <title>Games | Study Buddy</title>
 
   <link rel="stylesheet" href="/css/game-landing-page.css" />
+<link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
+  <%- include("page-nav", { activePage: "games", backHref: "/cylinder#cylinder" }) %>
   <div class="game-bg">
     <div class="soft-glow one"></div>
     <div class="soft-glow two"></div>
@@ -16,7 +18,7 @@
     <div id="bg-container"></div>
   </div>
   
-  <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+  
 
   <main class="games-page">
     <div class="top-title">Games</div>
@@ -66,6 +68,7 @@
     </section>
   </main>
 
-  <script src="/javaScript/game-landing-page.js"></script>
+ <script src="/javaScript/page-nav.js"></script>
+<script src="/javaScript/game-landing-page.js"></script>
 </body>
 </html>

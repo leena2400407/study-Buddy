@@ -6,9 +6,11 @@
   <title>Study Buddy Profile</title>
 
   <link rel="stylesheet" href="/css/profile.css?v=2" />
+  <link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
+  <%- include("page-nav", { activePage: "profile", backHref: "/cylinder#trigger-logo" }) %>
   <%
     const weakSubjects = studyProfile && studyProfile.weakSubjects ? studyProfile.weakSubjects : [];
     const strongSubjects = studyProfile && studyProfile.strongSubjects ? studyProfile.strongSubjects : [];
@@ -56,8 +58,7 @@
     <div class="glow glow-three"></div>
   </div>
 
-  <a class="close-btn" href="/cylinder#trigger-logo">✕</a>
-
+  
   <main class="profile-page">
 
     <section class="profile-hero">
@@ -457,6 +458,7 @@
 
   </main>
 
-  <script src="/javaScript/profile.js?v2"></script>
+  <script src="/javaScript/page-nav.js"></script>
+<script src="/javaScript/profile.js?v2"></script>
 </body>
 </html>

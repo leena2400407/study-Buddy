@@ -8,13 +8,15 @@
     Wordle
   </title>
 
-  <link rel="stylesheet" href="/css/Game2.css">
+ <link rel="stylesheet" href="/css/Game2.css">
+<link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
+  <%- include("page-nav", { activePage: "games", backHref: "/game-landing-page" }) %>
   <div id="floating-letters"></div>
 
-      <div class="close-btn" onclick="window.location.href='game-landing-page'" >✖</div>
+      
 
   <main class="wordle-page">
     <header class="wordle-header">
@@ -47,6 +49,7 @@
     </div>
   </div>
 
+  <script src="/javaScript/page-nav.js"></script>
   <script src="/javaScript/Game2.js"></script>
 </body>
 </html>

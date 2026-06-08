@@ -7,10 +7,12 @@
     <%= typeof pageTitle !== "undefined" ? pageTitle : "AI Chatbot" %>
   </title>
 
-  <link rel="stylesheet" href="/css/ai.css" />
+ <link rel="stylesheet" href="/css/ai.css" />
+<link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
+  <%- include("page-nav", { activePage: "ai", backHref: "/cylinder#cylinder" }) %>
   <div class="visual-world"></div>
 
   <nav class="signal-nav" aria-label="Hidden controls">
@@ -21,7 +23,7 @@
     <div class="signal-menu">
       <button id="themeToggle" type="button">soft mode</button>
       <button id="clearBtn" type="button">clear</button>
-      <button type="button" onclick="window.location.href='/cylinder#cylinder'">exit</button>
+     
     </div>
   </nav>
 
@@ -149,6 +151,7 @@
     </section>
   </main>
 
-  <script src="/javaScript/ai.js"></script>
+  <script src="/javaScript/page-nav.js"></script>
+<script src="/javaScript/ai.js"></script>
 </body>
 </html>

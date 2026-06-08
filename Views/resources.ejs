@@ -5,10 +5,12 @@
 
   <title>The Academic Atlas</title>
 
-  <link rel="stylesheet" href="/css/resources.css">
+<link rel="stylesheet" href="/css/resources.css">
+<link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
+  <%- include("page-nav", { activePage: "resources", backHref: "/cylinder#cylinder" }) %>
 
   <div class="book-cover">
     <div class="huge-book">
@@ -33,7 +35,7 @@
       </div>
 
       <div class="book-half right">
-        <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+      
 
         <div class="flip-sheet">
           <div class="page-face front"></div>
@@ -180,6 +182,7 @@
     </div>
   </div>
 
-  <script src="/javaScript/resourses.js"></script>
+  <script src="/javaScript/page-nav.js"></script>
+<script src="/javaScript/resourses.js"></script>
 </body>
 </html>

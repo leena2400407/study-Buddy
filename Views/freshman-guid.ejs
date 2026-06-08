@@ -6,15 +6,16 @@
     <title>Freshman Guide</title>
 
     <link rel="stylesheet" href="/css/guid.css">
+    <link rel="stylesheet" href="/css/page-nav.css">
 </head>
 
 <body>
-
+    <%- include("page-nav", { activePage: "guide", backHref: "/cylinder#cylinder" }) %>
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
     <div class="paper-grid"></div>
 
-    <div class="close-btn" onclick="window.location.href='/cylinder#cylinder'">✖</div>
+    
 
     <main class="guide-page">
 
@@ -157,6 +158,7 @@
 
     </main>
 
+    <script src="/javaScript/page-nav.js"></script>
     <script src="/javaScript/freshguide.js"></script>
 
 </body>
