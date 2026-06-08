@@ -418,3 +418,24 @@ function toggleCompetitionEdit(id) {
 function confirmForfeitCompetition() {
   return confirm("Are you sure? You will be removed from this competition.");
 }
+
+//====================================================
+// Password eye toggle for profile password fields
+//====================================================
+
+document.querySelectorAll(".profile-eye-btn").forEach((button) => {
+  button.addEventListener("click", () => {
+    const inputId = button.dataset.passwordTarget;
+    const input = document.getElementById(inputId);
+
+    if (!input) {
+      return;
+    }
+
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+    button.textContent = isHidden ? "🙈" : "👁";
+    button.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+  });
+});

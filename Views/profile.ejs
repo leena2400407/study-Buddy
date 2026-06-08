@@ -276,37 +276,70 @@
 
             <div class="form-group">
               <label for="profileCurrentPassword">Current Password</label>
-              <input 
-                type="password" 
-                id="profileCurrentPassword"
-                name="currentPassword" 
-                autocomplete="current-password"
-                placeholder="Only required if changing password"
-              />
+              <div class="profile-password-wrap">
+  <input 
+    type="password" 
+    id="profileCurrentPassword"
+    name="currentPassword" 
+    autocomplete="current-password"
+    placeholder="Only required if changing password"
+  />
+
+  <button 
+    type="button" 
+    class="profile-eye-btn" 
+    data-password-target="profileCurrentPassword"
+    aria-label="Show password"
+  >
+    👁
+  </button>
+</div>
               <small id="profileCurrentPasswordError" class="field-error"></small>
             </div>
 
             <div class="form-group">
               <label for="profileNewPassword">New Password</label>
-              <input 
-                type="password" 
-                id="profileNewPassword"
-                name="newPassword" 
-                autocomplete="new-password"
-                placeholder="Uppercase, lowercase, number, special character"
-              />
+              <div class="profile-password-wrap">
+  <input 
+    type="password" 
+    id="profileNewPassword"
+    name="newPassword" 
+    autocomplete="new-password"
+    placeholder="Uppercase, lowercase, number, special character"
+  />
+
+  <button 
+    type="button" 
+    class="profile-eye-btn" 
+    data-password-target="profileNewPassword"
+    aria-label="Show password"
+  >
+    👁
+  </button>
+</div>
               <small id="profileNewPasswordError" class="field-error"></small>
             </div>
 
             <div class="form-group">
               <label for="profileConfirmPassword">Confirm New Password</label>
-              <input 
-                type="password" 
-                id="profileConfirmPassword"
-                name="confirmPassword" 
-                autocomplete="new-password"
-                placeholder="Type the new password again"
-              />
+              <div class="profile-password-wrap">
+  <input 
+    type="password" 
+    id="profileConfirmPassword"
+    name="confirmPassword" 
+    autocomplete="new-password"
+    placeholder="Type the new password again"
+  />
+
+  <button 
+    type="button" 
+    class="profile-eye-btn" 
+    data-password-target="profileConfirmPassword"
+    aria-label="Show password"
+  >
+    👁
+  </button>
+</div>
               <small id="profileConfirmPasswordError" class="field-error"></small>
             </div>
           </div>

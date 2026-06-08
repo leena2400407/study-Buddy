@@ -1080,3 +1080,40 @@ textarea {
   color: var(--muted);
   font-weight: 700;
 }
+
+.profile-password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.profile-password-wrap input {
+  width: 100%;
+  padding-right: 54px !important;
+}
+
+.profile-eye-btn {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 1rem;
+  transition: 0.2s ease;
+}
+
+.profile-eye-btn:hover {
+  background: rgba(155, 92, 255, 0.22);
+  box-shadow: 0 0 18px rgba(155, 92, 255, 0.25);
+}
+
+.profile-eye-btn:active {
+  transform: translateY(-50%) scale(0.94);
+}
