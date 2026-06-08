@@ -981,7 +981,7 @@ async function acceptMatchRequest(requestId, otherName = "Study Partner") {
     await loadMyRequests();
 
     if (data.chatId) {
-      openMatchingChatPopup(data.chatId, otherName);
+      window.location.href = `/matching/chat/${data.chatId}`;
       return;
     }
   } catch (error) {
