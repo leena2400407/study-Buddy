@@ -1,0 +1,104 @@
+<%
+  const navBackHref = typeof backHref !== "undefined" ? backHref : "/cylinder#cylinder";
+  const navActive = typeof activePage !== "undefined" ? activePage : "";
+  const loggedUser = typeof user !== "undefined" ? user : null;
+  const currentLang = typeof lang !== "undefined" ? lang : "en";
+
+  const translate = typeof t === "function"
+    ? t
+    : function (key) {
+        const fallback = {
+          "nav.home": "Home",
+          "nav.profile": "Profile",
+          "nav.login": "Login",
+          "nav.logout": "Logout",
+          "cylinder.edugate": "Edugate",
+          "cylinder.games": "Games",
+          "cylinder.ai": "AI Chat",
+          "cylinder.events": "Events",
+          "cylinder.matching": "Matching",
+          "cylinder.resources": "Resources",
+          "cylinder.freshman": "Guide"
+        };
+
+        return fallback[key] || key;
+      };
+%>
+
+<nav class="sb-page-nav" id="sbPageNav">
+  <div class="sb-page-nav__panel">
+
+    <a class="sb-page-nav__link <%= navActive === 'home' ? 'is-active' : '' %>" href="/">
+      <%= translate("nav.home") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'edugate' ? 'is-active' : '' %>" href="/edugate">
+      <%= translate("cylinder.edugate") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'events' ? 'is-active' : '' %>" href="/events">
+      <%= translate("cylinder.events") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'games' ? 'is-active' : '' %>" href="/game-landing-page">
+      <%= translate("cylinder.games") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'resources' ? 'is-active' : '' %>" href="/resources">
+      <%= translate("cylinder.resources") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'matching' ? 'is-active' : '' %>" href="/matching">
+      <%= translate("cylinder.matching") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'ai' ? 'is-active' : '' %>" href="/ai">
+      <%= translate("cylinder.ai") %>
+    </a>
+
+    <a class="sb-page-nav__link <%= navActive === 'guide' ? 'is-active' : '' %>" href="/freshman-guid">
+      <%= translate("cylinder.freshman") %>
+    </a>
+
+    <div class="sb-page-nav__language">
+      <a class="sb-page-nav__lang-btn <%= currentLang === 'en' ? 'is-active' : '' %>" href="/change-language/en">
+        EN
+      </a>
+
+      <a class="sb-page-nav__lang-btn <%= currentLang === 'ar' ? 'is-active' : '' %>" href="/change-language/ar">
+        AR
+      </a>
+    </div>
+
+    <% if (loggedUser) { %>
+      <a class="sb-page-nav__link <%= navActive === 'profile' ? 'is-active' : '' %>" href="/profile#info">
+        <%= translate("nav.profile") %>
+      </a>
+
+      <% if (loggedUser.role === "admin") { %>
+        <a class="sb-page-nav__link <%= navActive === 'admin' ? 'is-active' : '' %>" href="/admin">
+          Admin
+        </a>
+      <% } %>
+
+      <a class="sb-page-nav__link sb-page-nav__logout" href="/logout">
+        <%= translate("nav.logout") %>
+      </a>
+    <% } else { %>
+      <a class="sb-page-nav__link" href="/login">
+        <%= translate("nav.login") %>
+      </a>
+    <% } %>
+
+  </div>
+
+  <a class="sb-page-nav__close" href="<%= navBackHref %>">×</a>
+
+  <button class="sb-page-nav__toggle" type="button" aria-label="Open navigation">
+    <span class="sb-page-nav__icon">
+      <span class="sb-page-nav__line sb-page-nav__line--one"></span>
+      <span class="sb-page-nav__line sb-page-nav__line--two"></span>
+      <span class="sb-page-nav__line sb-page-nav__line--three"></span>
+    </span>
+  </button>
+</nav>
