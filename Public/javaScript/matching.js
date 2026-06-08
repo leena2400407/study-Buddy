@@ -797,8 +797,7 @@ function renderRequests(requests) {
       Open Chat
     </button>
   `;
-} else if (status === "pending" && direction === "sent") {
-    } else if (status === "pending" && direction === "sent") {
+}else if (status === "pending" && direction === "sent") {
       actionHTML = `
         <button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
           Cancel Request
