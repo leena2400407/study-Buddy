@@ -36,12 +36,12 @@ const matchRequestSchema = new mongoose.Schema(
 
     senderWeakSubject: {
       type: String,
-      required: true
+      default: ""
     },
 
     senderStrongSubject: {
       type: String,
-      required: true
+      default: ""
     },
 
     receiverWeakSubject: {
@@ -54,62 +54,42 @@ const matchRequestSchema = new mongoose.Schema(
       default: ""
     },
 
-  status: {
-  type: String,
-  enum: ["pending", "accepted", "rejected", "cancelled", "rescheduled", "matched"],
-  default: "pending"
-},
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected", "cancelled", "rescheduled", "matched"],
+      default: "pending"
+    },
 
-emailToken: {
-  type: String,
-  required: true
-},
+    emailToken: {
+      type: String,
+      required: true
+    },
 
-chat: {
-  type: mongoose.Schema.Types.ObjectId,
-  ref: "Chat",
-  default: null
-},
+    chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+      default: null
+    },
 
-scheduledAt: {
-  type: Date,
-  default: null
-},
+    scheduledAt: {
+      type: Date,
+      default: null
+    },
 
-emailSentAt: {
-  type: Date,
-  default: null
-},
+    emailSentAt: {
+      type: Date,
+      default: null
+    },
 
-roomId: {
-  type: String,
-  default: ""
-},
+    roomId: {
+      type: String,
+      default: ""
+    },
 
-meetingLink: {
-  type: String,
-  default: ""
-},
-
-scheduledAt: {
-  type: Date,
-  default: null
-},
-
-emailSentAt: {
-  type: Date,
-  default: null
-},
-
-roomId: {
-  type: String,
-  default: ""
-},
-
-meetingLink: {
-  type: String,
-  default: ""
-}
+    meetingLink: {
+      type: String,
+      default: ""
+    }
   },
   {
     timestamps: true

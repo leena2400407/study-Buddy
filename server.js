@@ -2628,17 +2628,10 @@ app.post("/api/matching/profile/clear", requireAuth, async (req, res) => {
       }
     );
 
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Study profile was not found."
-      });
-    }
-
     return res.json({
       success: true,
       message: "Study list cleared.",
-      profile
+      profile: profile || null
     });
 
   } catch (error) {
@@ -2869,7 +2862,6 @@ const checkScheduledChatMatches = async () => {
 setInterval(checkScheduledChatMatches, 60 * 1000);
 
 const CS_SUBJECTS = [
-  "None",
   "Programming",
   "Object Oriented Programming",
   "Data Structures",
@@ -2984,26 +2976,30 @@ app.post("/api/matching/request/:requestId/reject", requireAuth, async (req, res
   }
 });
 
-app.get("/api/matching/subjects", requireAuth, (req, res) => {
+app.get("/api/matching/subjects", (req, res) => {
   res.json({
     success: true,
     subjects: CS_SUBJECTS
   });
 });
+
 app.post("/api/matching/search", requireAuth, async (req, res) => {
   try {
-    const weakSubjects = Array.isArray(req.body.weakSubjects)
-      ? req.body.weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
+    const rawWeakSubjects = Array.isArray(req.body.weakSubjects)
+      ? req.body.weakSubjects
       : [];
 
-    const strongSubjects = Array.isArray(req.body.strongSubjects)
-      ? req.body.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
+    const rawStrongSubjects = Array.isArray(req.body.strongSubjects)
+      ? req.body.strongSubjects
       : [];
 
-    if (weakSubjects.length === 0 || strongSubjects.length === 0) {
+    const weakSubjects = cleanSubjects(rawWeakSubjects);
+    const strongSubjects = cleanSubjects(rawStrongSubjects);
+
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Add at least one weak subject and one strong subject."
+        message: "Add at least one weak subject or one strong subject."
       });
     }
 
@@ -3057,42 +3053,64 @@ app.post("/api/matching/search", requireAuth, async (req, res) => {
       }
     );
 
+    const matchConditions = [];
+
+    if (weakSubjects.length > 0) {
+      matchConditions.push({
+        strongSubjects: { $in: weakSubjects }
+      });
+    }
+
+    if (strongSubjects.length > 0) {
+      matchConditions.push({
+        weakSubjects: { $in: strongSubjects }
+      });
+    }
+
     const profiles = await StudyProfile.find({
       user: { $ne: currentUser._id },
       university: currentUser.university,
       major: currentUser.major,
-      strongSubjects: { $in: weakSubjects }
+      $or: matchConditions
     }).lean();
 
-    const matches = profiles.map(profile => {
-      const otherWeakSubjects = profile.weakSubjects || [];
-      const otherStrongSubjects = profile.strongSubjects || [];
+    const matches = profiles
+      .map(profile => {
+        const otherWeakSubjects = profile.weakSubjects || [];
+        const otherStrongSubjects = profile.strongSubjects || [];
 
-      const canHelpMe = weakSubjects.filter(subject =>
-        otherStrongSubjects.includes(subject)
-      );
+        const canHelpMe = weakSubjects.filter(subject =>
+          otherStrongSubjects.includes(subject)
+        );
 
-      const iCanHelpThem = strongSubjects.filter(subject =>
-        otherWeakSubjects.includes(subject)
-      );
+        const iCanHelpThem = strongSubjects.filter(subject =>
+          otherWeakSubjects.includes(subject)
+        );
 
-      const isPerfectMatch = canHelpMe.length > 0 && iCanHelpThem.length > 0;
+        const isPerfectMatch = canHelpMe.length > 0 && iCanHelpThem.length > 0;
 
-      return {
-        profileId: profile._id,
-        userId: profile.user,
-        fullName: profile.fullName,
-        username: profile.username,
-        email: profile.email,
-        university: profile.university,
-        major: profile.major,
-        weakSubjects: otherWeakSubjects,
-        strongSubjects: otherStrongSubjects,
-        canHelpMe,
-        iCanHelpThem,
-        matchType: isPerfectMatch ? "Perfect Match" : "Helper Match"
-      };
-    });
+        return {
+          profileId: profile._id,
+          userId: profile.user,
+          fullName: profile.fullName,
+          username: profile.username,
+          email: profile.email,
+          university: profile.university,
+          major: profile.major,
+          weakSubjects: otherWeakSubjects,
+          strongSubjects: otherStrongSubjects,
+          canHelpMe,
+          iCanHelpThem,
+          matchType: isPerfectMatch
+            ? "Perfect Match"
+            : canHelpMe.length > 0
+              ? "Can Help You"
+              : "You Can Help"
+        };
+      })
+      .filter(match => {
+        return match.canHelpMe.length > 0 || match.iCanHelpThem.length > 0;
+      });
 
     res.json({
       success: true,
@@ -3108,6 +3126,7 @@ app.post("/api/matching/search", requireAuth, async (req, res) => {
     });
   }
 });
+
 app.post("/api/matching/request", requireAuth, async (req, res) => {
   try {
     const {
@@ -3126,14 +3145,32 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       });
     }
 
-    if (!isValidCSSubject(senderWeakSubject) || !isValidCSSubject(senderStrongSubject)) {
+    if (!senderWeakSubject && !senderStrongSubject) {
       return res.status(400).json({
         success: false,
-        message: "Please choose valid weak and strong subjects."
+        message: "Choose at least one subject for this request."
       });
     }
 
-    if (senderWeakSubject === senderStrongSubject) {
+    if (senderWeakSubject && !isValidCSSubject(senderWeakSubject)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please choose a valid weak subject."
+      });
+    }
+
+    if (senderStrongSubject && !isValidCSSubject(senderStrongSubject)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please choose a valid strong subject."
+      });
+    }
+
+    if (
+      senderWeakSubject &&
+      senderStrongSubject &&
+      senderWeakSubject === senderStrongSubject
+    ) {
       return res.status(400).json({
         success: false,
         message: "Weak subject and strong subject cannot be the same."
@@ -3175,10 +3212,19 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       });
     }
 
-    if (!(receiverProfile.strongSubjects || []).includes(senderWeakSubject)) {
+    const receiverStrongSubjects = receiverProfile.strongSubjects || [];
+    const receiverWeakSubjects = receiverProfile.weakSubjects || [];
+
+    const receiverCanHelpSender =
+      senderWeakSubject && receiverStrongSubjects.includes(senderWeakSubject);
+
+    const senderCanHelpReceiver =
+      senderStrongSubject && receiverWeakSubjects.includes(senderStrongSubject);
+
+    if (!receiverCanHelpSender && !senderCanHelpReceiver) {
       return res.status(400).json({
         success: false,
-        message: "This student is not a valid helper for your weak subject."
+        message: "This student is not a valid match for the selected subject."
       });
     }
 
@@ -3210,8 +3256,8 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       senderWeakSubject,
       senderStrongSubject,
 
-      receiverWeakSubject: (receiverProfile.weakSubjects || [])[0] || "",
-      receiverStrongSubject: senderWeakSubject,
+      receiverWeakSubject: senderStrongSubject || "",
+      receiverStrongSubject: senderWeakSubject || "",
 
       emailToken
     });

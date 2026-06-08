@@ -371,8 +371,8 @@ async function searchMatches() {
 
   renderProfileList();
 
-  if (myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
-    showToast("Add at least one weak subject and one strong subject before searching.", "warning");
+    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
+    showToast("Add at least one weak subject or one strong subject before searching.", "warning");
     renderNoSearchState();
     return;
   }
@@ -497,8 +497,18 @@ function renderMatches() {
       ? match.iCanHelpThem
       : [];
 
-    const requestWeakSubject = canHelpMe[0] || myWeakSubjects[0] || "";
-    const requestStrongSubject = iCanHelpThem[0] || myStrongSubjects[0] || "";
+       const requestWeakSubject = canHelpMe[0] || "";
+    const requestStrongSubject = iCanHelpThem[0] || "";
+
+    let requestButtonText = `Send Request to ${firstName}`;
+
+    if (requestWeakSubject && !requestStrongSubject) {
+      requestButtonText = `Ask ${firstName} for Help`;
+    }
+
+    if (!requestWeakSubject && requestStrongSubject) {
+      requestButtonText = `Offer Help to ${firstName}`;
+    }
 
     return `
       <div class="buddy-card">
@@ -549,7 +559,7 @@ function renderMatches() {
           class="btn-match"
           onclick="sendMatchRequest('${escapeJS(match.profileId)}', '${escapeJS(name)}', '${escapeJS(requestWeakSubject)}', '${escapeJS(requestStrongSubject)}')"
         >
-          Send Request to ${escapeHTML(firstName)}
+         ${escapeHTML(requestButtonText)}
         </button>
       </div>
     `;
@@ -569,8 +579,8 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
   const senderWeakSubject = String(weakSubject || "").trim();
   const senderStrongSubject = String(strongSubject || "").trim();
 
-  if (!senderWeakSubject || !senderStrongSubject) {
-    showToast("This match is missing a weak or strong subject.", "warning");
+    if (!senderWeakSubject && !senderStrongSubject) {
+    showToast("This match is missing a subject.", "warning");
     return;
   }
 
@@ -672,33 +682,33 @@ function renderRequests(requests) {
       request.senderName ||
       "Student";
 
-    const status = request.status || "pending";
+       const status = request.status || "pending";
+
+    const neededSubject = request.senderWeakSubject || "";
+    const offeredSubject = request.senderStrongSubject || "";
+
+    const neededText = neededSubject
+      ? escapeHTML(neededSubject)
+      : `<span class="small-tag empty-tag">No help requested</span>`;
+
+    const offeredText = offeredSubject
+      ? escapeHTML(offeredSubject)
+      : `<span class="small-tag empty-tag">No help offered</span>`;
 
     return `
-      <div class="buddy-card request-card">
-        <div class="buddy-top">
-          <div class="buddy-avatar">${escapeHTML(otherName.charAt(0).toUpperCase())}</div>
 
-          <div class="buddy-name">
-            <h3>${escapeHTML(otherName)}</h3>
-            <p>${escapeHTML(request.direction || "request")} request</p>
-          </div>
-
-          <span class="match-score">${escapeHTML(status)}</span>
-        </div>
-
-        <div class="buddy-subjects">
+             <div class="buddy-subjects">
           <div class="subject-row">
             <h5>Subject needed</h5>
             <div class="small-tags">
-              <span class="small-tag">${escapeHTML(request.senderWeakSubject || "-")}</span>
+              <span class="small-tag">${neededText}</span>
             </div>
           </div>
 
           <div class="subject-row">
             <h5>Can help with</h5>
             <div class="small-tags">
-              <span class="small-tag">${escapeHTML(request.senderStrongSubject || "-")}</span>
+              <span class="small-tag">${offeredText}</span>
             </div>
           </div>
         </div>
@@ -966,7 +976,7 @@ function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects =
     ? strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
     : [];
 
-  if (cleanWeakSubjects.length === 0 || cleanStrongSubjects.length === 0) {
+    if (cleanWeakSubjects.length === 0 && cleanStrongSubjects.length === 0) {
     return;
   }
 
@@ -998,7 +1008,7 @@ function getMatchingSearchState() {
       ? data.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
       : [];
 
-    if (weakSubjects.length === 0 || strongSubjects.length === 0) {
+        if (weakSubjects.length === 0 && strongSubjects.length === 0) {
       return null;
     }
 
