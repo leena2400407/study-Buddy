@@ -743,27 +743,45 @@ function renderRequests(requests) {
     const status = request.status || "pending";
     const direction = request.direction || "sent";
     const isSent = direction === "sent";
-
     const avatarLetter = otherName.charAt(0).toUpperCase();
 
     const neededSubject = normalizeDropdownSubject(request.senderWeakSubject || "");
     const offeredSubject = normalizeDropdownSubject(request.senderStrongSubject || "");
 
-    const neededLabel = isSent
-      ? "You asked for help with"
-      : "They need help with";
+    const subjectRows = [];
 
-    const offeredLabel = isSent
-      ? "You offered help with"
-      : "They can help with";
+    if (neededSubject) {
+      subjectRows.push(`
+        <div class="subject-row">
+          <h5>${isSent ? "You need help with" : "They need help with"}</h5>
+          <div class="small-tags">
+            <span class="small-tag">${escapeHTML(neededSubject)}</span>
+          </div>
+        </div>
+      `);
+    }
 
-    const neededHTML = neededSubject
-      ? `<span class="small-tag">${escapeHTML(neededSubject)}</span>`
-      : `<span class="small-tag empty-tag">No help requested</span>`;
+    if (offeredSubject) {
+      subjectRows.push(`
+        <div class="subject-row">
+          <h5>${isSent ? "You can help with" : "They can help with"}</h5>
+          <div class="small-tags">
+            <span class="small-tag">${escapeHTML(offeredSubject)}</span>
+          </div>
+        </div>
+      `);
+    }
 
-    const offeredHTML = offeredSubject
-      ? `<span class="small-tag">${escapeHTML(offeredSubject)}</span>`
-      : `<span class="small-tag empty-tag">No help offered</span>`;
+    if (subjectRows.length === 0) {
+      subjectRows.push(`
+        <div class="subject-row">
+          <h5>Subject</h5>
+          <div class="small-tags">
+            <span class="small-tag empty-tag">No subject selected</span>
+          </div>
+        </div>
+      `);
+    }
 
     let actionHTML = "";
 
@@ -806,26 +824,13 @@ function renderRequests(requests) {
 
           <div class="buddy-name">
             <h3>${escapeHTML(isSent ? `To ${otherName}` : `From ${otherName}`)}</h3>
-            <p>${escapeHTML(request.otherEmail || "")}</p>
           </div>
 
           <span class="match-score">${escapeHTML(status)}</span>
         </div>
 
         <div class="buddy-subjects">
-          <div class="subject-row">
-            <h5>${escapeHTML(neededLabel)}</h5>
-            <div class="small-tags">
-              ${neededHTML}
-            </div>
-          </div>
-
-          <div class="subject-row">
-            <h5>${escapeHTML(offeredLabel)}</h5>
-            <div class="small-tags">
-              ${offeredHTML}
-            </div>
-          </div>
+          ${subjectRows.join("")}
         </div>
 
         ${actionHTML}

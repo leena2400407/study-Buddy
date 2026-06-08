@@ -2708,10 +2708,19 @@ const createJitsiRoom = () => {
   };
 };
 
+const APP_TIME_ZONE = process.env.APP_TIME_ZONE || "Africa/Cairo";
+
 const formatMatchSchedule = (scheduledAt) => {
   if (!scheduledAt) return "Not scheduled.";
 
-  return new Date(scheduledAt).toLocaleString("en-US", {
+  const date = new Date(scheduledAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Invalid date.";
+  }
+
+  return date.toLocaleString("en-US", {
+    timeZone: APP_TIME_ZONE,
     weekday: "short",
     year: "numeric",
     month: "short",
