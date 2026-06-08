@@ -1,39 +1,69 @@
 const fs = require("fs");
 const path = require("path");
 
-const en = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "../locales/en.json"), "utf8")
-);
+const localesPath = path.join(__dirname, "..", "locales");
 
-const ar = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "../locales/ar.json"), "utf8")
-);
+function loadLocale(language) {
+  try {
+    const filePath = path.join(localesPath, `${language}.json`);
 
-const translations = {
-  en,
-  ar
-};
-
-function getValue(obj, key) {
-  return key.split(".").reduce((current, part) => {
-    if (current && current[part] !== undefined) {
-      return current[part];
+    if (!fs.existsSync(filePath)) {
+      console.error("Missing locale file:", filePath);
+      return {};
     }
 
-    return null;
-  }, obj);
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    console.error(`Locale load error for ${language}:`, error.message);
+    return {};
+  }
 }
 
-module.exports = function languageMiddleware(req, res, next) {
-  const selectedLang = req.session.lang || "en";
-  const lang = ["en", "ar"].includes(selectedLang) ? selectedLang : "en";
+const translations = {
+  en: loadLocale("en"),
+  ar: loadLocale("ar")
+};
 
-  res.locals.lang = lang;
-  res.locals.dir = lang === "ar" ? "rtl" : "ltr";
+function getNestedValue(object, key) {
+  return String(key || "")
+    .split(".")
+    .reduce((current, part) => {
+      return current && current[part] !== undefined ? current[part] : undefined;
+    }, object);
+}
 
-  res.locals.t = function (key) {
-    return getValue(translations[lang], key) || getValue(translations.en, key) || key;
+function languageMiddleware(req, res, next) {
+  const allowedLanguages = ["en", "ar"];
+
+  const selectedFromQuery = String(req.query.lang || "")
+    .trim()
+    .toLowerCase();
+
+  if (allowedLanguages.includes(selectedFromQuery)) {
+    req.session.language = selectedFromQuery;
+  }
+
+  const currentLanguage = allowedLanguages.includes(req.session.language)
+    ? req.session.language
+    : "en";
+
+  res.locals.lang = currentLanguage;
+  res.locals.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+
+  res.locals.t = function (key, fallback = "") {
+    return (
+      getNestedValue(translations[currentLanguage], key) ||
+      getNestedValue(translations.en, key) ||
+      fallback ||
+      key
+    );
   };
 
+  res.locals.clientTranslations = JSON.stringify(
+    translations[currentLanguage] || {}
+  );
+
   next();
-};
+}
+
+module.exports = languageMiddleware;

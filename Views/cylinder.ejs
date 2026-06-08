@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>" dir="<%= dir %>">
+<html lang="<%= typeof lang !== "undefined" ? lang : "en" %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +16,8 @@
     */
     (function () {
       try {
-        if (localStorage.getItem('studyBuddyCylinderTheme') === 'dark') {
-          document.documentElement.classList.add('cylinder-dark-theme-root');
+        if (localStorage.getItem("studyBuddyCylinderTheme") === "dark") {
+          document.documentElement.classList.add("cylinder-dark-theme-root");
         }
       } catch (error) {
         // Ignore localStorage errors
@@ -28,7 +28,17 @@
   <link rel="stylesheet" href="/css/home.css">
 </head>
 
-<body class="cylinder-body">
+<%
+  const tr = typeof t === "function"
+    ? t
+    : function (key, fallback) {
+        return fallback || key;
+      };
+
+  const currentLang = typeof lang !== "undefined" ? lang : "en";
+%>
+
+<body class="cylinder-body" data-lang="<%= currentLang %>">
 
   <div id="bg-effects">
     <span class="aurora aurora--1"></span>
@@ -38,14 +48,16 @@
   </div>
 
   <div id="intro-logo" style="display: none;">
-    <img src="/assests/images/WhatsApp_Image_2026-03-19_at_11.23.23_PM-removebg-preview.png"
-         alt="Study Buddy">
+    <img
+      src="/assests/images/WhatsApp_Image_2026-03-19_at_11.23.23_PM-removebg-preview.png"
+      alt="Study Buddy"
+    >
   </div>
 
   <div id="features-page" style="display: flex;">
     <div class="scene" id="cylinder-scene" style="display: flex;">
 
-      <!-- NEW HORIZONTAL SCROLL NAV -->
+      <!-- NAVBAR -->
       <nav class="top-nav">
         <div class="cylinder-scroll-nav" id="cylinderScrollNav">
 
@@ -65,13 +77,14 @@
 
           <div class="nav-scroll-panel" id="navScrollPanel">
 
+            <!-- PROFILE -->
             <div class="profile-dropdown">
-              <button class="profile-link" onclick="toggleProfile()">
+              <button class="profile-link" onclick="toggleProfile()" type="button">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <%= t("nav.profile") %>
+                <%= tr("nav.profile", "Profile") %>
               </button>
 
               <div id="profileCard" class="profile-card">
@@ -87,96 +100,117 @@
                   </h3>
 
                   <p class="profile-info">
-                   <strong><%= t("profile.gender") %>:</strong>
+                    <strong><%= tr("profile.gender", "Gender") %>:</strong>
                     <span id="dropdown-gender"><%= user.gender || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                <strong><%= t("profile.university") %>:</strong>
+                    <strong><%= tr("profile.university", "University") %>:</strong>
                     <span id="dropdown-university"><%= user.university || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                  <strong><%= t("profile.major") %>:</strong>
+                    <strong><%= tr("profile.major", "Major") %>:</strong>
                     <span id="dropdown-major"><%= user.major || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                   <strong><%= t("profile.email") %>:</strong>
+                    <strong><%= tr("profile.email", "Email") %>:</strong>
                     <span id="dropdown-email"><%= user.email || "N/A" %></span>
                   </p>
 
-                  <a href="/profile#info" class="full-profile-btn"><%= t("profile.viewFullProfile") %></a>
+                  <a href="/profile#info" class="full-profile-btn">
+                    <%= tr("profile.viewFullProfile", "View Full Profile") %>
+                  </a>
 
-                  <button onclick="logout()" class="logout-btn">
-                   <%= t("nav.logout") %>
+                  <button onclick="logout()" class="logout-btn" type="button">
+                    <%= tr("nav.logout", "Logout") %>
                   </button>
                 <% } else { %>
-                  <h3 class="profile-name"><%= t("profile.guest") %></h3>
+                  <h3 class="profile-name">
+                    <%= tr("profile.guest", "Guest") %>
+                  </h3>
 
                   <p class="profile-info">
-                 <%= t("profile.loginMessage") %>
+                    <%= tr("profile.loginMessage", "Please login to view your profile.") %>
                   </p>
 
                   <a href="/login" class="full-profile-btn">
-                  <%= t("nav.login") %>
+                    <%= tr("nav.login", "Login") %>
                   </a>
                 <% } %>
               </div>
             </div>
 
+            <!-- DROPDOWN -->
             <div class="dropdown">
-              <button class="dropbtn" onclick="toggleDropdown()">
+              <button class="dropbtn" onclick="toggleDropdown()" type="button">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
                   <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
                   <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
                 </svg>
-             <%= t("nav.cylinder") %> ▾
+                <%= tr("nav.cylinder", "Cylinder") %> ▾
               </button>
 
               <div id="myDropdown" class="dropdown-content">
-<a href="/events" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;"><%= t("nav.events") %></a>
+                <a href="/events" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.events", "Events") %>
+                </a>
 
-<a href="/game" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.game") %></a>
+                <a href="/game-landing-page" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.game", "Games") %>
+                </a>
 
-<a href="/resources" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.resources") %></a>
+                <a href="/resources" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.resources", "Resources") %>
+                </a>
 
-<a href="/matching" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.matching") %></a>
+                <a href="/matching" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.matching", "Matching") %>
+                </a>
 
-<a href="/ai" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.ai") %></a>
+                <a href="/ai" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.ai", "AI Assistant") %>
+                </a>
 
-<a href="/freshman-guide" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.guide") %></a>
+                <a href="/freshman-guid" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;">
+                  <%= tr("nav.guide", "Freshman Guide") %>
+                </a>
               </div>
             </div>
 
-            <% if (lang === "en") { %>
-  <div class="login-link" onclick="window.location.href='/change-language/ar'">
-    Arabic
-  </div>
-<% } else { %>
-  <div class="login-link" onclick="window.location.href='/change-language/en'">
-    English
-  </div>
-<% } %>
-
-            <div class="home-link" onclick="window.location.href='/'">
-            <%= t("nav.home") %>
-            </div>
-
-            <% if (!user) { %>
-              <div class="login-link" onclick="window.location.href='/login'">
-                <%= t("nav.login") %>
+            <!-- LANGUAGE BUTTON -->
+            <% if (currentLang === "en") { %>
+              <div class="login-link language-nav-btn" onclick="window.location.href='/change-language/ar?redirect=/cylinder'">
+                Arabic
               </div>
-            <% } else { %>
-              <div class="login-link" onclick="logout()">
-               <%= t("nav.logout") %>
+              <% } else { %>
+              <div class="login-link language-nav-btn" onclick="window.location.href='/change-language/en?redirect=/cylinder'">
+                English
               </div>
             <% } %>
 
-            <!-- THEME BUTTON: sun / moon switch at the very right of the navbar -->
+            <!-- HOME -->
+            <div class="home-link" onclick="window.location.href='/'">
+              <%= tr("nav.home", "Home") %>
+            </div>
+
+            <!-- LOGIN / LOGOUT -->
+            <% if (!user) { %>
+              <div class="login-link" onclick="window.location.href='/login'">
+                <%= tr("nav.login", "Login") %>
+              </div>
+            <% } else { %>
+              <div class="login-link" onclick="logout()">
+                <%= tr("nav.logout", "Logout") %>
+              </div>
+            <% } %>
+
+            <!-- THEME BUTTON -->
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
               <span class="theme-toggle__track">
+
                 <span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="4"></circle>
@@ -205,43 +239,75 @@
         </div>
       </nav>
 
+      <!-- CYLINDER CARDS -->
       <div class="Cylinder" id="Cylinder">
 
- <div class="Cylinder__cell" id="event">
-  <h3><%= t("cylinder.eventsTitle") %></h3>
-  <p style="font-size: 1.2rem; margin-top: 10px;"><%= t("cylinder.eventsDesc") %></p>
-</div>
+        <!-- EVENT CARD -->
+        <div class="Cylinder__cell" id="event" data-href="/events">
+          <div class="cell__media" style="background-image: url('/assests/images/event.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.eventsTitle", "Events") %></h3>
+            <p><%= tr("cylinder.eventsDesc", "Join campus events, tournaments, and activities.") %></p>
+          </div>
+        </div>
 
-<div class="Cylinder__cell" id="game">
-  <h3><%= t("cylinder.gameTitle") %></h3>
-</div>
+        <!-- GAME CARD -->
+        <div class="Cylinder__cell" id="game" data-href="/game-landing-page">
+          <div class="cell__media" style="background-image: url('/assests/images/game.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.gameTitle", "Games") %></h3>
+            <p><%= tr("cylinder.gameDesc", "Play and compete with your friends.") %></p>
+          </div>
+        </div>
 
-<div class="Cylinder__cell" id="resources-card">
-  <h3><%= t("cylinder.resourcesTitle") %></h3>
-  <p style="font-size: 1.2rem;"><%= t("cylinder.resourcesDesc") %></p>
-</div>
+        <!-- RESOURCES CARD -->
+        <div class="Cylinder__cell" id="resources-card" data-href="/resources">
+          <div class="cell__media" style="background-image: url('/assests/images/resources.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.resourcesTitle", "Resources") %></h3>
+            <p><%= tr("cylinder.resourcesDesc", "Find useful academic materials and student resources.") %></p>
+          </div>
+        </div>
 
-<div class="Cylinder__cell" id="btn-matching">
-  <h3><%= t("cylinder.matchTitle") %></h3>
-  <p style="font-size: 1.2rem;"><%= t("cylinder.matchDesc") %></p>
-</div>
+        <!-- MATCHING CARD -->
+        <div class="Cylinder__cell" id="btn-matching" data-href="/matching">
+          <div class="cell__media" style="background-image: url('/assests/images/matching.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.matchTitle", "Matching") %></h3>
+            <p><%= tr("cylinder.matchDesc", "Find the perfect study partner from your university and major.") %></p>
+          </div>
+        </div>
 
-<div class="Cylinder__cell" id="ai">
-  <h3><%= t("cylinder.aiTitle") %></h3>
-  <p style="font-size: 1.2rem;"><%= t("cylinder.aiDesc") %></p>
-</div>
+        <!-- AI CARD -->
+        <div class="Cylinder__cell" id="ai" data-href="/ai">
+          <div class="cell__media" style="background-image: url('/assests/images/ai.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.aiTitle", "AI Assistant") %></h3>
+            <p><%= tr("cylinder.aiDesc", "Ask Study Buddy AI for help anytime.") %></p>
+          </div>
+        </div>
 
-<div class="Cylinder__cell" id="guid">
-  <h3><%= t("cylinder.guideTitle") %></h3>
-  <p style="font-size: 1.2rem;"><%= t("cylinder.guideDesc") %></p>
-</div>
+        <!-- FRESHMAN GUIDE CARD -->
+        <div class="Cylinder__cell" id="guid" data-href="/freshman-guid">
+          <div class="cell__media" style="background-image: url('/assests/images/freshman.png');"></div>
+          <div class="cell__overlay"></div>
+          <div class="cell__content">
+            <h3><%= tr("cylinder.guideTitle", "Freshman Guide") %></h3>
+            <p><%= tr("cylinder.guideDesc", "Everything new students need to know.") %></p>
+          </div>
+        </div>
 
       </div>
     </div>
 
     <div class="controls" id="controls" style="display: none;">
-      <button class="control-btn" id="prev-btn">◀ PREV</button>
-      <button class="control-btn" id="next-btn">NEXT ▶</button>
+      <button class="control-btn" id="prev-btn" type="button">◀ PREV</button>
+      <button class="control-btn" id="next-btn" type="button">NEXT ▶</button>
     </div>
   </div>
 
