@@ -1297,3 +1297,13 @@ label {
     bottom: 12px;
   }
 }
+
+.matched-locked-btn {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: #fde68a !important;
+  border: 1px solid rgba(253, 230, 138, 0.25) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
