@@ -2730,6 +2730,77 @@ const formatMatchSchedule = (scheduledAt) => {
   });
 };
 
+const sendScheduleConfirmationEmail = async (matchRequest) => {
+  const freshRequest = await MatchRequest.findById(matchRequest._id);
+
+  if (!freshRequest) {
+    throw new Error("Match request was not found.");
+  }
+
+  const senderUser = await User.findById(freshRequest.sender).lean();
+  const receiverUser = await User.findById(freshRequest.receiver).lean();
+
+  const senderEmail = freshRequest.senderEmail || senderUser?.email || "";
+  const receiverEmail = freshRequest.receiverEmail || receiverUser?.email || "";
+
+  const senderName =
+    freshRequest.senderName ||
+    senderUser?.fullName ||
+    senderUser?.username ||
+    "Student";
+
+  const receiverName =
+    freshRequest.receiverName ||
+    receiverUser?.fullName ||
+    receiverUser?.username ||
+    "Student";
+
+  const emailList = [...new Set(
+    [senderEmail, receiverEmail]
+      .map(email => String(email || "").trim().toLowerCase())
+      .filter(Boolean)
+  )];
+
+  if (emailList.length < 2) {
+    throw new Error("Both student emails were not found.");
+  }
+
+  const subjectText =
+    freshRequest.senderWeakSubject ||
+    freshRequest.senderStrongSubject ||
+    freshRequest.receiverWeakSubject ||
+    freshRequest.receiverStrongSubject ||
+    "Study session";
+
+  const scheduledText = formatMatchSchedule(freshRequest.scheduledAt);
+
+  await sendEmail({
+    to: emailList,
+    subject: "Study Buddy Meeting Scheduled",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
+        <h2>Study Buddy Meeting Scheduled</h2>
+
+        <p>
+          A study meeting between
+          <strong>${senderName}</strong> and <strong>${receiverName}</strong>
+          has been scheduled.
+        </p>
+
+        <p><strong>Subject:</strong> ${subjectText}</p>
+        <p><strong>Scheduled Time:</strong> ${scheduledText}</p>
+
+        <p>The video room link will be sent when it is time for the meeting.</p>
+
+        <br>
+        <p><strong>Study Buddy Team</strong></p>
+      </div>
+    `,
+    text: `Study Buddy meeting scheduled. Subject: ${subjectText}. Time: ${scheduledText}. The video room link will be sent when it is time.`
+  });
+};
+
+
 const sendChatMatchEmail = async (matchRequest) => {
   if (matchRequest.emailSentAt) {
     return {
@@ -4565,11 +4636,19 @@ app.patch("/api/matching/chat/:chatId/schedule", requireAuth, async (req, res) =
 
     await matchRequest.save();
 
-    chat.messages.push({
-      sender: req.session.user.id,
-      senderName: req.session.user.fullName || req.session.user.username || "Student",
-      text: `Scheduled the match for ${formatMatchSchedule(finalScheduledAt)}.`
-    });
+if (finalScheduledAt.getTime() > Date.now()) {
+  try {
+    await sendScheduleConfirmationEmail(matchRequest);
+  } catch (emailError) {
+    console.error("Schedule confirmation email error:", emailError);
+  }
+}
+
+chat.messages.push({
+  sender: req.session.user.id,
+  senderName: req.session.user.fullName || req.session.user.username || "Student",
+  text: `Scheduled the match for ${formatMatchSchedule(finalScheduledAt)}.`
+});
 
     await chat.save();
 
