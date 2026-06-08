@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "login": "Login",
+    "logout": "Logout",
+    "cylinder": "Cylinder",
+    "events": "Events",
+    "game": "Game",
+    "resources": "Resources",
+    "matching": "Match",
+    "ai": "AI Chat",
+    "guide": "Guide"
+  },
+  "profile": {
+    "guest": "Guest",
+    "loginMessage": "Please login to view your profile.",
+    "viewFullProfile": "View Full Profile",
+    "gender": "Gender",
+    "university": "University",
+    "major": "Major",
+    "email": "Email"
+  },
+  "cylinder": {
+    "eventsTitle": "EVENTS",
+    "eventsDesc": "Fun & Sports",
+    "gameTitle": "GAME",
+    "resourcesTitle": "RESOURCES",
+    "resourcesDesc": "Summaries & Materials",
+    "matchTitle": "MATCH",
+    "matchDesc": "Find your study buddy",
+    "aiTitle": "AI CHAT",
+    "aiDesc": "Your smart assistant",
+    "guideTitle": "GUIDE",
+    "guideDesc": "Freshmen Survival Kit"
+  },
+  "language": {
+    "switchToArabic": "Arabic",
+    "switchToEnglish": "English"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "cylinder": "القائمة الرئيسية",
+    "events": "الفعاليات",
+    "game": "الألعاب",
+    "resources": "المصادر",
+    "matching": "التوافق الدراسي",
+    "ai": "المساعد الذكي",
+    "guide": "دليل الطلاب"
+  },
+  "profile": {
+    "guest": "زائر",
+    "loginMessage": "من فضلك سجل الدخول لعرض ملفك الشخصي.",
+    "viewFullProfile": "عرض الملف الكامل",
+    "gender": "النوع",
+    "university": "الجامعة",
+    "major": "التخصص",
+    "email": "البريد الإلكتروني"
+  },
+  "cylinder": {
+    "eventsTitle": "الفعاليات",
+    "eventsDesc": "أنشطة ورياضة",
+    "gameTitle": "الألعاب",
+    "resourcesTitle": "المصادر",
+    "resourcesDesc": "ملخصات ومواد دراسية",
+    "matchTitle": "التوافق",
+    "matchDesc": "اعثر على شريك مذاكرة",
+    "aiTitle": "المساعد الذكي",
+    "aiDesc": "مساعدك الدراسي الذكي",
+    "guideTitle": "الدليل",
+    "guideDesc": "دليل الطلاب الجدد"
+  },
+  "language": {
+    "switchToArabic": "العربية",
+    "switchToEnglish": "English"
+  }
+}
