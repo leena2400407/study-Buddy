@@ -1,38 +1,41 @@
 {
-  "language": {
-    "arabic": "العربية",
-    "english": "English"
-  },
   "nav": {
     "home": "الرئيسية",
     "profile": "الملف الشخصي",
     "login": "تسجيل الدخول",
-    "signup": "إنشاء حساب",
-    "logout": "تسجيل الخروج"
-  },
-  "cylinder": {
-    "title": "ستادي بادي",
-    "edugate": "بوابة الجامعات",
-    "games": "الألعاب",
-    "ai": "المساعد الذكي",
+    "logout": "تسجيل الخروج",
+    "cylinder": "القائمة الرئيسية",
     "events": "الفعاليات",
-    "matching": "المطابقة الدراسية",
-    "resources": "المصادر الدراسية",
-    "freshman": "دليل الطلاب الجدد"
+    "game": "الألعاب",
+    "resources": "المصادر",
+    "matching": "التوافق الدراسي",
+    "ai": "المساعد الذكي",
+    "guide": "دليل الطلاب"
   },
-  "auth": {
-    "loginTitle": "تسجيل الدخول",
-    "signupTitle": "إنشاء حساب",
-    "fullName": "الاسم الكامل",
-    "username": "اسم المستخدم",
-    "email": "البريد الإلكتروني",
-    "password": "كلمة المرور",
-    "confirmPassword": "تأكيد كلمة المرور",
+  "profile": {
+    "guest": "زائر",
+    "loginMessage": "من فضلك سجل الدخول لعرض ملفك الشخصي.",
+    "viewFullProfile": "عرض الملف الكامل",
     "gender": "النوع",
     "university": "الجامعة",
     "major": "التخصص",
-    "chooseAvatar": "اختر صورة شخصية",
-    "submitLogin": "تسجيل الدخول",
-    "submitSignup": "إنشاء الحساب"
+    "email": "البريد الإلكتروني"
+  },
+  "cylinder": {
+    "eventsTitle": "الفعاليات",
+    "eventsDesc": "أنشطة ورياضة",
+    "gameTitle": "الألعاب",
+    "resourcesTitle": "المصادر",
+    "resourcesDesc": "ملخصات ومواد دراسية",
+    "matchTitle": "التوافق",
+    "matchDesc": "اعثر على شريك مذاكرة",
+    "aiTitle": "المساعد الذكي",
+    "aiDesc": "مساعدك الدراسي الذكي",
+    "guideTitle": "الدليل",
+    "guideDesc": "دليل الطلاب الجدد"
+  },
+  "language": {
+    "switchToArabic": "العربية",
+    "switchToEnglish": "English"
   }
 }

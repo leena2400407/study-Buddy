@@ -2091,40 +2091,26 @@ body.cylinder-body.cylinder-dark-theme .nav-menu-morph__line {
   margin: 0 auto 24px;
 }
 
-.language-switcher {
-  position: fixed;
-  top: 22px;
-  right: 22px;
-  z-index: 999999;
-}
-
-html[dir="rtl"] .language-switcher {
-  right: auto;
-  left: 22px;
-}
-
-.language-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
-  border-radius: 999px;
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 800;
-  background: rgba(20, 20, 45, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
-  transition: 0.25s ease;
-}
-
-.language-btn:hover {
-  background: rgba(40, 40, 85, 0.9);
-  transform: translateY(-2px);
-}
-
 html[dir="rtl"] body {
+  direction: rtl;
+}
+
+html[dir="rtl"] .nav-container {
+  right: auto !important;
+  left: 15px !important;
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .dropdown-content {
+  right: auto;
+  left: 0;
+}
+
+html[dir="rtl"] .profile-card {
+  right: auto;
+  left: 0;
+}
+
+html[dir="rtl"] .Cylinder__cell {
   direction: rtl;
 }

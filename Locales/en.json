@@ -1,38 +1,41 @@
 {
-  "language": {
-    "arabic": "Arabic",
-    "english": "English"
-  },
   "nav": {
     "home": "Home",
     "profile": "Profile",
     "login": "Login",
-    "signup": "Sign Up",
-    "logout": "Logout"
-  },
-  "cylinder": {
-    "title": "Study Buddy",
-    "edugate": "Edugate",
-    "games": "Games",
-    "ai": "AI Assistant",
+    "logout": "Logout",
+    "cylinder": "Cylinder",
     "events": "Events",
-    "matching": "Matching",
+    "game": "Game",
     "resources": "Resources",
-    "freshman": "Freshman Guide"
+    "matching": "Match",
+    "ai": "AI Chat",
+    "guide": "Guide"
   },
-  "auth": {
-    "loginTitle": "Login",
-    "signupTitle": "Create Account",
-    "fullName": "Full Name",
-    "username": "Username",
-    "email": "Email",
-    "password": "Password",
-    "confirmPassword": "Confirm Password",
+  "profile": {
+    "guest": "Guest",
+    "loginMessage": "Please login to view your profile.",
+    "viewFullProfile": "View Full Profile",
     "gender": "Gender",
     "university": "University",
     "major": "Major",
-    "chooseAvatar": "Choose Avatar",
-    "submitLogin": "Login",
-    "submitSignup": "Sign Up"
+    "email": "Email"
+  },
+  "cylinder": {
+    "eventsTitle": "EVENTS",
+    "eventsDesc": "Fun & Sports",
+    "gameTitle": "GAME",
+    "resourcesTitle": "RESOURCES",
+    "resourcesDesc": "Summaries & Materials",
+    "matchTitle": "MATCH",
+    "matchDesc": "Find your study buddy",
+    "aiTitle": "AI CHAT",
+    "aiDesc": "Your smart assistant",
+    "guideTitle": "GUIDE",
+    "guideDesc": "Freshmen Survival Kit"
+  },
+  "language": {
+    "switchToArabic": "Arabic",
+    "switchToEnglish": "English"
   }
 }

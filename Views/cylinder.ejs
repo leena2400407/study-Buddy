@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>" dir="<%= dir %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,7 +71,7 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                Profile
+                <%= t("nav.profile") %>
               </button>
 
               <div id="profileCard" class="profile-card">
@@ -87,39 +87,39 @@
                   </h3>
 
                   <p class="profile-info">
-                    <strong>Gender:</strong>
+                   <strong><%= t("profile.gender") %>:</strong>
                     <span id="dropdown-gender"><%= user.gender || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong>University:</strong>
+                <strong><%= t("profile.university") %>:</strong>
                     <span id="dropdown-university"><%= user.university || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong>Major:</strong>
+                  <strong><%= t("profile.major") %>:</strong>
                     <span id="dropdown-major"><%= user.major || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong>Email:</strong>
+                   <strong><%= t("profile.email") %>:</strong>
                     <span id="dropdown-email"><%= user.email || "N/A" %></span>
                   </p>
 
-                  <a href="/profile#info" class="full-profile-btn">View Full Profile</a>
+                  <a href="/profile#info" class="full-profile-btn"><%= t("profile.viewFullProfile") %></a>
 
                   <button onclick="logout()" class="logout-btn">
-                    Logout
+                   <%= t("nav.logout") %>
                   </button>
                 <% } else { %>
-                  <h3 class="profile-name">Guest</h3>
+                  <h3 class="profile-name"><%= t("profile.guest") %></h3>
 
                   <p class="profile-info">
-                    Please login to view your profile.
+                 <%= t("profile.loginMessage") %>
                   </p>
 
                   <a href="/login" class="full-profile-btn">
-                    Login
+                  <%= t("nav.login") %>
                   </a>
                 <% } %>
               </div>
@@ -132,30 +132,45 @@
                   <path d="M3 5V19A9 3 0 0 0 21 19V5"></path>
                   <ellipse cx="12" cy="19" rx="9" ry="3"></ellipse>
                 </svg>
-                Cylinder ▾
+             <%= t("nav.cylinder") %> ▾
               </button>
 
               <div id="myDropdown" class="dropdown-content">
-                <a href="/events">Events</a>
-                <a href="/game-landing-page">Game</a>
-                <a href="/resources">Resources</a>
-                <a href="/matching">Match</a>
-                <a href="/ai">AI Chat</a>
-                <a href="/freshman-guid">Guide</a>
+<a href="/events" style="color: white; padding: 12px 16px; text-decoration: none; display: block; text-align: center;"><%= t("nav.events") %></a>
+
+<a href="/game" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.game") %></a>
+
+<a href="/resources" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.resources") %></a>
+
+<a href="/matching" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.matching") %></a>
+
+<a href="/ai" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.ai") %></a>
+
+<a href="/freshman-guide" style="color: white; padding: 12px 16px; text-decoration: none; display: block;"><%= t("nav.guide") %></a>
               </div>
             </div>
 
+            <% if (lang === "en") { %>
+  <div class="login-link" onclick="window.location.href='/change-language/ar'">
+    Arabic
+  </div>
+<% } else { %>
+  <div class="login-link" onclick="window.location.href='/change-language/en'">
+    English
+  </div>
+<% } %>
+
             <div class="home-link" onclick="window.location.href='/'">
-              Home
+            <%= t("nav.home") %>
             </div>
 
             <% if (!user) { %>
               <div class="login-link" onclick="window.location.href='/login'">
-                Login
+                <%= t("nav.login") %>
               </div>
             <% } else { %>
               <div class="login-link" onclick="logout()">
-                Logout
+               <%= t("nav.logout") %>
               </div>
             <% } %>
 
@@ -192,59 +207,34 @@
 
       <div class="Cylinder" id="Cylinder">
 
-        <div class="Cylinder__cell" id="event" data-href="/events">
-          <div class="cell__media" style="background-image:url('/assests/images/event.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>EVENTS</h3>
-            <p>Fun &amp; Sports</p>
-          </div>
-        </div>
+ <div class="Cylinder__cell" id="event">
+  <h3><%= t("cylinder.eventsTitle") %></h3>
+  <p style="font-size: 1.2rem; margin-top: 10px;"><%= t("cylinder.eventsDesc") %></p>
+</div>
 
-        <div class="Cylinder__cell" id="game" data-href="/game-landing-page">
-          <div class="cell__media" style="background-image:url('/assests/images/game.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>GAME</h3>
-            <p>Play &amp; compete</p>
-          </div>
-        </div>
+<div class="Cylinder__cell" id="game">
+  <h3><%= t("cylinder.gameTitle") %></h3>
+</div>
 
-        <div class="Cylinder__cell" id="resources-card" data-href="/resources">
-          <div class="cell__media" style="background-image:url('/assests/images/resources.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>RESOURCES</h3>
-            <p>Summaries &amp; Materials</p>
-          </div>
-        </div>
+<div class="Cylinder__cell" id="resources-card">
+  <h3><%= t("cylinder.resourcesTitle") %></h3>
+  <p style="font-size: 1.2rem;"><%= t("cylinder.resourcesDesc") %></p>
+</div>
 
-        <div class="Cylinder__cell" id="btn-matching" data-href="/matching">
-          <div class="cell__media" style="background-image:url('/assests/images/matching.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>MATCH</h3>
-            <p>Find your study buddy</p>
-          </div>
-        </div>
+<div class="Cylinder__cell" id="btn-matching">
+  <h3><%= t("cylinder.matchTitle") %></h3>
+  <p style="font-size: 1.2rem;"><%= t("cylinder.matchDesc") %></p>
+</div>
 
-        <div class="Cylinder__cell" id="ai" data-href="/ai">
-          <div class="cell__media" style="background-image:url('/assests/images/ai.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>AI CHAT</h3>
-            <p>Your smart assistant</p>
-          </div>
-        </div>
+<div class="Cylinder__cell" id="ai">
+  <h3><%= t("cylinder.aiTitle") %></h3>
+  <p style="font-size: 1.2rem;"><%= t("cylinder.aiDesc") %></p>
+</div>
 
-        <div class="Cylinder__cell" id="guid" data-href="/freshman-guid">
-          <div class="cell__media" style="background-image:url('/assests/images/freshman.png')"></div>
-          <div class="cell__overlay"></div>
-          <div class="cell__content">
-            <h3>GUIDE</h3>
-            <p>Freshmen Survival Kit</p>
-          </div>
-        </div>
+<div class="Cylinder__cell" id="guid">
+  <h3><%= t("cylinder.guideTitle") %></h3>
+  <p style="font-size: 1.2rem;"><%= t("cylinder.guideDesc") %></p>
+</div>
 
       </div>
     </div>

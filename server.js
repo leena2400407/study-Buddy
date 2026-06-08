@@ -314,6 +314,16 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/change-language/:lang", (req, res) => {
+  const lang = req.params.lang;
+
+  if (["en", "ar"].includes(lang)) {
+    req.session.lang = lang;
+  }
+
+  res.redirect(req.get("Referrer") || "/");
+});
+
 const requireAdminPage = (req, res, next) => {
   if (!req.session.user) {
     return res.redirect("/login?returnTo=/admin");
