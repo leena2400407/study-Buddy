@@ -1,30 +1,106 @@
-const { Resend } = require("resend");
+const getBrevoApiKey = () => {
+  return String(process.env.BREVO_API_KEY || "").trim();
+};
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getBrevoSenderEmail = () => {
+  return String(process.env.BREVO_SENDER_EMAIL || "").trim();
+};
+
+const getBrevoSenderName = () => {
+  return String(process.env.BREVO_SENDER_NAME || "Study Buddy").trim();
+};
+
+const normalizeRecipients = (to) => {
+  const list = Array.isArray(to)
+    ? to
+    : String(to || "")
+        .split(",")
+        .map((email) => email.trim())
+        .filter(Boolean);
+
+  return list
+    .map((item) => {
+      if (typeof item === "string") {
+        return {
+          email: item.trim()
+        };
+      }
+
+      return {
+        email: String(item.email || "").trim(),
+        name: item.name ? String(item.name).trim() : undefined
+      };
+    })
+    .filter((item) => item.email);
+};
 
 async function sendEmail({ to, subject, html, text }) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("Missing RESEND_API_KEY in Railway Variables");
+  const apiKey = getBrevoApiKey();
+  const senderEmail = getBrevoSenderEmail();
+  const senderName = getBrevoSenderName();
+
+  if (!apiKey) {
+    throw new Error("Missing BREVO_API_KEY in Railway Variables");
   }
 
-  if (!process.env.EMAIL_FROM) {
-    throw new Error("Missing EMAIL_FROM in Railway Variables");
+  if (!senderEmail) {
+    throw new Error("Missing BREVO_SENDER_EMAIL in Railway Variables");
   }
 
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM,
-    to,
-    subject,
-    html,
-    text
+  const recipients = normalizeRecipients(to);
+
+  if (recipients.length === 0) {
+    throw new Error("Missing email recipient");
+  }
+
+  const payload = {
+    sender: {
+      name: senderName,
+      email: senderEmail
+    },
+    to: recipients,
+    subject: subject || "Study Buddy Notification"
+  };
+
+  if (html) {
+    payload.htmlContent = html;
+  }
+
+  if (text) {
+    payload.textContent = text;
+  }
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload)
   });
 
-  if (error) {
-    console.error("RESEND ERROR:", error);
-    throw new Error(error.message || "Failed to send email");
+  const raw = await response.text();
+
+  let result;
+  try {
+    result = raw ? JSON.parse(raw) : {};
+  } catch {
+    result = raw;
   }
 
-  return data;
+  if (!response.ok) {
+    console.error("BREVO ERROR:", result);
+
+    throw new Error(
+      typeof result === "object" && result.message
+        ? result.message
+        : `Brevo failed with status ${response.status}`
+    );
+  }
+
+  console.log("BREVO EMAIL SENT:", result.messageId || subject);
+  return result;
 }
 
 module.exports = sendEmail;

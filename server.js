@@ -18,13 +18,10 @@ const crypto = require("crypto");
 const MatchRequest = require("./models/MatchReq");
 const Chat = require("./models/chat");
 const multer = require("multer");
-const dns = require("node:dns");
 const fs = require("fs");
 const Avatar = require("./models/Avatar");
 const sendEmail = require("./utils/sendEmail");
 require("dotenv").config();
-
-dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
 
