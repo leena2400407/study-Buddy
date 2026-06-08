@@ -1025,12 +1025,14 @@ router.get("/matching/request/:requestId/accept", async (req, res) => {
     }
 
     if (matchRequest.status !== "pending") {
-      return res.send(`
-        <div style="font-family: Arial; max-width: 520px; margin: 80px auto; text-align: center;">
-          <h1>This request is already ${matchRequest.status}.</h1>
-          <a href="/matching">Back to Matching</a>
-        </div>
-      `);
+      if (
+        matchRequest.chat &&
+        ["accepted", "rescheduled"].includes(String(matchRequest.status))
+      ) {
+        return res.redirect(`/matching?openChat=${matchRequest.chat}`);
+      }
+
+      return res.redirect("/matching");
     }
 
     const chat = await Chat.create({
@@ -1043,11 +1045,11 @@ router.get("/matching/request/:requestId/accept", async (req, res) => {
     matchRequest.chat = chat._id;
     await matchRequest.save();
 
-    res.redirect(`/matching/chat/${chat._id}`);
+    return res.redirect(`/matching?openChat=${chat._id}`);
 
   } catch (error) {
     console.error("Accept match request error:", error);
-    res.status(500).render("ERROR");
+    return res.status(500).render("ERROR");
   }
 });
 

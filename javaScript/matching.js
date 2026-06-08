@@ -1270,6 +1270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     restoreMatchingSearchState();
     await loadMyRequests();
     await refreshSavedMatches(true);
+    await openChatFromEmailRedirect();
     startMatchingLiveRefresh();
   }
 });
@@ -1668,6 +1669,54 @@ function formatPopupFullDate(value) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+async function openChatFromEmailRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const chatIdFromEmail = params.get("openChat");
+
+  if (!chatIdFromEmail) {
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/matching/requests", {
+      cache: "no-store"
+    });
+
+    const data = await readJSONOrLogout(response);
+
+    if (!data || !data.success) {
+      return;
+    }
+
+    const request = (data.requests || []).find(item => {
+      return String(item.chat || "") === String(chatIdFromEmail);
+    });
+
+    if (!request) {
+      return;
+    }
+
+    const status = String(request.status || "");
+
+    if (!["accepted", "rescheduled"].includes(status)) {
+      return;
+    }
+
+    const otherName =
+      request.otherName ||
+      request.receiverName ||
+      request.senderName ||
+      "Study Partner";
+
+    openMatchingChatPopup(chatIdFromEmail, otherName);
+
+    window.history.replaceState({}, document.title, "/matching");
+
+  } catch (error) {
+    console.error("Open chat from email redirect error:", error);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
