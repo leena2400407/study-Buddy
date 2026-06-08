@@ -3448,41 +3448,41 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
     lockWasAdded = true;
 
     const existingActiveRequest = await MatchRequest.findOne({
-      $or: [
-        {
-          sender: sender._id,
-          receiver: receiverProfile.user
-        },
-        {
-          sender: receiverProfile.user,
-          receiver: sender._id
-        }
-      ],
-      status: {
-        $in: ["pending", "accepted", "rescheduled", "matched"]
-      }
-    }).lean();
-
-    if (existingActiveRequest) {
-      let message = "There is already an active match request with this student.";
-
-      if (existingActiveRequest.status === "pending") {
-        const youSentIt = String(existingActiveRequest.sender) === String(sender._id);
-
-        message = youSentIt
-          ? "You already sent this student a pending request. Wait for them to accept or reject."
-          : "This student already sent you a pending request. Check your requests section.";
-      }
-
-      if (["accepted", "rescheduled", "matched"].includes(existingActiveRequest.status)) {
-        message = "You already have an active chat or match with this student.";
-      }
-
-      return res.status(400).json({
-        success: false,
-        message
-      });
+  $or: [
+    {
+      sender: sender._id,
+      receiver: receiverProfile.user
+    },
+    {
+      sender: receiverProfile.user,
+      receiver: sender._id
     }
+  ],
+  status: {
+    $in: ["pending", "accepted", "rescheduled"]
+  }
+}).lean();
+
+if (existingActiveRequest) {
+  let message = "There is already an active match request with this student.";
+
+  if (existingActiveRequest.status === "pending") {
+    const youSentIt = String(existingActiveRequest.sender) === String(sender._id);
+
+    message = youSentIt
+      ? "You already sent this student a pending request. Wait for them to accept or reject."
+      : "This student already sent you a pending request. Check your requests section.";
+  }
+
+  if (["accepted", "rescheduled"].includes(existingActiveRequest.status)) {
+    message = "You already have an active chat with this student.";
+  }
+
+  return res.status(400).json({
+    success: false,
+    message
+  });
+}
 
     const emailToken = crypto.randomBytes(32).toString("hex");
 
