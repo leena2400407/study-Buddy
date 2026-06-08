@@ -51,7 +51,7 @@ const defaultArabic = {
 
 function loadJsonFile(fileName, fallback) {
   try {
-    const filePath = path.join(process.cwd(), "locales", fileName);
+    const filePath = path.join(process.cwd(), "Locales", fileName);
 
     if (!fs.existsSync(filePath)) {
       console.warn(`Localization file missing: ${filePath}`);

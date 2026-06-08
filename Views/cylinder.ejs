@@ -81,7 +81,7 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-               <%= t("nav.profile") %>
+                Profile
               </button>
 
               <div id="profileCard" class="profile-card">
@@ -97,40 +97,39 @@
                   </h3>
 
                   <p class="profile-info">
-<strong><%= t("nav.gender") %>:</strong>
+                    <strong>Gender:</strong>
                     <span id="dropdown-gender"><%= user.gender || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong><%= t("nav.university") %>:</strong>
+                    <strong>University:</strong>
                     <span id="dropdown-university"><%= user.university || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong><%= t("nav.major") %>:</strong>
+                    <strong>Major:</strong>
                     <span id="dropdown-major"><%= user.major || "N/A" %></span>
                   </p>
 
                   <p class="profile-info">
-                    <strong><%= t("nav.email") %>:</strong>
+                    <strong>Email:</strong>
                     <span id="dropdown-email"><%= user.email || "N/A" %></span>
                   </p>
 
-<a href="/profile#info" class="full-profile-btn"><%= t("nav.viewFullProfile") %></a>
+                  <a href="/profile#info" class="full-profile-btn">View Full Profile</a>
 
-                <button onclick="logout()" class="logout-btn">
-  <%= t("nav.logout") %>
-</button>
-
+                  <button onclick="logout()" class="logout-btn">
+                    Logout
+                  </button>
                 <% } else { %>
-                 <h3 class="profile-name"><%= t("nav.guest") %></h3>
+                  <h3 class="profile-name">Guest</h3>
 
                   <p class="profile-info">
-                    <%= t("nav.guestMessage") %>
+                    Please login to view your profile.
                   </p>
 
                   <a href="/login" class="full-profile-btn">
-                    <%= t("nav.login") %>
+                    Login
                   </a>
                 <% } %>
               </div>
@@ -147,26 +146,26 @@
               </button>
 
               <div id="myDropdown" class="dropdown-content">
-              <a href="/events"><%= t("nav.events") %></a>
-<a href="/game-landing-page"><%= t("nav.game") %></a>
-<a href="/resources"><%= t("nav.resources") %></a>
-<a href="/matching"><%= t("nav.match") %></a>
-<a href="/ai"><%= t("nav.aiChat") %></a>
-<a href="/freshman-guid"><%= t("nav.guide") %></a>
+                <a href="/events">Events</a>
+                <a href="/game-landing-page">Game</a>
+                <a href="/resources">Resources</a>
+                <a href="/matching">Match</a>
+                <a href="/ai">AI Chat</a>
+                <a href="/freshman-guid">Guide</a>
               </div>
             </div>
 
             <div class="home-link" onclick="window.location.href='/'">
-              <%= t("nav.home") %>
+              Home
             </div>
 
             <% if (!user) { %>
               <div class="login-link" onclick="window.location.href='/login'">
-                <%= t("nav.login") %>
+                Login
               </div>
             <% } else { %>
               <div class="login-link" onclick="logout()">
-                <%= t("nav.logout") %>
+                Logout
               </div>
             <% } %>
 
@@ -207,8 +206,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/event.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-      <h3><%= t("cylinder.events") %></h3>
-<p><%= t("cylinder.eventsSub") %></p>
+            <h3>EVENTS</h3>
+            <p>Fun &amp; Sports</p>
           </div>
         </div>
 
@@ -216,8 +215,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/game.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-            <h3><%= t("cylinder.game") %></h3>
-            <p><%= t("cylinder.gameSub") %></p>
+            <h3>GAME</h3>
+            <p>Play &amp; compete</p>
           </div>
         </div>
 
@@ -225,8 +224,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/resources.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-            <h3><%= t("cylinder.resources") %></h3>
-            <p><%= t("cylinder.resourcesSub") %></p>
+            <h3>RESOURCES</h3>
+            <p>Summaries &amp; Materials</p>
           </div>
         </div>
 
@@ -234,8 +233,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/matching.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-            <h3><%= t("cylinder.match") %></h3>
-            <p><%= t("cylinder.matchSub") %></p>
+            <h3>MATCH</h3>
+            <p>Find your study buddy</p>
           </div>
         </div>
 
@@ -243,8 +242,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/ai.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-            <h3><%= t("cylinder.aiChat") %></h3>
-            <p><%= t("cylinder.aiChatSub") %></p>
+            <h3>AI CHAT</h3>
+            <p>Your smart assistant</p>
           </div>
         </div>
 
@@ -252,8 +251,8 @@
           <div class="cell__media" style="background-image:url('/assests/images/freshman.png')"></div>
           <div class="cell__overlay"></div>
           <div class="cell__content">
-            <h3><%= t("cylinder.guide") %></h3>
-            <p><%= t("cylinder.guideSub") %></p>
+            <h3>GUIDE</h3>
+            <p>Freshmen Survival Kit</p>
           </div>
         </div>
 
@@ -261,7 +260,8 @@
     </div>
 
     <div class="controls" id="controls" style="display: none;">
-<button class="control-btn" id="prev-btn">◀ PREV</button>
+      <button class="control-btn" id="prev-btn">◀ PREV</button>
+      <button class="control-btn" id="next-btn">NEXT ▶</button>
     </div>
   </div>
 
