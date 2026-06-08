@@ -1745,7 +1745,7 @@ const cleanSubjects = (subjects) => {
   return [...new Set(
     subjects
       .map(normalizeSubject)
-      .filter(Boolean)
+      .filter(subject => subject && subject !== "None")
   )];
 };
 
@@ -2653,6 +2653,14 @@ const sendMatchRequestEmail = async ({
   acceptLink,
   rejectLink
 }) => {
+  const helpNeededText = senderWeakSubject && String(senderWeakSubject).trim()
+    ? senderWeakSubject
+    : "No help requested";
+
+  const canHelpText = senderStrongSubject && String(senderStrongSubject).trim()
+    ? senderStrongSubject
+    : "No help offered";
+
   await sendEmail({
     to,
     subject: "New Study Buddy Match Request",
@@ -2663,8 +2671,8 @@ const sendMatchRequestEmail = async ({
         <p>Hello ${receiverName},</p>
         <p><strong>${senderName}</strong> wants to study with you.</p>
 
-        <p><strong>They need help with:</strong> ${senderWeakSubject}</p>
-        <p><strong>They can help with:</strong> ${senderStrongSubject}</p>
+        <p><strong>They need help with:</strong> ${helpNeededText}</p>
+        <p><strong>They can help with:</strong> ${canHelpText}</p>
 
         <p>
           <a href="${acceptLink}" target="_blank" style="display:inline-block; padding:12px 18px; background:#16a34a; color:white; text-decoration:none; border-radius:8px;">
@@ -2682,10 +2690,9 @@ const sendMatchRequestEmail = async ({
         <p><strong>Study Buddy Team</strong></p>
       </div>
     `,
-    text: `${senderName} sent you a Study Buddy match request. Accept: ${acceptLink} Reject: ${rejectLink}`
+    text: `${senderName} sent you a Study Buddy match request. They need help with: ${helpNeededText}. They can help with: ${canHelpText}. Accept: ${acceptLink} Reject: ${rejectLink}`
   });
 };
-
 const createJitsiRoom = () => {
   const randomCode = Math.floor(100000 + Math.random() * 900000);
   const roomId = `studybuddy-${Date.now()}-${randomCode}`;
@@ -2862,6 +2869,7 @@ const checkScheduledChatMatches = async () => {
 setInterval(checkScheduledChatMatches, 60 * 1000);
 
 const CS_SUBJECTS = [
+  "None",
   "Programming",
   "Object Oriented Programming",
   "Data Structures",
@@ -3076,8 +3084,13 @@ app.post("/api/matching/search", requireAuth, async (req, res) => {
 
     const matches = profiles
       .map(profile => {
-        const otherWeakSubjects = profile.weakSubjects || [];
-        const otherStrongSubjects = profile.strongSubjects || [];
+        const otherWeakSubjects = Array.isArray(profile.weakSubjects)
+          ? profile.weakSubjects.filter(subject => subject && subject !== "None")
+          : [];
+
+        const otherStrongSubjects = Array.isArray(profile.strongSubjects)
+          ? profile.strongSubjects.filter(subject => subject && subject !== "None")
+          : [];
 
         const canHelpMe = weakSubjects.filter(subject =>
           otherStrongSubjects.includes(subject)
@@ -3104,7 +3117,7 @@ app.post("/api/matching/search", requireAuth, async (req, res) => {
           matchType: isPerfectMatch
             ? "Perfect Match"
             : canHelpMe.length > 0
-              ? "Can Help You"
+              ? "Helper Match"
               : "You Can Help"
         };
       })
@@ -3135,8 +3148,13 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       strongSubject
     } = req.body;
 
-    const senderWeakSubject = String(weakSubject || "").trim();
-    const senderStrongSubject = String(strongSubject || "").trim();
+    const senderWeakSubject = normalizeSubject(weakSubject) === "None"
+      ? ""
+      : normalizeSubject(weakSubject);
+
+    const senderStrongSubject = normalizeSubject(strongSubject) === "None"
+      ? ""
+      : normalizeSubject(strongSubject);
 
     if (!receiverProfileId) {
       return res.status(400).json({
@@ -3212,14 +3230,16 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       });
     }
 
-    const receiverStrongSubjects = receiverProfile.strongSubjects || [];
-    const receiverWeakSubjects = receiverProfile.weakSubjects || [];
+    const receiverStrongSubjects = cleanSubjects(receiverProfile.strongSubjects || []);
+    const receiverWeakSubjects = cleanSubjects(receiverProfile.weakSubjects || []);
 
-    const receiverCanHelpSender =
-      senderWeakSubject && receiverStrongSubjects.includes(senderWeakSubject);
+    const receiverCanHelpSender = Boolean(
+      senderWeakSubject && receiverStrongSubjects.includes(senderWeakSubject)
+    );
 
-    const senderCanHelpReceiver =
-      senderStrongSubject && receiverWeakSubjects.includes(senderStrongSubject);
+    const senderCanHelpReceiver = Boolean(
+      senderStrongSubject && receiverWeakSubjects.includes(senderStrongSubject)
+    );
 
     if (!receiverCanHelpSender && !senderCanHelpReceiver) {
       return res.status(400).json({
@@ -3256,8 +3276,8 @@ app.post("/api/matching/request", requireAuth, async (req, res) => {
       senderWeakSubject,
       senderStrongSubject,
 
-      receiverWeakSubject: senderStrongSubject || "",
-      receiverStrongSubject: senderWeakSubject || "",
+      receiverWeakSubject: senderCanHelpReceiver ? senderStrongSubject : "",
+      receiverStrongSubject: receiverCanHelpSender ? senderWeakSubject : "",
 
       emailToken
     });

@@ -12,6 +12,28 @@ let studyListIsSaved = false;
 let studyListHasLocalChanges = false;
 const LOGIN_REDIRECT_DELAY = 2200;
 
+function normalizeDropdownSubject(value) {
+  const subject = String(value || "").trim();
+
+  if (subject.toLowerCase() === "none") {
+    return "";
+  }
+
+  return subject;
+}
+
+function cleanSubjectList(subjects) {
+  if (!Array.isArray(subjects)) {
+    return [];
+  }
+
+  return [...new Set(
+    subjects
+      .map(subject => normalizeDropdownSubject(subject))
+      .filter(Boolean)
+  )];
+}
+
 function isLoggedIn() {
   return Boolean(
     window.MATCHING_PAGE_DATA && window.MATCHING_PAGE_DATA.isLoggedIn
@@ -99,13 +121,8 @@ async function loadMyProfile(options = {}) {
     }
 
     if (data.success && data.profile) {
-      myWeakSubjects = Array.isArray(data.profile.weakSubjects)
-        ? data.profile.weakSubjects
-        : [];
-
-      myStrongSubjects = Array.isArray(data.profile.strongSubjects)
-        ? data.profile.strongSubjects
-        : [];
+     myWeakSubjects = cleanSubjectList(data.profile.weakSubjects);
+    myStrongSubjects = cleanSubjectList(data.profile.strongSubjects);
 
       studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
     } else {
@@ -131,9 +148,8 @@ function addSelectedSubject(type) {
   if (!weakSelect || !strongSelect) return;
 
   const value = type === "weak"
-    ? weakSelect.value.trim()
-    : strongSelect.value.trim();
-
+  ? normalizeDropdownSubject(weakSelect.value)
+  : normalizeDropdownSubject(strongSelect.value);
   if (!value) {
     showToast("Choose a subject first.", "warning");
     return;
@@ -255,13 +271,8 @@ async function saveStudyList() {
       return;
     }
 
-    myWeakSubjects = Array.isArray(data.profile.weakSubjects)
-      ? data.profile.weakSubjects
-      : [];
-
-    myStrongSubjects = Array.isArray(data.profile.strongSubjects)
-      ? data.profile.strongSubjects
-      : [];
+    myWeakSubjects = cleanSubjectList(data.profile.weakSubjects);
+    myStrongSubjects = cleanSubjectList(data.profile.strongSubjects);
 
     studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
     studyListHasLocalChanges = false;
@@ -335,8 +346,8 @@ async function searchMatches() {
 
   if (!weakSelect || !strongSelect) return;
 
-  selectedWeakSubject = weakSelect.value.trim();
-  selectedStrongSubject = strongSelect.value.trim();
+ selectedWeakSubject = normalizeDropdownSubject(weakSelect.value);
+selectedStrongSubject = normalizeDropdownSubject(strongSelect.value);
 
   if (selectedWeakSubject) {
     if (myStrongSubjects.includes(selectedWeakSubject)) {
@@ -372,10 +383,10 @@ async function searchMatches() {
   renderProfileList();
 
     if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
-    showToast("Add at least one weak subject or one strong subject before searching.", "warning");
-    renderNoSearchState();
-    return;
-  }
+  showToast("Add at least one weak subject or one strong subject before searching.", "warning");
+  renderNoSearchState();
+  return;
+}
 
   renderLoadingMatches();
 
@@ -682,65 +693,99 @@ function renderRequests(requests) {
       request.senderName ||
       "Student";
 
-       const status = request.status || "pending";
+    const status = request.status || "pending";
+    const direction = request.direction || "sent";
+    const isSent = direction === "sent";
 
-    const neededSubject = request.senderWeakSubject || "";
-    const offeredSubject = request.senderStrongSubject || "";
+    const avatarLetter = otherName.charAt(0).toUpperCase();
 
-    const neededText = neededSubject
-      ? escapeHTML(neededSubject)
+    const neededSubject = normalizeDropdownSubject(request.senderWeakSubject || "");
+    const offeredSubject = normalizeDropdownSubject(request.senderStrongSubject || "");
+
+    const neededLabel = isSent
+      ? "You asked for help with"
+      : "They need help with";
+
+    const offeredLabel = isSent
+      ? "You offered help with"
+      : "They can help with";
+
+    const neededHTML = neededSubject
+      ? `<span class="small-tag">${escapeHTML(neededSubject)}</span>`
       : `<span class="small-tag empty-tag">No help requested</span>`;
 
-    const offeredText = offeredSubject
-      ? escapeHTML(offeredSubject)
+    const offeredHTML = offeredSubject
+      ? `<span class="small-tag">${escapeHTML(offeredSubject)}</span>`
       : `<span class="small-tag empty-tag">No help offered</span>`;
 
-    return `
+    let actionHTML = "";
 
-             <div class="buddy-subjects">
+    if (["accepted", "rescheduled", "matched"].includes(status) && request.chat) {
+      actionHTML = `
+        <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
+          Open Chat
+        </button>
+      `;
+    } else if (status === "pending" && direction === "sent") {
+      actionHTML = `
+        <button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
+          Cancel Request
+        </button>
+      `;
+    } else if (status === "pending" && direction === "received") {
+      actionHTML = `
+        <div class="request-actions">
+          <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}', '${escapeJS(otherName)}')">
+            Accept
+          </button>
+
+          <button class="btn-match reject-request-btn" onclick="rejectMatchRequest('${escapeJS(request._id)}')">
+            Reject
+          </button>
+        </div>
+      `;
+    } else {
+      actionHTML = `
+        <button class="btn-match" disabled>
+          ${escapeHTML(status)}
+        </button>
+      `;
+    }
+
+    return `
+      <div class="buddy-card">
+        <div class="buddy-top">
+          <div class="buddy-avatar">${escapeHTML(avatarLetter)}</div>
+
+          <div class="buddy-name">
+            <h3>${escapeHTML(isSent ? `To ${otherName}` : `From ${otherName}`)}</h3>
+            <p>${escapeHTML(request.otherEmail || "")}</p>
+          </div>
+
+          <span class="match-score">${escapeHTML(status)}</span>
+        </div>
+
+        <div class="buddy-subjects">
           <div class="subject-row">
-            <h5>Subject needed</h5>
+            <h5>${escapeHTML(neededLabel)}</h5>
             <div class="small-tags">
-              <span class="small-tag">${neededText}</span>
+              ${neededHTML}
             </div>
           </div>
 
           <div class="subject-row">
-            <h5>Can help with</h5>
+            <h5>${escapeHTML(offeredLabel)}</h5>
             <div class="small-tags">
-              <span class="small-tag">${offeredText}</span>
+              ${offeredHTML}
             </div>
           </div>
         </div>
 
-        ${
-          ["accepted", "rescheduled", "matched"].includes(status) && request.chat
-            ? `<button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
-                Open Chat
-              </button>`
-            : status === "pending" && request.direction === "sent"
-              ? `<button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
-                  Cancel Request
-                </button>`
-              : status === "pending" && request.direction === "received"
-                ? `<div class="request-actions">
-                    <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}', '${escapeJS(otherName)}')">
-                      Accept
-                    </button>
-
-                    <button class="btn-match reject-request-btn" onclick="rejectMatchRequest('${escapeJS(request._id)}')">
-                      Reject
-                    </button>
-                  </div>`
-                : `<button class="btn-match" disabled>
-                    ${escapeHTML(status)}
-                  </button>`
-        }
+        ${actionHTML}
       </div>
     `;
   }).join("");
 }
-
 function renderEmptyRequests() {
   const requestsGrid = document.getElementById("requestsGrid");
 
@@ -968,15 +1013,10 @@ function stopSavedMatchRefresh() {
 function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects = myStrongSubjects) {
   if (!isLoggedIn()) return;
 
-  const cleanWeakSubjects = Array.isArray(weakSubjects)
-    ? weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
-    : [];
+  const cleanWeakSubjects = cleanSubjectList(weakSubjects);
+  const cleanStrongSubjects = cleanSubjectList(strongSubjects);
 
-  const cleanStrongSubjects = Array.isArray(strongSubjects)
-    ? strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
-    : [];
-
-    if (cleanWeakSubjects.length === 0 && cleanStrongSubjects.length === 0) {
+  if (cleanWeakSubjects.length === 0 && cleanStrongSubjects.length === 0) {
     return;
   }
 
@@ -985,8 +1025,8 @@ function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects =
     JSON.stringify({
       weakSubjects: cleanWeakSubjects,
       strongSubjects: cleanStrongSubjects,
-      selectedWeakSubject,
-      selectedStrongSubject,
+      selectedWeakSubject: normalizeDropdownSubject(selectedWeakSubject),
+      selectedStrongSubject: normalizeDropdownSubject(selectedStrongSubject),
       savedAt: Date.now()
     })
   );
@@ -1000,23 +1040,18 @@ function getMatchingSearchState() {
 
     const data = JSON.parse(rawData);
 
-    const weakSubjects = Array.isArray(data.weakSubjects)
-      ? data.weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
-      : [];
+    const weakSubjects = cleanSubjectList(data.weakSubjects);
+    const strongSubjects = cleanSubjectList(data.strongSubjects);
 
-    const strongSubjects = Array.isArray(data.strongSubjects)
-      ? data.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
-      : [];
-
-        if (weakSubjects.length === 0 && strongSubjects.length === 0) {
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
       return null;
     }
 
     return {
       weakSubjects,
       strongSubjects,
-      selectedWeakSubject: data.selectedWeakSubject || "",
-      selectedStrongSubject: data.selectedStrongSubject || ""
+      selectedWeakSubject: normalizeDropdownSubject(data.selectedWeakSubject || ""),
+      selectedStrongSubject: normalizeDropdownSubject(data.selectedStrongSubject || "")
     };
   } catch (error) {
     console.error("Read matching search state error:", error);
