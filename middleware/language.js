@@ -6,52 +6,94 @@ const defaultEnglish = {
     arabic: "Arabic",
     english: "English"
   },
+
   nav: {
-    home: "Home",
     profile: "Profile",
+    gender: "Gender",
+    university: "University",
+    major: "Major",
+    email: "Email",
+    viewFullProfile: "View Full Profile",
+    logout: "Logout",
+    guest: "Guest",
+    guestMessage: "Please login to view your profile.",
     login: "Login",
-    signup: "Sign Up",
-    logout: "Logout"
-  },
-  cylinder: {
-    title: "Study Buddy",
-    edugate: "Edugate",
-    games: "Games",
-    ai: "AI Assistant",
+    home: "Home",
+    cylinder: "Cylinder",
     events: "Events",
-    matching: "Matching",
+    game: "Game",
     resources: "Resources",
-    freshman: "Freshman Guide"
+    match: "Match",
+    aiChat: "AI Chat",
+    guide: "Guide"
+  },
+
+  cylinder: {
+    events: "EVENTS",
+    eventsSub: "Fun & Sports",
+    game: "GAME",
+    gameSub: "Play & compete",
+    resources: "RESOURCES",
+    resourcesSub: "Summaries & Materials",
+    match: "MATCH",
+    matchSub: "Find your study buddy",
+    ai: "AI CHAT",
+    aiSub: "Your smart assistant",
+    guide: "GUIDE",
+    guideSub: "Freshmen Survival Kit",
+    prev: "PREV",
+    next: "NEXT"
   }
 };
 
 const defaultArabic = {
   language: {
-    arabic: "Arabic",
+    arabic: "العربية",
     english: "English"
   },
+
   nav: {
-    home: "Home",
-    profile: "Profile",
-    login: "Login",
-    signup: "Sign Up",
-    logout: "Logout"
+    profile: "الملف الشخصي",
+    gender: "النوع",
+    university: "الجامعة",
+    major: "التخصص",
+    email: "البريد الإلكتروني",
+    viewFullProfile: "عرض الملف الكامل",
+    logout: "تسجيل الخروج",
+    guest: "زائر",
+    guestMessage: "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
+    login: "تسجيل الدخول",
+    home: "الرئيسية",
+    cylinder: "القائمة",
+    events: "الفعاليات",
+    game: "الألعاب",
+    resources: "المصادر",
+    match: "المطابقة",
+    aiChat: "المحادثة الذكية",
+    guide: "الدليل"
   },
+
   cylinder: {
-    title: "Study Buddy",
-    edugate: "Edugate",
-    games: "Games",
-    ai: "AI Assistant",
-    events: "Events",
-    matching: "Matching",
-    resources: "Resources",
-    freshman: "Freshman Guide"
+    events: "الفعاليات",
+    eventsSub: "ترفيه ورياضة",
+    game: "الألعاب",
+    gameSub: "العب وتنافس",
+    resources: "المصادر",
+    resourcesSub: "ملخصات ومواد دراسية",
+    match: "المطابقة",
+    matchSub: "اعثر على شريك دراسة",
+    ai: "المحادثة الذكية",
+    aiSub: "مساعدك الذكي",
+    guide: "الدليل",
+    guideSub: "دليل الطلاب الجدد",
+    prev: "السابق",
+    next: "التالي"
   }
 };
 
 function loadJsonFile(fileName, fallback) {
   try {
-    const filePath = path.join(process.cwd(), "Locales", fileName);
+    const filePath = path.join(process.cwd(), "locales", fileName);
 
     if (!fs.existsSync(filePath)) {
       console.warn(`Localization file missing: ${filePath}`);

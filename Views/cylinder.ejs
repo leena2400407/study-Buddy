@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>" dir="<%= dir %>"><head>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -29,18 +30,6 @@
 
 <body class="cylinder-body">
 
-  <div class="language-switcher">
-  <% if (lang === "en") { %>
-    <a href="/change-language/ar" class="language-btn">
-      <%= t("language.arabic") %>
-    </a>
-  <% } else { %>
-    <a href="/change-language/en" class="language-btn">
-      <%= t("language.english") %>
-    </a>
-  <% } %>
-</div>
-
   <div id="bg-effects">
     <span class="aurora aurora--1"></span>
     <span class="aurora aurora--2"></span>
@@ -49,12 +38,13 @@
   </div>
 
   <div id="intro-logo" style="display: none;">
-  <img src="/assests/images/WhatsApp_Image_2026-03-19_at_11.23.23_PM-removebg-preview.png"
-       alt="Study Buddy">
+    <img src="/assests/images/WhatsApp_Image_2026-03-19_at_11.23.23_PM-removebg-preview.png"
+         alt="Study Buddy">
   </div>
 
   <div id="features-page" style="display: flex;">
-  <div class="scene" id="cylinder-scene" style="display: flex;">
+    <div class="scene" id="cylinder-scene" style="display: flex;">
+
       <!-- NEW HORIZONTAL SCROLL NAV -->
       <nav class="top-nav">
         <div class="cylinder-scroll-nav" id="cylinderScrollNav">
@@ -86,10 +76,10 @@
 
               <div id="profileCard" class="profile-card">
                 <% if (user && user.avatar) { %>
-                <img src="<%= user.avatar %>" alt="Student Profile Avatar" class="profile-avatar-img">
+                  <img src="<%= user.avatar %>" alt="Student Profile Avatar" class="profile-avatar-img">
                 <% } else { %>
                   <img src="/assests/images/profile.png" alt="Student Profile Avatar" class="profile-avatar-img">
-                  <% } %>
+                <% } %>
 
                 <% if (user) { %>
                   <h3 id="dropdown-name" class="profile-name">
