@@ -438,14 +438,29 @@ if (duplicateTeam) {
   });
 }
 
+
+
     const maxPlayers = Number(eventData.maxPlayers) || 10;
 
-    if (players.length > maxPlayers) {
-      return res.status(400).json({
-        success: false,
-        message: `This tournament allows maximum ${maxPlayers} players.`
-      });
-    }
+   const eventCategoryText = String(eventData.category || "").toLowerCase();
+   const eventTitleText = String(eventData.title || "").toLowerCase();
+
+const isPadelTournament =
+  eventCategoryText.includes("padel") || eventTitleText.includes("padel");
+
+if (isPadelTournament && players.length !== 2) {
+  return res.status(400).json({
+    success: false,
+    message: "Padel registration must have exactly 2 players. Not 1 and not more than 2."
+  });
+}
+
+if (!isPadelTournament && players.length > maxPlayers) {
+  return res.status(400).json({
+    success: false,
+    message: `This tournament allows maximum ${maxPlayers} players.`
+  });
+}
 
     const captain = players[0];
 
@@ -488,6 +503,13 @@ if (duplicateTeam) {
     };
   })
   .filter(Boolean);
+  
+  if (isPadelTournament && cleanedPlayers.length !== 2) {
+  return res.status(400).json({
+    success: false,
+    message: "Padel registration must have exactly 2 valid player names."
+  });
+}
 
 const invalidPlayer = cleanedPlayers.find(player => {
   return !isLettersOnlyName(player.name);
