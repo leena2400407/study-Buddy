@@ -12,6 +12,28 @@ let studyListIsSaved = false;
 let studyListHasLocalChanges = false;
 const LOGIN_REDIRECT_DELAY = 2200;
 
+function normalizeDropdownSubject(value) {
+  const subject = String(value || "").trim();
+
+  if (subject.toLowerCase() === "none") {
+    return "";
+  }
+
+  return subject;
+}
+
+function cleanSubjectList(subjects) {
+  if (!Array.isArray(subjects)) {
+    return [];
+  }
+
+  return [...new Set(
+    subjects
+      .map(subject => normalizeDropdownSubject(subject))
+      .filter(Boolean)
+  )];
+}
+
 function isLoggedIn() {
   return Boolean(
     window.MATCHING_PAGE_DATA && window.MATCHING_PAGE_DATA.isLoggedIn
@@ -99,13 +121,8 @@ async function loadMyProfile(options = {}) {
     }
 
     if (data.success && data.profile) {
-      myWeakSubjects = Array.isArray(data.profile.weakSubjects)
-        ? data.profile.weakSubjects
-        : [];
-
-      myStrongSubjects = Array.isArray(data.profile.strongSubjects)
-        ? data.profile.strongSubjects
-        : [];
+     myWeakSubjects = cleanSubjectList(data.profile.weakSubjects);
+    myStrongSubjects = cleanSubjectList(data.profile.strongSubjects);
 
       studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
     } else {
@@ -130,16 +147,33 @@ function addSelectedSubject(type) {
 
   if (!weakSelect || !strongSelect) return;
 
-  const value = type === "weak"
-    ? weakSelect.value.trim()
-    : strongSelect.value.trim();
+  const rawValue = type === "weak"
+    ? String(weakSelect.value || "").trim()
+    : String(strongSelect.value || "").trim();
 
-  if (!value) {
+  const isNone = rawValue.toLowerCase() === "none";
+  const value = normalizeDropdownSubject(rawValue);
+
+  if (!rawValue) {
     showToast("Choose a subject first.", "warning");
     return;
   }
 
   if (type === "weak") {
+    if (isNone) {
+      myWeakSubjects = [];
+      weakSelect.value = "";
+      studyListIsSaved = false;
+      studyListHasLocalChanges = true;
+
+      stopSavedMatchRefresh();
+      renderProfileList();
+      renderNoSearchState();
+
+      showToast("Weak list set to none. You can still search if you have strong subjects.", "info");
+      return;
+    }
+
     if (myStrongSubjects.includes(value)) {
       showToast("This subject is already in your strong list.", "warning");
       return;
@@ -153,6 +187,20 @@ function addSelectedSubject(type) {
   }
 
   if (type === "strong") {
+    if (isNone) {
+      myStrongSubjects = [];
+      strongSelect.value = "";
+      studyListIsSaved = false;
+      studyListHasLocalChanges = true;
+
+      stopSavedMatchRefresh();
+      renderProfileList();
+      renderNoSearchState();
+
+      showToast("Strong list set to none. You can still search if you have weak subjects.", "info");
+      return;
+    }
+
     if (myWeakSubjects.includes(value)) {
       showToast("This subject is already in your weak list.", "warning");
       return;
@@ -172,7 +220,6 @@ function addSelectedSubject(type) {
   renderProfileList();
   renderNoSearchState();
 }
-
 function removeSubject(subject, type) {
   if (type === "weak") {
     myWeakSubjects = myWeakSubjects.filter(item => item !== subject);
@@ -255,13 +302,8 @@ async function saveStudyList() {
       return;
     }
 
-    myWeakSubjects = Array.isArray(data.profile.weakSubjects)
-      ? data.profile.weakSubjects
-      : [];
-
-    myStrongSubjects = Array.isArray(data.profile.strongSubjects)
-      ? data.profile.strongSubjects
-      : [];
+    myWeakSubjects = cleanSubjectList(data.profile.weakSubjects);
+    myStrongSubjects = cleanSubjectList(data.profile.strongSubjects);
 
     studyListIsSaved = myWeakSubjects.length > 0 || myStrongSubjects.length > 0;
     studyListHasLocalChanges = false;
@@ -335,8 +377,24 @@ async function searchMatches() {
 
   if (!weakSelect || !strongSelect) return;
 
-  selectedWeakSubject = weakSelect.value.trim();
-  selectedStrongSubject = strongSelect.value.trim();
+ const rawSelectedWeakSubject = String(weakSelect.value || "").trim();
+const rawSelectedStrongSubject = String(strongSelect.value || "").trim();
+
+const weakSelectedNone = rawSelectedWeakSubject.toLowerCase() === "none";
+const strongSelectedNone = rawSelectedStrongSubject.toLowerCase() === "none";
+
+selectedWeakSubject = normalizeDropdownSubject(rawSelectedWeakSubject);
+selectedStrongSubject = normalizeDropdownSubject(rawSelectedStrongSubject);
+
+if (weakSelectedNone) {
+  myWeakSubjects = [];
+  weakSelect.value = "";
+}
+
+if (strongSelectedNone) {
+  myStrongSubjects = [];
+  strongSelect.value = "";
+}
 
   if (selectedWeakSubject) {
     if (myStrongSubjects.includes(selectedWeakSubject)) {
@@ -371,11 +429,11 @@ async function searchMatches() {
 
   renderProfileList();
 
-  if (myWeakSubjects.length === 0 || myStrongSubjects.length === 0) {
-    showToast("Add at least one weak subject and one strong subject before searching.", "warning");
-    renderNoSearchState();
-    return;
-  }
+    if (myWeakSubjects.length === 0 && myStrongSubjects.length === 0) {
+  showToast("Add at least one weak subject or one strong subject before searching.", "warning");
+  renderNoSearchState();
+  return;
+    }
 
   renderLoadingMatches();
 
@@ -497,8 +555,18 @@ function renderMatches() {
       ? match.iCanHelpThem
       : [];
 
-    const requestWeakSubject = canHelpMe[0] || myWeakSubjects[0] || "";
-    const requestStrongSubject = iCanHelpThem[0] || myStrongSubjects[0] || "";
+       const requestWeakSubject = canHelpMe[0] || "";
+    const requestStrongSubject = iCanHelpThem[0] || "";
+
+    let requestButtonText = `Send Request to ${firstName}`;
+
+    if (requestWeakSubject && !requestStrongSubject) {
+      requestButtonText = `Ask ${firstName} for Help`;
+    }
+
+    if (!requestWeakSubject && requestStrongSubject) {
+      requestButtonText = `Offer Help to ${firstName}`;
+    }
 
     return `
       <div class="buddy-card">
@@ -549,7 +617,7 @@ function renderMatches() {
           class="btn-match"
           onclick="sendMatchRequest('${escapeJS(match.profileId)}', '${escapeJS(name)}', '${escapeJS(requestWeakSubject)}', '${escapeJS(requestStrongSubject)}')"
         >
-          Send Request to ${escapeHTML(firstName)}
+         ${escapeHTML(requestButtonText)}
         </button>
       </div>
     `;
@@ -569,8 +637,8 @@ async function sendMatchRequest(receiverProfileId, name, weakSubject, strongSubj
   const senderWeakSubject = String(weakSubject || "").trim();
   const senderStrongSubject = String(strongSubject || "").trim();
 
-  if (!senderWeakSubject || !senderStrongSubject) {
-    showToast("This match is missing a weak or strong subject.", "warning");
+    if (!senderWeakSubject && !senderStrongSubject) {
+    showToast("This match is missing a subject.", "warning");
     return;
   }
 
@@ -673,15 +741,72 @@ function renderRequests(requests) {
       "Student";
 
     const status = request.status || "pending";
+    const direction = request.direction || "sent";
+    const isSent = direction === "sent";
+
+    const avatarLetter = otherName.charAt(0).toUpperCase();
+
+    const neededSubject = normalizeDropdownSubject(request.senderWeakSubject || "");
+    const offeredSubject = normalizeDropdownSubject(request.senderStrongSubject || "");
+
+    const neededLabel = isSent
+      ? "You asked for help with"
+      : "They need help with";
+
+    const offeredLabel = isSent
+      ? "You offered help with"
+      : "They can help with";
+
+    const neededHTML = neededSubject
+      ? `<span class="small-tag">${escapeHTML(neededSubject)}</span>`
+      : `<span class="small-tag empty-tag">No help requested</span>`;
+
+    const offeredHTML = offeredSubject
+      ? `<span class="small-tag">${escapeHTML(offeredSubject)}</span>`
+      : `<span class="small-tag empty-tag">No help offered</span>`;
+
+    let actionHTML = "";
+
+    if (["accepted", "rescheduled", "matched"].includes(status) && request.chat) {
+      actionHTML = `
+        <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
+          Open Chat
+        </button>
+      `;
+    } else if (status === "pending" && direction === "sent") {
+      actionHTML = `
+        <button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
+          Cancel Request
+        </button>
+      `;
+    } else if (status === "pending" && direction === "received") {
+      actionHTML = `
+        <div class="request-actions">
+          <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}', '${escapeJS(otherName)}')">
+            Accept
+          </button>
+
+          <button class="btn-match reject-request-btn" onclick="rejectMatchRequest('${escapeJS(request._id)}')">
+            Reject
+          </button>
+        </div>
+      `;
+    } else {
+      actionHTML = `
+        <button class="btn-match" disabled>
+          ${escapeHTML(status)}
+        </button>
+      `;
+    }
 
     return `
-      <div class="buddy-card request-card">
+      <div class="buddy-card">
         <div class="buddy-top">
-          <div class="buddy-avatar">${escapeHTML(otherName.charAt(0).toUpperCase())}</div>
+          <div class="buddy-avatar">${escapeHTML(avatarLetter)}</div>
 
           <div class="buddy-name">
-            <h3>${escapeHTML(otherName)}</h3>
-            <p>${escapeHTML(request.direction || "request")} request</p>
+            <h3>${escapeHTML(isSent ? `To ${otherName}` : `From ${otherName}`)}</h3>
+            <p>${escapeHTML(request.otherEmail || "")}</p>
           </div>
 
           <span class="match-score">${escapeHTML(status)}</span>
@@ -689,48 +814,25 @@ function renderRequests(requests) {
 
         <div class="buddy-subjects">
           <div class="subject-row">
-            <h5>Subject needed</h5>
+            <h5>${escapeHTML(neededLabel)}</h5>
             <div class="small-tags">
-              <span class="small-tag">${escapeHTML(request.senderWeakSubject || "-")}</span>
+              ${neededHTML}
             </div>
           </div>
 
           <div class="subject-row">
-            <h5>Can help with</h5>
+            <h5>${escapeHTML(offeredLabel)}</h5>
             <div class="small-tags">
-              <span class="small-tag">${escapeHTML(request.senderStrongSubject || "-")}</span>
+              ${offeredHTML}
             </div>
           </div>
         </div>
 
-        ${
-          ["accepted", "rescheduled", "matched"].includes(status) && request.chat
-            ? `<button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
-                Open Chat
-              </button>`
-            : status === "pending" && request.direction === "sent"
-              ? `<button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
-                  Cancel Request
-                </button>`
-              : status === "pending" && request.direction === "received"
-                ? `<div class="request-actions">
-                    <button class="btn-match accept-request-btn" onclick="acceptMatchRequest('${escapeJS(request._id)}', '${escapeJS(otherName)}')">
-                      Accept
-                    </button>
-
-                    <button class="btn-match reject-request-btn" onclick="rejectMatchRequest('${escapeJS(request._id)}')">
-                      Reject
-                    </button>
-                  </div>`
-                : `<button class="btn-match" disabled>
-                    ${escapeHTML(status)}
-                  </button>`
-        }
+        ${actionHTML}
       </div>
     `;
   }).join("");
 }
-
 function renderEmptyRequests() {
   const requestsGrid = document.getElementById("requestsGrid");
 
@@ -958,15 +1060,10 @@ function stopSavedMatchRefresh() {
 function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects = myStrongSubjects) {
   if (!isLoggedIn()) return;
 
-  const cleanWeakSubjects = Array.isArray(weakSubjects)
-    ? weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
-    : [];
+  const cleanWeakSubjects = cleanSubjectList(weakSubjects);
+  const cleanStrongSubjects = cleanSubjectList(strongSubjects);
 
-  const cleanStrongSubjects = Array.isArray(strongSubjects)
-    ? strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
-    : [];
-
-  if (cleanWeakSubjects.length === 0 || cleanStrongSubjects.length === 0) {
+  if (cleanWeakSubjects.length === 0 && cleanStrongSubjects.length === 0) {
     return;
   }
 
@@ -975,8 +1072,8 @@ function saveMatchingSearchState(weakSubjects = myWeakSubjects, strongSubjects =
     JSON.stringify({
       weakSubjects: cleanWeakSubjects,
       strongSubjects: cleanStrongSubjects,
-      selectedWeakSubject,
-      selectedStrongSubject,
+      selectedWeakSubject: normalizeDropdownSubject(selectedWeakSubject),
+      selectedStrongSubject: normalizeDropdownSubject(selectedStrongSubject),
       savedAt: Date.now()
     })
   );
@@ -990,23 +1087,18 @@ function getMatchingSearchState() {
 
     const data = JSON.parse(rawData);
 
-    const weakSubjects = Array.isArray(data.weakSubjects)
-      ? data.weakSubjects.map(subject => String(subject).trim()).filter(Boolean)
-      : [];
+    const weakSubjects = cleanSubjectList(data.weakSubjects);
+    const strongSubjects = cleanSubjectList(data.strongSubjects);
 
-    const strongSubjects = Array.isArray(data.strongSubjects)
-      ? data.strongSubjects.map(subject => String(subject).trim()).filter(Boolean)
-      : [];
-
-    if (weakSubjects.length === 0 || strongSubjects.length === 0) {
+    if (weakSubjects.length === 0 && strongSubjects.length === 0) {
       return null;
     }
 
     return {
       weakSubjects,
       strongSubjects,
-      selectedWeakSubject: data.selectedWeakSubject || "",
-      selectedStrongSubject: data.selectedStrongSubject || ""
+      selectedWeakSubject: normalizeDropdownSubject(data.selectedWeakSubject || ""),
+      selectedStrongSubject: normalizeDropdownSubject(data.selectedStrongSubject || "")
     };
   } catch (error) {
     console.error("Read matching search state error:", error);
