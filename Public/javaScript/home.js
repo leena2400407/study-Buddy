@@ -13,7 +13,6 @@ const bgEffects         = document.getElementById('bg-effects');
 const introLogo         = document.getElementById('intro-logo');
 const navCylinderToggle = document.getElementById('navCylinderToggle');
 const cylinderScrollNav = document.getElementById('cylinderScrollNav');
-const themeToggle       = document.getElementById('themeToggle');
 
 let selectedIndex  = 0;
 const cellCount    = 6;
@@ -22,40 +21,64 @@ let cylinderPageInitialized = false;
 
 const CYLINDER_INTRO_FLAG = 'studyBuddyPlayCylinderIntro';
 const CYLINDER_THEME_KEY  = 'studyBuddyCylinderTheme';
+const SHARED_THEME_KEY    = 'sbTheme';
 
 /* ------------------------------------------------------------
    THEME TOGGLE
-   This is the only new part.
-   It does not change cylinder movement, pop animation, or nav logic.
+   One clean system only.
+   It updates:
+   - localStorage sbTheme
+   - old cylinder theme key for compatibility
+   - html/body theme classes
+   - the switch button visual classes is-light / is-dark
    ------------------------------------------------------------ */
 function getSavedCylinderTheme() {
     try {
-        return localStorage.getItem(CYLINDER_THEME_KEY) === 'dark' ? 'dark' : 'light';
+        const sharedTheme = localStorage.getItem(SHARED_THEME_KEY);
+        const oldTheme = localStorage.getItem(CYLINDER_THEME_KEY);
+        const savedTheme = sharedTheme || oldTheme || 'light';
+
+        return savedTheme === 'dark' ? 'dark' : 'light';
     } catch (error) {
         return 'light';
     }
 }
 
 function saveCylinderTheme(theme) {
+    const finalTheme = theme === 'dark' ? 'dark' : 'light';
+
     try {
-        localStorage.setItem(CYLINDER_THEME_KEY, theme === 'dark' ? 'dark' : 'light');
+        localStorage.setItem(SHARED_THEME_KEY, finalTheme);
+        localStorage.setItem(CYLINDER_THEME_KEY, finalTheme);
     } catch (error) {
         // Ignore localStorage errors
     }
 }
 
 function applyCylinderTheme(theme) {
-    if (!document.body.classList.contains('cylinder-body')) return;
+    if (!document.body || !document.body.classList.contains('cylinder-body')) return;
 
-    const isDark = theme === 'dark';
+    const finalTheme = theme === 'dark' ? 'dark' : 'light';
+    const isDark = finalTheme === 'dark';
+    const isLight = finalTheme === 'light';
 
+    document.documentElement.dataset.theme = finalTheme;
+    document.body.dataset.theme = finalTheme;
+    document.body.setAttribute('data-cylinder-theme', finalTheme);
+
+    document.documentElement.classList.toggle('theme-light', isLight);
+    document.documentElement.classList.toggle('theme-dark', isDark);
     document.documentElement.classList.toggle('cylinder-dark-theme-root', isDark);
+
+    document.body.classList.toggle('theme-light', isLight);
+    document.body.classList.toggle('theme-dark', isDark);
+    document.body.classList.toggle('cylinder-light-theme', isLight);
     document.body.classList.toggle('cylinder-dark-theme', isDark);
-    document.body.setAttribute('data-cylinder-theme', isDark ? 'dark' : 'light');
 
     const currentThemeToggle = document.getElementById('themeToggle');
 
     if (currentThemeToggle) {
+        currentThemeToggle.classList.toggle('is-light', isLight);
         currentThemeToggle.classList.toggle('is-dark', isDark);
         currentThemeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
         currentThemeToggle.setAttribute(
@@ -63,6 +86,8 @@ function applyCylinderTheme(theme) {
             isDark ? 'Switch to light theme' : 'Switch to dark theme'
         );
     }
+
+    saveCylinderTheme(finalTheme);
 }
 
 function toggleCylinderTheme(event) {
@@ -71,28 +96,61 @@ function toggleCylinderTheme(event) {
         event.stopPropagation();
     }
 
-    const nextTheme = document.body.classList.contains('cylinder-dark-theme')
-        ? 'light'
-        : 'dark';
+    const currentTheme = document.body.classList.contains('cylinder-dark-theme')
+        ? 'dark'
+        : 'light';
+
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
     applyCylinderTheme(nextTheme);
-    saveCylinderTheme(nextTheme);
 }
 
 function initCylinderTheme() {
-    if (!document.body.classList.contains('cylinder-body')) return;
+    if (!document.body || !document.body.classList.contains('cylinder-body')) return;
 
     applyCylinderTheme(getSavedCylinderTheme());
 
     const currentThemeToggle = document.getElementById('themeToggle');
 
     if (currentThemeToggle) {
-        currentThemeToggle.removeEventListener('click', toggleCylinderTheme);
-        currentThemeToggle.addEventListener('click', toggleCylinderTheme);
+        currentThemeToggle.onclick = toggleCylinderTheme;
     }
 }
 
 initCylinderTheme();
+
+/* ------------------------------------------------------------
+   LANGUAGE SYNC
+   Cylinder uses the same language key as the other pages: sbLang
+   ------------------------------------------------------------ */
+function initCylinderLanguage() {
+    if (!document.body || !document.body.classList.contains('cylinder-body')) return;
+
+    const langToggle = document.getElementById('cylinderLangToggle');
+    const currentLang = document.body.dataset.lang === 'ar' ? 'ar' : 'en';
+
+    try {
+        localStorage.setItem('sbLang', currentLang);
+    } catch (error) {
+        // Ignore localStorage errors
+    }
+
+    if (langToggle) {
+        langToggle.onclick = function () {
+            const nextLang = langToggle.dataset.nextLang === 'ar' ? 'ar' : 'en';
+
+            try {
+                localStorage.setItem('sbLang', nextLang);
+            } catch (error) {
+                // Ignore localStorage errors
+            }
+
+            window.location.href = '/change-language/' + nextLang + '?redirect=/cylinder';
+        };
+    }
+}
+
+initCylinderLanguage();
 
 /* ------------------------------------------------------------
    SESSION FLAG HELPERS
@@ -458,6 +516,7 @@ if (document.readyState === 'loading') {
    ------------------------------------------------------------ */
 window.addEventListener('pageshow', (event) => {
     initCylinderTheme();
+    initCylinderLanguage();
 
     if (!cylinderScene) return;
 
@@ -467,9 +526,8 @@ window.addEventListener('pageshow', (event) => {
 });
 
 /* ============================================================
-   NEW HORIZONTAL CYLINDER SCROLL NAV
+   HORIZONTAL CYLINDER SCROLL NAV
    ============================================================ */
-
 function animateNavIcon(isOpen) {
     if (!navCylinderToggle) return;
 
@@ -489,7 +547,7 @@ function animateNavIcon(isOpen) {
     }, 230);
 }
 
-function setScrollNavState(isOpen, animateIcon = true) {
+function setScrollNavState(isOpen, animateIconState = true) {
     if (!cylinderScrollNav) return;
 
     cylinderScrollNav.classList.toggle('is-open', isOpen);
@@ -502,7 +560,7 @@ function setScrollNavState(isOpen, animateIcon = true) {
         if (profileCard) profileCard.classList.remove('show');
     }
 
-    if (animateIcon) {
+    if (animateIconState) {
         animateNavIcon(isOpen);
     } else if (navCylinderToggle) {
         clearTimeout(navCylinderToggle._morphTimer);
@@ -542,7 +600,6 @@ if (navCylinderToggle) {
 /* ============================================================
    NAV / UI HELPERS
    ============================================================ */
-
 function goHome() {
     if (featuresPage) featuresPage.style.display = 'none';
     if (homePage) homePage.style.display = 'block';
@@ -563,6 +620,15 @@ function toggleProfile() {
 
     profileCard.classList.toggle('show');
 }
+
+function logout() {
+    window.location.href = '/logout';
+}
+
+window.goHome = goHome;
+window.toggleDropdown = toggleDropdown;
+window.toggleProfile = toggleProfile;
+window.logout = logout;
 
 window.addEventListener('click', (event) => {
     if (!event.target.closest('.cylinder-scroll-nav')) {

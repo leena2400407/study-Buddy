@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= typeof lang !== "undefined" ? lang : "en" %>">
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>" dir="<%= typeof dir !== 'undefined' ? dir : 'ltr' %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,57 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-
-  <script>
-    /*
-      Sync language + theme before CSS paints.
-
-      Shared language key for cylinder + other pages:
-      sbLang
-
-      Shared theme key for cylinder + other pages:
-      sbTheme
-    */
-    (function () {
-      try {
-        const serverLang = "<%= typeof lang !== 'undefined' ? lang : 'en' %>";
-        let savedLang = localStorage.getItem("sbLang");
-
-        if (savedLang !== "en" && savedLang !== "ar") {
-          savedLang = serverLang;
-          localStorage.setItem("sbLang", serverLang);
-        }
-
-        if (savedLang !== serverLang) {
-          window.location.replace("/change-language/" + savedLang + "?redirect=/cylinder");
-          return;
-        }
-
-        document.documentElement.lang = savedLang;
-        document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
-
-        const sharedTheme = localStorage.getItem("sbTheme");
-        const oldCylinderTheme = localStorage.getItem("studyBuddyCylinderTheme");
-        const savedTheme = sharedTheme || oldCylinderTheme || "dark";
-
-        localStorage.setItem("sbTheme", savedTheme);
-        localStorage.setItem("studyBuddyCylinderTheme", savedTheme);
-
-        document.documentElement.dataset.theme = savedTheme;
-
-        document.documentElement.classList.toggle("theme-light", savedTheme === "light");
-        document.documentElement.classList.toggle("theme-dark", savedTheme !== "light");
-
-        if (savedTheme === "dark") {
-          document.documentElement.classList.add("cylinder-dark-theme-root");
-        } else {
-          document.documentElement.classList.remove("cylinder-dark-theme-root");
-        }
-      } catch (error) {
-        // Ignore localStorage errors
-      }
-    })();
-  </script>
 
   <link rel="stylesheet" href="/css/home.css">
 </head>
@@ -74,7 +23,7 @@
   const currentLang = typeof lang !== "undefined" ? lang : "en";
 %>
 
-<body class="cylinder-body" data-lang="<%= currentLang %>">
+<body class="cylinder-body" data-lang="<%= currentLang %>" data-page="cylinder">
 
   <div id="bg-effects">
     <span class="aurora aurora--1"></span>
@@ -219,17 +168,19 @@
             <!-- LANGUAGE BUTTON -->
             <% if (currentLang === "en") { %>
               <button
+                id="cylinderLangToggle"
                 class="login-link language-nav-btn notranslate"
                 type="button"
-                onclick="localStorage.setItem('sbLang', 'ar'); window.location.href='/change-language/ar?redirect=/cylinder';"
+                data-next-lang="ar"
               >
                 Arabic
               </button>
             <% } else { %>
               <button
+                id="cylinderLangToggle"
                 class="login-link language-nav-btn notranslate"
                 type="button"
-                onclick="localStorage.setItem('sbLang', 'en'); window.location.href='/change-language/en?redirect=/cylinder';"
+                data-next-lang="en"
               >
                 English
               </button>
@@ -286,7 +237,6 @@
       <!-- CYLINDER CARDS -->
       <div class="Cylinder" id="Cylinder">
 
-        <!-- EVENT CARD -->
         <div class="Cylinder__cell" id="event" data-href="/events">
           <div class="cell__media" style="background-image: url('/assests/images/event.png');"></div>
           <div class="cell__overlay"></div>
@@ -296,7 +246,6 @@
           </div>
         </div>
 
-        <!-- GAME CARD -->
         <div class="Cylinder__cell" id="game" data-href="/game-landing-page">
           <div class="cell__media" style="background-image: url('/assests/images/game.png');"></div>
           <div class="cell__overlay"></div>
@@ -306,7 +255,6 @@
           </div>
         </div>
 
-        <!-- RESOURCES CARD -->
         <div class="Cylinder__cell" id="resources-card" data-href="/resources">
           <div class="cell__media" style="background-image: url('/assests/images/resources.png');"></div>
           <div class="cell__overlay"></div>
@@ -316,7 +264,6 @@
           </div>
         </div>
 
-        <!-- MATCHING CARD -->
         <div class="Cylinder__cell" id="btn-matching" data-href="/matching">
           <div class="cell__media" style="background-image: url('/assests/images/matching.png');"></div>
           <div class="cell__overlay"></div>
@@ -326,7 +273,6 @@
           </div>
         </div>
 
-        <!-- AI CARD -->
         <div class="Cylinder__cell" id="ai" data-href="/ai">
           <div class="cell__media" style="background-image: url('/assests/images/ai.png');"></div>
           <div class="cell__overlay"></div>
@@ -336,7 +282,6 @@
           </div>
         </div>
 
-        <!-- FRESHMAN GUIDE CARD -->
         <div class="Cylinder__cell" id="guid" data-href="/freshman-guid">
           <div class="cell__media" style="background-image: url('/assests/images/freshman.png');"></div>
           <div class="cell__overlay"></div>
@@ -356,89 +301,6 @@
   </div>
 
   <script src="/javaScript/home.js"></script>
-
-  <script>
-    /*
-      Final sync after page loads.
-      This makes cylinder update shared keys for all other pages.
-    */
-    (function () {
-      function applySharedTheme(theme) {
-        const isLight = theme === "light";
-
-        localStorage.setItem("sbTheme", theme);
-        localStorage.setItem("studyBuddyCylinderTheme", theme);
-
-        document.documentElement.dataset.theme = theme;
-        document.body.dataset.theme = theme;
-
-        document.documentElement.classList.toggle("theme-light", isLight);
-        document.documentElement.classList.toggle("theme-dark", !isLight);
-        document.body.classList.toggle("theme-light", isLight);
-        document.body.classList.toggle("theme-dark", !isLight);
-
-        document.documentElement.classList.toggle("cylinder-dark-theme-root", !isLight);
-
-        const themeToggle = document.getElementById("themeToggle");
-
-        if (themeToggle) {
-          themeToggle.setAttribute("aria-pressed", isLight ? "true" : "false");
-          themeToggle.setAttribute(
-            "aria-label",
-            isLight ? "Switch to dark theme" : "Switch to light theme"
-          );
-        }
-      }
-
-      function detectCurrentTheme() {
-        if (document.documentElement.classList.contains("cylinder-dark-theme-root")) {
-          return "dark";
-        }
-
-        if (
-          document.documentElement.classList.contains("theme-light") ||
-          document.body.classList.contains("theme-light") ||
-          document.body.dataset.theme === "light"
-        ) {
-          return "light";
-        }
-
-        return localStorage.getItem("sbTheme") ||
-          localStorage.getItem("studyBuddyCylinderTheme") ||
-          "dark";
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        const currentServerLang = "<%= currentLang %>";
-        localStorage.setItem("sbLang", currentServerLang);
-
-        document.documentElement.lang = currentServerLang;
-        document.documentElement.dir = currentServerLang === "ar" ? "rtl" : "ltr";
-
-        const savedTheme =
-          localStorage.getItem("sbTheme") ||
-          localStorage.getItem("studyBuddyCylinderTheme") ||
-          "dark";
-
-        applySharedTheme(savedTheme);
-
-        const themeToggle = document.getElementById("themeToggle");
-
-        if (themeToggle) {
-          themeToggle.addEventListener("click", function () {
-            setTimeout(function () {
-              const themeAfterHomeJs = detectCurrentTheme();
-              applySharedTheme(themeAfterHomeJs);
-            }, 0);
-          });
-        }
-      });
-    })();
-
-    function logout() {
-      window.location.href = "/logout";
-    }
-  </script>
 
 </body>
 </html>
