@@ -2710,6 +2710,75 @@ const createJitsiRoom = () => {
 
 const APP_TIME_ZONE = process.env.APP_TIME_ZONE || "Africa/Cairo";
 
+function getTimeZoneOffsetMs(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(date);
+
+  const values = {};
+
+  parts.forEach(part => {
+    if (part.type !== "literal") {
+      values[part.type] = Number(part.value);
+    }
+  });
+
+  const asUTC = Date.UTC(
+    values.year,
+    values.month - 1,
+    values.day,
+    values.hour,
+    values.minute,
+    values.second
+  );
+
+  return asUTC - date.getTime();
+}
+
+function parseScheduleDateTime(value) {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return new Date("invalid");
+  }
+
+  // If the frontend ever sends a real ISO date with Z or +02:00, use it directly.
+  if (/[zZ]$|[+-]\d{2}:\d{2}$/.test(rawValue)) {
+    return new Date(rawValue);
+  }
+
+  // datetime-local comes like: 2026-06-08T13:32
+  const match = rawValue.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+  );
+
+  if (!match) {
+    return new Date(rawValue);
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6] || 0);
+
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  const offsetMs = getTimeZoneOffsetMs(utcGuess, APP_TIME_ZONE);
+
+  return new Date(utcGuess.getTime() - offsetMs);
+}
+
+
 const formatMatchSchedule = (scheduledAt) => {
   if (!scheduledAt) return "Not scheduled.";
 
@@ -2931,15 +3000,25 @@ const sendChatMatchEmail = async (matchRequest) => {
   
 const checkScheduledChatMatches = async () => {
   try {
+    const now = new Date();
+
     const dueRequests = await MatchRequest.find({
       status: "rescheduled",
-      scheduledAt: { $lte: new Date() },
+      scheduledAt: { $lte: now },
       emailSentAt: null
     }).limit(20);
 
+    if (dueRequests.length > 0) {
+      console.log(`Scheduled checker found ${dueRequests.length} due match request(s) at ${now.toISOString()}`);
+    }
+
     for (const request of dueRequests) {
-      await sendChatMatchEmail(request);
-      console.log(`Scheduled chat match email sent for request ${request._id}`);
+      try {
+        await sendChatMatchEmail(request);
+        console.log(`Scheduled chat match email sent for request ${request._id}`);
+      } catch (emailError) {
+        console.error(`Scheduled chat match email failed for request ${request._id}:`, emailError);
+      }
     }
   } catch (error) {
     console.error("Scheduled chat match checker error:", error);
@@ -2947,6 +3026,10 @@ const checkScheduledChatMatches = async () => {
 };
 
 setInterval(checkScheduledChatMatches, 60 * 1000);
+
+setTimeout(() => {
+  checkScheduledChatMatches();
+}, 5000);
 
 const CS_SUBJECTS = [
   "None",
@@ -4590,7 +4673,7 @@ app.patch("/api/matching/chat/:chatId/schedule", requireAuth, async (req, res) =
       });
     }
 
-    const finalScheduledAt = new Date(scheduledAt);
+   const finalScheduledAt = parseScheduleDateTime(scheduledAt);
 
     if (Number.isNaN(finalScheduledAt.getTime())) {
       return res.status(400).json({
