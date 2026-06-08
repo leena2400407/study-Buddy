@@ -1,17 +1,73 @@
 const fs = require("fs");
 const path = require("path");
 
-const en = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "..", "locales", "en.json"), "utf8")
-);
+const defaultEnglish = {
+  language: {
+    arabic: "Arabic",
+    english: "English"
+  },
+  nav: {
+    home: "Home",
+    profile: "Profile",
+    login: "Login",
+    signup: "Sign Up",
+    logout: "Logout"
+  },
+  cylinder: {
+    title: "Study Buddy",
+    edugate: "Edugate",
+    games: "Games",
+    ai: "AI Assistant",
+    events: "Events",
+    matching: "Matching",
+    resources: "Resources",
+    freshman: "Freshman Guide"
+  }
+};
 
-const ar = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "..", "locales", "ar.json"), "utf8")
-);
+const defaultArabic = {
+  language: {
+    arabic: "Arabic",
+    english: "English"
+  },
+  nav: {
+    home: "Home",
+    profile: "Profile",
+    login: "Login",
+    signup: "Sign Up",
+    logout: "Logout"
+  },
+  cylinder: {
+    title: "Study Buddy",
+    edugate: "Edugate",
+    games: "Games",
+    ai: "AI Assistant",
+    events: "Events",
+    matching: "Matching",
+    resources: "Resources",
+    freshman: "Freshman Guide"
+  }
+};
+
+function loadJsonFile(fileName, fallback) {
+  try {
+    const filePath = path.join(process.cwd(), "locales", fileName);
+
+    if (!fs.existsSync(filePath)) {
+      console.warn(`Localization file missing: ${filePath}`);
+      return fallback;
+    }
+
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    console.error(`Could not load localization file ${fileName}:`, error.message);
+    return fallback;
+  }
+}
 
 const translations = {
-  en,
-  ar
+  en: loadJsonFile("en.json", defaultEnglish),
+  ar: loadJsonFile("ar.json", defaultArabic)
 };
 
 function getNestedValue(obj, key) {
@@ -25,7 +81,7 @@ function getNestedValue(obj, key) {
 }
 
 function languageMiddleware(req, res, next) {
-const selectedLanguage = req.session?.lang || "en";
+  const selectedLanguage = req.session?.lang || "en";
   const lang = translations[selectedLanguage] ? selectedLanguage : "en";
 
   res.locals.lang = lang;
