@@ -785,12 +785,19 @@ function renderRequests(requests) {
 
     let actionHTML = "";
 
-    if (["accepted", "rescheduled", "matched"].includes(status) && request.chat) {
-      actionHTML = `
-        <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
-          Open Chat
-        </button>
-      `;
+    if (status === "matched") {
+  actionHTML = `
+    <button class="btn-match matched-locked-btn" type="button" disabled>
+      Chat Closed
+    </button>
+  `;
+  } else if (["accepted", "rescheduled"].includes(status) && request.chat) {
+     actionHTML = `
+    <button class="btn-match" onclick="openMatchingChatPopup('${escapeJS(request.chat)}', '${escapeJS(otherName)}')">
+      Open Chat
+    </button>
+  `;
+} else if (status === "pending" && direction === "sent") {
     } else if (status === "pending" && direction === "sent") {
       actionHTML = `
         <button class="btn-match cancel-request-btn" onclick="cancelMatchRequest('${escapeJS(request._id)}')">
