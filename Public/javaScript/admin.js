@@ -15,6 +15,244 @@ const adminPages = {
   avatars: 1
 };
 
+
+function adminCleanText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function adminIsValidFullName(value) {
+  const text = adminCleanText(value);
+  return text.length >= 5 && text.length <= 80 && /^[A-Za-z]+(?: [A-Za-z]+)+$/.test(text);
+}
+
+function adminIsValidUsername(value) {
+  const text = String(value || "").trim();
+  return /^(?=.{3,20}$)[A-Za-z][A-Za-z0-9_]*$/.test(text);
+}
+
+function adminIsValidEmail(value) {
+  const text = String(value || "").trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(text);
+}
+
+function adminIsValidStrongPassword(value) {
+  const text = String(value || "");
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(text);
+}
+
+function adminIsValidSimpleText(value, min = 2, max = 80) {
+  const text = adminCleanText(value);
+  return (
+    text.length >= min &&
+    text.length <= max &&
+    /^[A-Za-z0-9][A-Za-z0-9\s&+.#()\-']*$/.test(text)
+  );
+}
+
+function adminIsValidLongText(value, min = 10, max = 2000) {
+  const text = adminCleanText(value);
+  return text.length >= min && text.length <= max;
+}
+
+function adminIsSafePathOrUrl(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return false;
+
+  const lowerText = text.toLowerCase();
+
+  if (
+    lowerText.startsWith("javascript:") ||
+    lowerText.startsWith("data:") ||
+    lowerText.startsWith("vbscript:") ||
+    text.includes("..") ||
+    /[<>"']/.test(text)
+  ) {
+    return false;
+  }
+
+  if (text.startsWith("/")) {
+    return text.length > 1 && !/\s/.test(text);
+  }
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (error) {
+    return false;
+  }
+}
+
+function adminIsValidImagePath(value) {
+  const text = String(value || "").trim();
+  const lowerText = text.toLowerCase().split("?")[0].split("#")[0];
+
+  if (!adminIsSafePathOrUrl(text)) return false;
+
+  return (
+    lowerText.endsWith(".jpg") ||
+    lowerText.endsWith(".jpeg") ||
+    lowerText.endsWith(".png") ||
+    lowerText.endsWith(".webp") ||
+    lowerText.includes("unsplash.com") ||
+    lowerText.includes("images.")
+  );
+}
+
+function validateAdminUserPayload(payload, isEditMode) {
+  if (!adminIsValidFullName(payload.fullName)) {
+    return "Full name must contain first and last name, letters only.";
+  }
+
+  if (!adminIsValidUsername(payload.username)) {
+    return "Username must be 3-20 characters, start with a letter, and use only letters, numbers, or underscore.";
+  }
+
+  if (!adminIsValidEmail(payload.email)) {
+    return "Please enter a valid email address.";
+  }
+
+  if (!isEditMode && !payload.password) {
+    return "Password is required when creating a user.";
+  }
+
+  if (payload.password && !adminIsValidStrongPassword(payload.password)) {
+    return "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+  }
+
+  if (!["male", "female"].includes(String(payload.gender || "").toLowerCase())) {
+    return "Gender must be Male or Female.";
+  }
+
+  if (!adminIsValidSimpleText(payload.university, 2, 80)) {
+    return "University must be 2-80 characters and use safe characters only.";
+  }
+
+  if (!adminIsValidSimpleText(payload.major, 2, 80)) {
+    return "Major must be 2-80 characters and use safe characters only.";
+  }
+
+  if (!["student", "admin"].includes(String(payload.role || "").toLowerCase())) {
+    return "Role must be student or admin.";
+  }
+
+  return "";
+}
+
+function validateAdminEventPayload(payload) {
+  const category = String(payload.category || "").trim().toLowerCase();
+  const buttonType = String(payload.buttonType || "").trim().toLowerCase();
+  const allowedCategories = ["sports", "football", "padel", "music", "concert", "entertainment"];
+
+  if (!adminIsValidSimpleText(payload.title, 3, 80)) {
+    return "Event title must be 3-80 characters and use safe characters only.";
+  }
+
+  if (!allowedCategories.includes(category)) {
+    return "Category must be sports, football, padel, music, concert, or entertainment.";
+  }
+
+  if (!adminIsValidLongText(payload.description, 10, 1500)) {
+    return "Event description must be 10-1500 characters.";
+  }
+
+  if (!adminIsValidImagePath(payload.imagePath)) {
+    return "Image must be a safe image path or image URL.";
+  }
+
+  if (!["register", "details"].includes(buttonType)) {
+    return "Button type must be register or details.";
+  }
+
+  if (payload.detailsLink && !adminIsSafePathOrUrl(payload.detailsLink)) {
+    return "Details/location link must be a safe URL or path.";
+  }
+
+  if (buttonType === "details" && !payload.detailsLink) {
+    return "Details link is required when button type is details.";
+  }
+
+  if (buttonType === "register") {
+    const maxPlayers = Number(payload.maxPlayers);
+
+    if (!Number.isInteger(maxPlayers)) {
+      return "Max players must be a whole number.";
+    }
+
+    if (category === "padel" && maxPlayers !== 2) {
+      return "Padel must have exactly 2 players.";
+    }
+
+    if (category === "football" && (maxPlayers < 5 || maxPlayers > 20)) {
+      return "Football max players must be between 5 and 20.";
+    }
+
+    if (category !== "football" && category !== "padel" && (maxPlayers < 1 || maxPlayers > 20)) {
+      return "Max players must be between 1 and 20 for register events.";
+    }
+  }
+
+  return "";
+}
+
+function validateAdminUniversityPayload(payload) {
+  if (!adminIsValidSimpleText(payload.name, 3, 100)) {
+    return "University name must be 3-100 characters and use safe characters only.";
+  }
+
+  if (!/^[A-Za-z0-9]{2,15}$/.test(String(payload.shortName || "").trim())) {
+    return "University short name must be 2-15 letters/numbers, like MIU or GUC.";
+  }
+
+  if (!adminIsValidImagePath(payload.imagePath)) {
+    return "University image must be a safe image path or image URL.";
+  }
+
+  if (!adminIsValidLongText(payload.overview, 20, 2000)) {
+    return "Overview must be 20-2000 characters.";
+  }
+
+  if (!adminIsValidSimpleText(payload.location, 2, 120)) {
+    return "Location must be 2-120 characters and use safe characters only.";
+  }
+
+  if (!adminIsSafePathOrUrl(payload.portalLink)) {
+    return "Portal link must be a safe URL or path.";
+  }
+
+  const listItems = [payload.academics, payload.whyChoose, payload.studentLife]
+    .join("\n")
+    .split("\n")
+    .map(item => adminCleanText(item))
+    .filter(Boolean);
+
+  if (listItems.some(item => !adminIsValidSimpleText(item, 2, 160))) {
+    return "Academics, why choose, and student life items must be 2-160 characters and use safe characters only.";
+  }
+
+  if (payload.contactInfo && adminCleanText(payload.contactInfo).length > 500) {
+    return "Contact info must be 500 characters or less.";
+  }
+
+  return "";
+}
+
+function validateAdminResourceCategoryPayload(name, shortName, color) {
+  if (!adminIsValidSimpleText(name, 2, 80)) {
+    return "Category name must be 2-80 characters and use safe characters only.";
+  }
+
+  if (!adminIsValidSimpleText(shortName, 1, 16)) {
+    return "Tab short name must be 1-16 characters and use safe characters only.";
+  }
+
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+    return "Please choose a valid color.";
+  }
+
+  return "";
+}
+
 function renderPagination(tabName, pagination, loadFunctionName) {
   if (!pagination) return "";
 
@@ -191,21 +429,29 @@ async function loadUsers() {
   }
 }
 
+
 async function saveUser(event) {
   event.preventDefault();
 
   const userId = document.getElementById("userId").value;
 
   const payload = {
-    fullName: document.getElementById("userFullName").value.trim(),
+    fullName: adminCleanText(document.getElementById("userFullName").value),
     username: document.getElementById("userUsername").value.trim(),
-    email: document.getElementById("userEmail").value.trim(),
+    email: document.getElementById("userEmail").value.trim().toLowerCase(),
     password: document.getElementById("userPassword").value,
     gender: document.getElementById("userGender").value,
-    university: document.getElementById("userUniversity").value.trim(),
-    major: document.getElementById("userMajor").value.trim(),
+    university: adminCleanText(document.getElementById("userUniversity").value),
+    major: adminCleanText(document.getElementById("userMajor").value),
     role: document.getElementById("userRole").value
   };
+
+  const validationError = validateAdminUserPayload(payload, Boolean(userId));
+
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
 
   const url = userId
     ? `/admin/api/users/${userId}`
@@ -270,7 +516,7 @@ async function deleteUser(userId) {
   if (!confirmDelete) return;
 
   try {
-    const response = await fetch(`/admin/users/${userId}`, {
+    const response = await fetch(`/admin/api/users/${userId}`, {
       method: "DELETE"
     });
 
@@ -638,20 +884,28 @@ if (avatarForm) {
 }
 });
 
+
 async function saveEvent(event) {
   event.preventDefault();
 
   const eventId = document.getElementById("eventId").value;
 
   const payload = {
-    title: document.getElementById("eventTitle").value.trim(),
-    category: document.getElementById("eventCategory").value.trim(),
-    description: document.getElementById("eventDescription").value.trim(),
+    title: adminCleanText(document.getElementById("eventTitle").value),
+    category: document.getElementById("eventCategory").value.trim().toLowerCase(),
+    description: adminCleanText(document.getElementById("eventDescription").value),
     imagePath: document.getElementById("eventImagePath").value.trim(),
     buttonType: document.getElementById("eventButtonType").value,
     detailsLink: document.getElementById("eventDetailsLink").value.trim(),
     maxPlayers: document.getElementById("eventMaxPlayers").value
   };
+
+  const validationError = validateAdminEventPayload(payload);
+
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
 
   const url = eventId
     ? `/admin/api/events/${eventId}`
@@ -732,23 +986,31 @@ async function deleteEvent(eventId) {
   }
 }
 
+
 async function saveUniversity(event) {
   event.preventDefault();
 
   const universityId = document.getElementById("universityId").value;
 
   const payload = {
-    name: document.getElementById("uniName").value.trim(),
-    shortName: document.getElementById("uniShortName").value.trim(),
+    name: adminCleanText(document.getElementById("uniName").value),
+    shortName: document.getElementById("uniShortName").value.trim().toUpperCase(),
     imagePath: document.getElementById("uniImagePath").value.trim(),
-    overview: document.getElementById("uniOverview").value.trim(),
-    location: document.getElementById("uniLocation").value.trim(),
+    overview: adminCleanText(document.getElementById("uniOverview").value),
+    location: adminCleanText(document.getElementById("uniLocation").value),
     academics: document.getElementById("uniAcademics").value.trim(),
     whyChoose: document.getElementById("uniWhyChoose").value.trim(),
     studentLife: document.getElementById("uniStudentLife").value.trim(),
-    contactInfo: document.getElementById("uniContactInfo").value.trim(),
+    contactInfo: adminCleanText(document.getElementById("uniContactInfo").value),
     portalLink: document.getElementById("uniPortalLink").value.trim()
   };
+
+  const validationError = validateAdminUniversityPayload(payload);
+
+  if (validationError) {
+    showToast(validationError, "error");
+    return;
+  }
 
   const url = universityId
     ? `/admin/api/universities/${universityId}`
@@ -1250,6 +1512,7 @@ function isValidResourcePathOrUrl(value) {
   }
 }
 
+
 function validateResourceInputs() {
   const rows = document.querySelectorAll("#resourceRows .resource-row");
   const allowedTypes = ["website", "playlist", "pdf", "video", "tool"];
@@ -1270,13 +1533,8 @@ function validateResourceInputs() {
       continue;
     }
 
-    if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(title)) {
-      showToast(`Resource ${index + 1}: title must contain letters only.`, "error");
-      return false;
-    }
-
-    if (title.length < 2 || title.length > 80) {
-      showToast(`Resource ${index + 1}: title must be 2-80 characters.`, "error");
+    if (!adminIsValidSimpleText(title, 2, 100)) {
+      showToast(`Resource ${index + 1}: title must be 2-100 characters and use safe characters only.`, "error");
       return false;
     }
 
@@ -1285,7 +1543,7 @@ function validateResourceInputs() {
       return false;
     }
 
-    if (!isValidResourcePathOrUrl(url)) {
+    if (!adminIsSafePathOrUrl(url)) {
       showToast(`Resource ${index + 1}: enter a valid URL or path.`, "error");
       return false;
     }
@@ -1325,37 +1583,20 @@ function resetResourceRows() {
   addResourceInputRow();
 }
 
+
 async function saveResource(event) {
   event.preventDefault();
 
   const resourceId = document.getElementById("resourceId").value;
 
-  const name = document.getElementById("resourceName").value.trim();
-  const shortName = document.getElementById("resourceShortName").value.trim();
+  const name = adminCleanText(document.getElementById("resourceName").value);
+  const shortName = adminCleanText(document.getElementById("resourceShortName").value);
   const color = document.getElementById("resourceColor").value.trim();
 
-  if (!name) {
-    showToast("Category name is required.", "error");
-    return;
-  }
+  const validationError = validateAdminResourceCategoryPayload(name, shortName, color);
 
-  if (name.length < 2 || name.length > 80) {
-    showToast("Category name must be 2-80 characters.", "error");
-    return;
-  }
-
-  if (!shortName) {
-    showToast("Tab short name is required.", "error");
-    return;
-  }
-
-  if (shortName.length < 1 || shortName.length > 12) {
-    showToast("Tab short name must be 1-12 characters.", "error");
-    return;
-  }
-
-  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
-    showToast("Please choose a valid color.", "error");
+  if (validationError) {
+    showToast(validationError, "error");
     return;
   }
 
@@ -1413,7 +1654,7 @@ async function saveResource(event) {
 
 function cleanLettersOnlyInput(value) {
   return String(value || "")
-    .replace(/[^A-Za-z\s]/g, "")
+    .replace(/[^A-Za-z0-9\s&+.#()\-']/g, "")
     .replace(/\s+/g, " ")
     .trimStart();
 }
@@ -1515,14 +1756,15 @@ async function loadAvatars() {
   }
 }
 
+
 async function saveAvatar(event) {
   event.preventDefault();
 
-  const name = document.getElementById("avatarName").value.trim();
+  const name = adminCleanText(document.getElementById("avatarName").value);
   const fileInput = document.getElementById("avatarImage");
 
-  if (!name) {
-    showToast("Avatar name is required.", "error");
+  if (!adminIsValidSimpleText(name, 2, 40)) {
+    showToast("Avatar name must be 2-40 characters and use safe characters only.", "error");
     return;
   }
 
@@ -1533,9 +1775,16 @@ async function saveAvatar(event) {
 
   const file = fileInput.files[0];
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+  const fileName = String(file.name || "").toLowerCase();
 
   if (!allowedTypes.includes(file.type)) {
     showToast("Only JPG, PNG, and WEBP images are allowed.", "error");
+    return;
+  }
+
+  if (!allowedExtensions.some(extension => fileName.endsWith(extension))) {
+    showToast("Avatar image must end with .jpg, .jpeg, .png, or .webp.", "error");
     return;
   }
 

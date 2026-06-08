@@ -81,6 +81,377 @@ const requireAdminApi = (req, res, next) => {
   next();
 };
 
+
+   //ADMIN BACKEND VALIDATION HELPERS
+  
+
+function cleanText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isValidObjectIdString(value) {
+  return /^[0-9a-fA-F]{24}$/.test(String(value || ""));
+}
+
+function isValidFullName(value) {
+  const text = cleanText(value);
+  return text.length >= 5 && text.length <= 80 && /^[A-Za-z]+(?: [A-Za-z]+)+$/.test(text);
+}
+
+function isValidUsername(value) {
+  const text = String(value || "").trim();
+  return /^(?=.{3,20}$)[A-Za-z][A-Za-z0-9_]*$/.test(text);
+}
+
+function isValidEmail(value) {
+  const text = String(value || "").trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(text);
+}
+
+function isValidStrongPassword(value) {
+  const text = String(value || "");
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(text);
+}
+
+function isValidSimpleText(value, min = 2, max = 80) {
+  const text = cleanText(value);
+
+  return (
+    text.length >= min &&
+    text.length <= max &&
+    /^[A-Za-z0-9][A-Za-z0-9\s&+.#()\-']*$/.test(text)
+  );
+}
+
+function isValidLongText(value, min = 10, max = 2000) {
+  const text = cleanText(value);
+  return text.length >= min && text.length <= max;
+}
+
+function isSafePathOrUrl(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return false;
+
+  const lowerText = text.toLowerCase();
+
+  if (
+    lowerText.startsWith("javascript:") ||
+    lowerText.startsWith("data:") ||
+    lowerText.startsWith("vbscript:") ||
+    text.includes("..") ||
+    /[<>"']/.test(text)
+  ) {
+    return false;
+  }
+
+  if (text.startsWith("/")) {
+    return text.length > 1 && !/\s/.test(text);
+  }
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (error) {
+    return false;
+  }
+}
+
+function isValidImagePath(value) {
+  const text = String(value || "").trim();
+  const lowerText = text.toLowerCase().split("?")[0].split("#")[0];
+
+  if (!isSafePathOrUrl(text)) return false;
+
+  return (
+    lowerText.endsWith(".jpg") ||
+    lowerText.endsWith(".jpeg") ||
+    lowerText.endsWith(".png") ||
+    lowerText.endsWith(".webp") ||
+    lowerText.includes("unsplash.com") ||
+    lowerText.includes("images.")
+  );
+}
+
+function isValidHexColor(value) {
+  return /^#[0-9A-Fa-f]{6}$/.test(String(value || "").trim());
+}
+
+function normalizeRole(value) {
+  const role = String(value || "").trim().toLowerCase();
+  return ["student", "admin"].includes(role) ? role : "";
+}
+
+function normalizeGender(value) {
+  const gender = String(value || "").trim().toLowerCase();
+
+  if (gender === "male") return "Male";
+  if (gender === "female") return "Female";
+
+  return "";
+}
+
+async function ensureUniqueUser({ userId = null, email, username }) {
+  const duplicateUser = await User.findOne({
+    $or: [
+      { email: String(email || "").trim().toLowerCase() },
+      { username: String(username || "").trim() }
+    ]
+  }).lean();
+
+  if (!duplicateUser) return true;
+
+  if (userId && String(duplicateUser._id) === String(userId)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function ensureUniqueEventTitle({ eventId = null, title }) {
+  const duplicateEvent = await Event.findOne({
+    title: new RegExp(`^${escapeRegExp(cleanText(title))}$`, "i")
+  }).lean();
+
+  if (!duplicateEvent) return true;
+
+  if (eventId && String(duplicateEvent._id) === String(eventId)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function ensureUniqueUniversity({ universityId = null, name, shortName }) {
+  const duplicateUniversity = await University.findOne({
+    $or: [
+      { name: new RegExp(`^${escapeRegExp(cleanText(name))}$`, "i") },
+      { shortName: new RegExp(`^${escapeRegExp(cleanText(shortName))}$`, "i") }
+    ]
+  }).lean();
+
+  if (!duplicateUniversity) return true;
+
+  if (universityId && String(duplicateUniversity._id) === String(universityId)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function ensureUniqueResourceCategory({ categoryId = null, name, shortName }) {
+  const duplicateCategory = await ResourceCategory.findOne({
+    $or: [
+      { name: new RegExp(`^${escapeRegExp(cleanText(name))}$`, "i") },
+      { shortName: new RegExp(`^${escapeRegExp(cleanText(shortName))}$`, "i") }
+    ]
+  }).lean();
+
+  if (!duplicateCategory) return true;
+
+  if (categoryId && String(duplicateCategory._id) === String(categoryId)) {
+    return true;
+  }
+
+  return false;
+}
+
+function validateEventPayload(body) {
+  const title = cleanText(body.title);
+  const category = String(body.category || "").trim().toLowerCase();
+  const description = cleanText(body.description);
+  const imagePath = String(body.imagePath || "").trim();
+  const buttonType = String(body.buttonType || "").trim().toLowerCase();
+  const detailsLink = String(body.detailsLink || "").trim();
+  const maxPlayers = Number(body.maxPlayers);
+
+  const allowedCategories = ["sports", "football", "padel", "music", "concert", "entertainment"];
+
+  if (!isValidSimpleText(title, 3, 80)) {
+    return { error: "Event title must be 3-80 characters and use safe characters only." };
+  }
+
+  if (!allowedCategories.includes(category)) {
+    return { error: "Category must be sports, football, padel, music, concert, or entertainment." };
+  }
+
+  if (!isValidLongText(description, 10, 1500)) {
+    return { error: "Event description must be 10-1500 characters." };
+  }
+
+  if (!isValidImagePath(imagePath)) {
+    return { error: "Image must be a safe image path or image URL." };
+  }
+
+  if (!["register", "details"].includes(buttonType)) {
+    return { error: "Button type must be register or details." };
+  }
+
+  if (detailsLink && !isSafePathOrUrl(detailsLink)) {
+    return { error: "Details/location link must be a safe URL or path." };
+  }
+
+  if (buttonType === "details" && !detailsLink) {
+    return { error: "Details link is required when button type is details." };
+  }
+
+  let finalMaxPlayers = 0;
+
+  if (buttonType === "register") {
+    if (!Number.isInteger(maxPlayers)) {
+      return { error: "Max players must be a whole number." };
+    }
+
+    if (category === "padel" && maxPlayers !== 2) {
+      return { error: "Padel must have exactly 2 players." };
+    }
+
+    if (category === "football" && (maxPlayers < 5 || maxPlayers > 20)) {
+      return { error: "Football max players must be between 5 and 20." };
+    }
+
+    if (category !== "football" && category !== "padel" && (maxPlayers < 1 || maxPlayers > 20)) {
+      return { error: "Max players must be between 1 and 20 for register events." };
+    }
+
+    finalMaxPlayers = maxPlayers;
+  }
+
+  return {
+    eventData: {
+      title,
+      category,
+      description,
+      imagePath,
+      buttonType,
+      detailsLink,
+      maxPlayers: finalMaxPlayers
+    }
+  };
+}
+
+function splitLines(value) {
+  if (Array.isArray(value)) {
+    return value.map(item => cleanText(item)).filter(Boolean);
+  }
+
+  return String(value || "")
+    .split(/\r?\n/)
+    .map(item => cleanText(item))
+    .filter(Boolean);
+}
+
+function validateUniversityPayload(body) {
+  const name = cleanText(body.name);
+  const shortName = cleanText(body.shortName).toUpperCase();
+  const imagePath = String(body.imagePath || "").trim();
+  const overview = cleanText(body.overview);
+  const location = cleanText(body.location);
+  const academics = splitLines(body.academics);
+  const whyChoose = splitLines(body.whyChoose);
+  const studentLife = splitLines(body.studentLife);
+  const contactInfo = cleanText(body.contactInfo);
+  const portalLink = String(body.portalLink || "").trim();
+
+  if (!isValidSimpleText(name, 3, 100)) {
+    return { error: "University name must be 3-100 characters and use safe characters only." };
+  }
+
+  if (!/^[A-Za-z0-9]{2,15}$/.test(shortName)) {
+    return { error: "University short name must be 2-15 letters/numbers, like MIU or GUC." };
+  }
+
+  if (!isValidImagePath(imagePath)) {
+    return { error: "University image must be a safe image path or image URL." };
+  }
+
+  if (!isValidLongText(overview, 20, 2000)) {
+    return { error: "Overview must be 20-2000 characters." };
+  }
+
+  if (!isValidSimpleText(location, 2, 120)) {
+    return { error: "Location must be 2-120 characters and use safe characters only." };
+  }
+
+  if (!isSafePathOrUrl(portalLink)) {
+    return { error: "Portal link must be a safe URL or path." };
+  }
+
+  const listItems = [...academics, ...whyChoose, ...studentLife];
+
+  if (listItems.some(item => !isValidSimpleText(item, 2, 160))) {
+    return { error: "Academics, why choose, and student life items must be 2-160 characters and use safe characters only." };
+  }
+
+  if (contactInfo && contactInfo.length > 500) {
+    return { error: "Contact info must be 500 characters or less." };
+  }
+
+  return {
+    universityData: {
+      name,
+      shortName,
+      imagePath,
+      overview,
+      location,
+      academics,
+      whyChoose,
+      studentLife,
+      contactInfo,
+      portalLink
+    }
+  };
+}
+
+function validateResourcesText(resourcesText) {
+  const lines = String(resourcesText || "")
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return { error: "Add at least one resource." };
+  }
+
+  if (lines.length > 50) {
+    return { error: "You can add maximum 50 resources in one category." };
+  }
+
+  const resources = [];
+  const allowedTypes = ["playlist", "website", "pdf", "book", "other"];
+
+  for (let index = 0; index < lines.length; index++) {
+    const parts = lines[index].split("|").map(part => cleanText(part));
+    const title = parts[0] || "";
+    const url = parts[1] || "";
+    let type = String(parts[2] || "website").trim().toLowerCase();
+
+    if (type === "video" || type === "tool") {
+      type = "other";
+    }
+
+    if (!isValidSimpleText(title, 2, 100)) {
+      return { error: `Resource ${index + 1}: title must be 2-100 characters and use safe characters only.` };
+    }
+
+    if (!isSafePathOrUrl(url)) {
+      return { error: `Resource ${index + 1}: enter a valid URL or safe path.` };
+    }
+
+    if (!allowedTypes.includes(type)) {
+      return { error: `Resource ${index + 1}: invalid resource type.` };
+    }
+
+    resources.push({ title, url, type });
+  }
+
+  return { resources };
+}
+
 router.get("/admin/api/overview", requireAdminApi, async (req, res) => {
   try {
     const usersCount = await User.countDocuments();
@@ -171,7 +542,7 @@ router.get("/admin/api/avatars", requireAdminApi, async (req, res) => {
 
 router.post("/admin/api/avatars", requireAdminApi, avatarUpload.single("avatarImage"), async (req, res) => {
   try {
-    const name = String(req.body.name || "").trim();
+    const name = cleanText(req.body.name);
 
     if (!name) {
       return res.status(400).json({
@@ -180,10 +551,38 @@ router.post("/admin/api/avatars", requireAdminApi, avatarUpload.single("avatarIm
       });
     }
 
+    if (!isValidSimpleText(name, 2, 40)) {
+      return res.status(400).json({
+        success: false,
+        message: "Avatar name must be 2-40 characters and use safe characters only."
+      });
+    }
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
         message: "Avatar image is required."
+      });
+    }
+
+    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+    const ext = path.extname(req.file.originalname || "").toLowerCase();
+
+    if (!allowedExtensions.includes(ext)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only JPG, PNG, and WEBP images are allowed."
+      });
+    }
+
+    const existingAvatar = await Avatar.findOne({
+      name: new RegExp(`^${escapeRegExp(name)}$`, "i")
+    }).lean();
+
+    if (existingAvatar) {
+      return res.status(400).json({
+        success: false,
+        message: "Avatar name already exists."
       });
     }
 
@@ -214,6 +613,13 @@ router.delete("/admin/api/avatars/:avatarId", requireAdminApi, async (req, res) 
   try {
     const { avatarId } = req.params;
 
+    if (!isValidObjectIdString(avatarId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid avatar ID."
+      });
+    }
+
     const avatar = await Avatar.findByIdAndDelete(avatarId);
 
     if (!avatar) {
@@ -223,9 +629,10 @@ router.delete("/admin/api/avatars/:avatarId", requireAdminApi, async (req, res) 
       });
     }
 
-    const filePath = path.join(__dirname, "..", "Public", avatar.imagePath);
+    const uploadsRoot = path.resolve(__dirname, "..", "Public", "uploads", "avatars");
+    const filePath = path.resolve(__dirname, "..", "Public", String(avatar.imagePath || ""));
 
-    if (fs.existsSync(filePath)) {
+    if (filePath.startsWith(uploadsRoot) && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
@@ -259,23 +666,6 @@ function getPagination(query) {
     limit,
     skip
   };
-}
-
-function parseResourcesText(value) {
-  return String(value || "")
-    .split("\n")
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map(line => {
-      const parts = line.split("|").map(part => part.trim());
-
-      return {
-        title: parts[0] || "",
-        url: parts[1] || "",
-        type: parts[2] || "website"
-      };
-    })
-    .filter(resource => resource.title && resource.url);
 }
 
 router.get("/admin/api/resources", requireAdminApi, async (req, res) => {
@@ -313,25 +703,54 @@ router.get("/admin/api/resources", requireAdminApi, async (req, res) => {
 
 router.post("/admin/api/resources", requireAdminApi, async (req, res) => {
   try {
-    const {
-      name,
-      shortName,
-      color,
-      resourcesText
-    } = req.body;
+    const name = cleanText(req.body.name);
+    const shortName = cleanText(req.body.shortName);
+    const color = String(req.body.color || "#0077b6").trim();
 
-    if (!name || !shortName) {
+    if (!isValidSimpleText(name, 2, 80)) {
       return res.status(400).json({
         success: false,
-        message: "Category name and short name are required."
+        message: "Category name must be 2-80 characters and use safe characters only."
+      });
+    }
+
+    if (!isValidSimpleText(shortName, 1, 16)) {
+      return res.status(400).json({
+        success: false,
+        message: "Tab short name must be 1-16 characters and use safe characters only."
+      });
+    }
+
+    if (!isValidHexColor(color)) {
+      return res.status(400).json({
+        success: false,
+        message: "Color must be a valid hex color."
+      });
+    }
+
+    const validatedResources = validateResourcesText(req.body.resourcesText);
+
+    if (validatedResources.error) {
+      return res.status(400).json({
+        success: false,
+        message: validatedResources.error
+      });
+    }
+
+    const isUnique = await ensureUniqueResourceCategory({ name, shortName });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "Resource category name or short name already exists."
       });
     }
 
     const category = await ResourceCategory.create({
-      name: name.trim(),
-      shortName: shortName.trim(),
-      color: color || "#0077b6",
-      resources: parseResourcesText(resourcesText)
+      name,
+      shortName,
+      color,
+      resources: validatedResources.resources
     });
 
     res.json({
@@ -354,20 +773,63 @@ router.patch("/admin/api/resources/:categoryId", requireAdminApi, async (req, re
   try {
     const { categoryId } = req.params;
 
-    const {
-      name,
-      shortName,
-      color,
-      resourcesText
-    } = req.body;
+    if (!isValidObjectIdString(categoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid resource category ID."
+      });
+    }
+
+    const name = cleanText(req.body.name);
+    const shortName = cleanText(req.body.shortName);
+    const color = String(req.body.color || "#0077b6").trim();
+
+    if (!isValidSimpleText(name, 2, 80)) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name must be 2-80 characters and use safe characters only."
+      });
+    }
+
+    if (!isValidSimpleText(shortName, 1, 16)) {
+      return res.status(400).json({
+        success: false,
+        message: "Tab short name must be 1-16 characters and use safe characters only."
+      });
+    }
+
+    if (!isValidHexColor(color)) {
+      return res.status(400).json({
+        success: false,
+        message: "Color must be a valid hex color."
+      });
+    }
+
+    const validatedResources = validateResourcesText(req.body.resourcesText);
+
+    if (validatedResources.error) {
+      return res.status(400).json({
+        success: false,
+        message: validatedResources.error
+      });
+    }
+
+    const isUnique = await ensureUniqueResourceCategory({ categoryId, name, shortName });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "Resource category name or short name already exists."
+      });
+    }
 
     const category = await ResourceCategory.findByIdAndUpdate(
       categoryId,
       {
-        name: name.trim(),
-        shortName: shortName.trim(),
-        color: color || "#0077b6",
-        resources: parseResourcesText(resourcesText)
+        name,
+        shortName,
+        color,
+        resources: validatedResources.resources
       },
       {
         new: true,
@@ -430,6 +892,13 @@ router.patch("/admin/api/users/:userId", requireAdminApi, async (req, res) => {
   try {
     const { userId } = req.params;
 
+    if (!isValidObjectIdString(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID."
+      });
+    }
+
     let {
       fullName,
       username,
@@ -441,52 +910,61 @@ router.patch("/admin/api/users/:userId", requireAdminApi, async (req, res) => {
       role
     } = req.body;
 
-    fullName = String(fullName || "").trim().replace(/\s+/g, " ");
+    fullName = cleanText(fullName);
     username = String(username || "").trim();
     email = String(email || "").trim().toLowerCase();
     password = String(password || "");
-    university = String(university || "").trim();
-    major = String(major || "").trim();
-    role = String(role || "student").trim().toLowerCase();
+    university = cleanText(university);
+    major = cleanText(major);
+    role = normalizeRole(role);
 
-    const cleanedGender = String(gender || "").trim().toLowerCase();
+    const finalGender = normalizeGender(gender);
 
-    if (!fullName || !username || !email || !cleanedGender || !university || !major || !role) {
+    if (!fullName || !username || !email || !finalGender || !university || !major || !role) {
       return res.status(400).json({
         success: false,
         message: "Please fill in all user fields except password."
       });
     }
 
-    let finalGender = "";
-
-    if (cleanedGender === "male") {
-      finalGender = "Male";
-    } else if (cleanedGender === "female") {
-      finalGender = "Female";
-    } else {
+    if (!isValidFullName(fullName)) {
       return res.status(400).json({
         success: false,
-        message: "Gender must be Male or Female."
+        message: "Full name must contain at least first and last name, letters only."
       });
     }
 
-    if (!["student", "admin"].includes(role)) {
+    if (!isValidUsername(username)) {
       return res.status(400).json({
         success: false,
-        message: "Role must be student or admin."
+        message: "Username must be 3-20 characters, start with a letter, and use only letters, numbers, or underscore."
       });
     }
 
-    const existingUser = await User.findOne({
-      _id: { $ne: userId },
-      $or: [
-        { email },
-        { username }
-      ]
-    });
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email address."
+      });
+    }
 
-    if (existingUser) {
+    if (university.length < 2 || university.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "University must be 2-80 characters."
+      });
+    }
+
+    if (major.length < 2 || major.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "Major must be 2-80 characters."
+      });
+    }
+
+    const isUnique = await ensureUniqueUser({ userId, email, username });
+
+    if (!isUnique) {
       return res.status(400).json({
         success: false,
         message: "Email or username already exists."
@@ -504,9 +982,7 @@ router.patch("/admin/api/users/:userId", requireAdminApi, async (req, res) => {
     };
 
     if (password) {
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-
-      if (!passwordRegex.test(password)) {
+      if (!isValidStrongPassword(password)) {
         return res.status(400).json({
           success: false,
           message: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
@@ -606,86 +1082,68 @@ router.post("/admin/api/users", requireAdminApi, async (req, res) => {
       role
     } = req.body;
 
-    fullName = String(fullName || "").trim();
+    fullName = cleanText(fullName);
     username = String(username || "").trim();
     email = String(email || "").trim().toLowerCase();
     password = String(password || "");
-    university = String(university || "").trim();
-    major = String(major || "").trim();
-    role = String(role || "student").trim().toLowerCase();
+    university = cleanText(university);
+    major = cleanText(major);
+    role = normalizeRole(role);
 
-    const cleanedGender = String(gender || "").trim().toLowerCase();
-    fullName = fullName.replace(/\s+/g, " ");
-    const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
+    const finalGender = normalizeGender(gender);
 
-    if (!fullNameRegex.test(fullName)) {
-       return res.status(400).json({
-        success: false,
-        message: "Full name must start with letters, and numbers are only allowed at the end."
-      });
-    }
-
-    const usernameRegex = /^(?=.{3,20}$)[A-Za-z_]+[0-9]*$/;
-    if (!usernameRegex.test(username)) {
-       return res.status(400).json({
-        success: false,
-        message: "Username must be 3-20 characters, start with letters/underscores, and numbers are only allowed at the end."
-      });
-    }
-
-    if (!fullName || !username || !email || !password || !cleanedGender || !university || !major || !role) {
+    if (!fullName || !username || !email || !password || !finalGender || !university || !major || !role) {
       return res.status(400).json({
         success: false,
         message: "Please fill in all user fields."
       });
     }
 
-    let finalGender = "";
-
-    if (cleanedGender === "male") {
-      finalGender = "Male";
-    } else if (cleanedGender === "female") {
-      finalGender = "Female";
-    } else {
+    if (!isValidFullName(fullName)) {
       return res.status(400).json({
         success: false,
-        message: "Gender must be Male or Female."
+        message: "Full name must contain at least first and last name, letters only."
       });
     }
 
-    if (!["student", "admin"].includes(role)) {
+    if (!isValidUsername(username)) {
       return res.status(400).json({
         success: false,
-        message: "Role must be student or admin."
+        message: "Username must be 3-20 characters, start with a letter, and use only letters, numbers, or underscore."
       });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid email."
+        message: "Please enter a valid email address."
       });
     }
 
-    const passwordRegex =/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!isValidStrongPassword(password)) {
       return res.status(400).json({
-      success: false,
-      message:
-      "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
-    });
-  }
+        success: false,
+        message: "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+      });
+    }
 
-    const existingUser = await User.findOne({
-      $or: [
-        { email },
-        { username }
-      ]
-    });
+    if (university.length < 2 || university.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "University must be 2-80 characters."
+      });
+    }
 
-    if (existingUser) {
+    if (major.length < 2 || major.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "Major must be 2-80 characters."
+      });
+    }
+
+    const isUnique = await ensureUniqueUser({ email, username });
+
+    if (!isUnique) {
       return res.status(400).json({
         success: false,
         message: "Email or username already exists."
@@ -874,6 +1332,13 @@ router.patch("/admin/api/events/:eventId/bracket", requireAdminApi, async (req, 
   try {
     const { eventId } = req.params;
 
+    if (!isValidObjectIdString(eventId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID."
+      });
+    }
+
     const {
       roundOf8,
       semiFinal,
@@ -890,13 +1355,94 @@ router.patch("/admin/api/events/:eventId/bracket", requireAdminApi, async (req, 
       });
     }
 
+    const registrations = await EventRegistration.find({
+      tournamentName: event.title
+    }).select("_id teamName").lean();
+
+    const allowedTeams = new Map(
+      registrations.map(registration => [
+        String(registration._id),
+        registration.teamName || "Unnamed Team"
+      ])
+    );
+
+    function validateBracketRound(roundData, expectedCount, roundName) {
+      if (!Array.isArray(roundData)) {
+        return {
+          error: `${roundName} must be an array.`
+        };
+      }
+
+      if (roundData.length !== expectedCount) {
+        return {
+          error: `${roundName} must have exactly ${expectedCount} slots.`
+        };
+      }
+
+      const usedTeams = new Set();
+      const finalRound = [];
+
+      for (let i = 0; i < roundData.length; i++) {
+        const item = roundData[i] || {};
+        const registrationId = String(item.registrationId || "").trim();
+
+        if (registrationId) {
+          if (!isValidObjectIdString(registrationId) || !allowedTeams.has(registrationId)) {
+            return {
+              error: `${roundName} slot ${i + 1}: selected team does not belong to this event.`
+            };
+          }
+
+          if (usedTeams.has(registrationId)) {
+            return {
+              error: `${roundName}: the same team cannot be selected twice.`
+            };
+          }
+
+          usedTeams.add(registrationId);
+        }
+
+        finalRound.push({
+          slot: i + 1,
+          registrationId: registrationId || null,
+          teamName: registrationId ? allowedTeams.get(registrationId) : ""
+        });
+      }
+
+      return {
+        finalRound
+      };
+    }
+
+    const validatedRoundOf8 = validateBracketRound(roundOf8, 8, "Round of 8");
+    const validatedSemiFinal = validateBracketRound(semiFinal, 4, "Semi Final");
+    const validatedFinal = validateBracketRound(final, 2, "Final");
+
+    const firstError = validatedRoundOf8.error || validatedSemiFinal.error || validatedFinal.error;
+
+    if (firstError) {
+      return res.status(400).json({
+        success: false,
+        message: firstError
+      });
+    }
+
+    const winnerId = String(winner?.registrationId || "").trim();
+
+    if (winnerId && (!isValidObjectIdString(winnerId) || !allowedTeams.has(winnerId))) {
+      return res.status(400).json({
+        success: false,
+        message: "Winner must be a registered team for this event."
+      });
+    }
+
     event.bracket = {
-      roundOf8: await buildBracketRound(roundOf8),
-      semiFinal: await buildBracketRound(semiFinal),
-      final: await buildBracketRound(final),
+      roundOf8: validatedRoundOf8.finalRound,
+      semiFinal: validatedSemiFinal.finalRound,
+      final: validatedFinal.finalRound,
       winner: {
-        teamName: String(winner?.teamName || "").trim(),
-        registrationId: String(winner?.registrationId || "").trim() || null
+        teamName: winnerId ? allowedTeams.get(winnerId) : "",
+        registrationId: winnerId || null
       }
     };
 
@@ -1005,32 +1551,27 @@ router.get("/admin/api/universities", requireAdminApi, async (req, res) => {
 
 router.post("/admin/api/events", requireAdminApi, async (req, res) => {
   try {
-    const {
-      title,
-      category,
-      description,
-      imagePath,
-      buttonType,
-      detailsLink,
-      maxPlayers
-    } = req.body;
+    const validated = validateEventPayload(req.body);
 
-    if (!title || !category || !description || !imagePath || !buttonType) {
+    if (validated.error) {
       return res.status(400).json({
         success: false,
-        message: "Title, category, description, image, and button type are required."
+        message: validated.error
       });
     }
 
-    const event = await Event.create({
-      title,
-      category,
-      description,
-      imagePath,
-      buttonType,
-      detailsLink: detailsLink || "",
-      maxPlayers: Number(maxPlayers) || 0
+    const isUnique = await ensureUniqueEventTitle({
+      title: validated.eventData.title
     });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "Event title already exists."
+      });
+    }
+
+    const event = await Event.create(validated.eventData);
 
     res.json({
       success: true,
@@ -1052,27 +1593,37 @@ router.patch("/admin/api/events/:eventId", requireAdminApi, async (req, res) => 
   try {
     const { eventId } = req.params;
 
-    const {
-      title,
-      category,
-      description,
-      imagePath,
-      buttonType,
-      detailsLink,
-      maxPlayers
-    } = req.body;
+    if (!isValidObjectIdString(eventId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID."
+      });
+    }
+
+    const validated = validateEventPayload(req.body);
+
+    if (validated.error) {
+      return res.status(400).json({
+        success: false,
+        message: validated.error
+      });
+    }
+
+    const isUnique = await ensureUniqueEventTitle({
+      eventId,
+      title: validated.eventData.title
+    });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "Event title already exists."
+      });
+    }
 
     const event = await Event.findByIdAndUpdate(
       eventId,
-      {
-        title,
-        category,
-        description,
-        imagePath,
-        buttonType,
-        detailsLink: detailsLink || "",
-        maxPlayers: Number(maxPlayers) || 0
-      },
+      validated.eventData,
       {
         new: true,
         runValidators: true
@@ -1258,51 +1809,31 @@ router.patch("/admin/api/events/:eventId/bracket/reset", requireAdminApi, async 
   }
 });
 
-function splitLines(value) {
-  if (Array.isArray(value)) {
-    return value;
-  }
-
-  return String(value || "")
-    .split("\n")
-    .map(item => item.trim())
-    .filter(Boolean);
-}
 
 router.post("/admin/api/universities", requireAdminApi, async (req, res) => {
   try {
-    const {
-      name,
-      shortName,
-      imagePath,
-      overview,
-      location,
-      academics,
-      whyChoose,
-      studentLife,
-      contactInfo,
-      portalLink
-    } = req.body;
+    const validated = validateUniversityPayload(req.body);
 
-    if (!name || !shortName || !imagePath || !overview || !location || !portalLink) {
+    if (validated.error) {
       return res.status(400).json({
         success: false,
-        message: "Name, short name, image, overview, location, and portal link are required."
+        message: validated.error
       });
     }
 
-    const university = await University.create({
-      name,
-      shortName,
-      imagePath,
-      overview,
-      location,
-      academics: splitLines(academics),
-      whyChoose: splitLines(whyChoose),
-      studentLife: splitLines(studentLife),
-      contactInfo: contactInfo || "",
-      portalLink
+    const isUnique = await ensureUniqueUniversity({
+      name: validated.universityData.name,
+      shortName: validated.universityData.shortName
     });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "University name or short name already exists."
+      });
+    }
+
+    const university = await University.create(validated.universityData);
 
     res.json({
       success: true,
@@ -1314,9 +1845,9 @@ router.post("/admin/api/universities", requireAdminApi, async (req, res) => {
     console.error("Admin add university error:", error);
 
     res.status(500).json({
-  success: false,
-  message: error.message
-});
+      success: false,
+      message: error.message || "Could not add university."
+    });
   }
 });
 
@@ -1324,33 +1855,38 @@ router.patch("/admin/api/universities/:universityId", requireAdminApi, async (re
   try {
     const { universityId } = req.params;
 
-    const {
-      name,
-      shortName,
-      imagePath,
-      overview,
-      location,
-      academics,
-      whyChoose,
-      studentLife,
-      contactInfo,
-      portalLink
-    } = req.body;
+    if (!isValidObjectIdString(universityId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid university ID."
+      });
+    }
+
+    const validated = validateUniversityPayload(req.body);
+
+    if (validated.error) {
+      return res.status(400).json({
+        success: false,
+        message: validated.error
+      });
+    }
+
+    const isUnique = await ensureUniqueUniversity({
+      universityId,
+      name: validated.universityData.name,
+      shortName: validated.universityData.shortName
+    });
+
+    if (!isUnique) {
+      return res.status(400).json({
+        success: false,
+        message: "University name or short name already exists."
+      });
+    }
 
     const university = await University.findByIdAndUpdate(
       universityId,
-      {
-        name,
-        shortName,
-        imagePath,
-        overview,
-        location,
-        academics: splitLines(academics),
-        whyChoose: splitLines(whyChoose),
-        studentLife: splitLines(studentLife),
-        contactInfo: contactInfo || "",
-        portalLink
-      },
+      validated.universityData,
       {
         new: true,
         runValidators: true
