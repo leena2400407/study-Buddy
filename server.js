@@ -13,6 +13,7 @@ const Event = require("./models/Events");
 const EventRegistration = require("./models/eventsReg");
 const University = require("./models/Universities");
 const { requireAuth, requirePageAuth } = require("./middleware/authMiddleware");
+const languageMiddleware = require("./middleware/language");
 const ResourceCategory = require("./models/resources");
 const crypto = require("crypto");
 const MatchRequest = require("./models/MatchReq");
@@ -294,6 +295,7 @@ app.use(
 );
 
 app.use(flash());
+app.use(languageMiddleware);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -4885,6 +4887,16 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
 
 app.get("/cylinder/admin", (req, res) => {
   return res.status(403).render("UNAUTHORIZED");
+});
+
+app.get("/change-language/:lang", (req, res) => {
+  const lang = req.params.lang;
+
+  if (["en", "ar"].includes(lang)) {
+    req.session.lang = lang;
+  }
+
+  res.redirect(req.get("Referrer") || "/");
 });
 
 app.use((req, res) => {

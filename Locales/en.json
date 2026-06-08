@@ -1,0 +1,38 @@
+{
+  "language": {
+    "arabic": "Arabic",
+    "english": "English"
+  },
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout"
+  },
+  "cylinder": {
+    "title": "Study Buddy",
+    "edugate": "Edugate",
+    "games": "Games",
+    "ai": "AI Assistant",
+    "events": "Events",
+    "matching": "Matching",
+    "resources": "Resources",
+    "freshman": "Freshman Guide"
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "signupTitle": "Create Account",
+    "fullName": "Full Name",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "gender": "Gender",
+    "university": "University",
+    "major": "Major",
+    "chooseAvatar": "Choose Avatar",
+    "submitLogin": "Login",
+    "submitSignup": "Sign Up"
+  }
+}

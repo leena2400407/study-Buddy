@@ -1,0 +1,38 @@
+{
+  "language": {
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج"
+  },
+  "cylinder": {
+    "title": "ستادي بادي",
+    "edugate": "بوابة الجامعات",
+    "games": "الألعاب",
+    "ai": "المساعد الذكي",
+    "events": "الفعاليات",
+    "matching": "المطابقة الدراسية",
+    "resources": "المصادر الدراسية",
+    "freshman": "دليل الطلاب الجدد"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "signupTitle": "إنشاء حساب",
+    "fullName": "الاسم الكامل",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "gender": "النوع",
+    "university": "الجامعة",
+    "major": "التخصص",
+    "chooseAvatar": "اختر صورة شخصية",
+    "submitLogin": "تسجيل الدخول",
+    "submitSignup": "إنشاء الحساب"
+  }
+}
