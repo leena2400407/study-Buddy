@@ -4,24 +4,36 @@
   const loggedUser = typeof user !== "undefined" ? user : null;
   const currentLang = typeof lang !== "undefined" ? lang : "en";
 
+  const pagePaths = {
+    home: "/",
+    events: "/events",
+    games: "/game-landing-page",
+    resources: "/resources",
+    matching: "/matching",
+    ai: "/ai",
+    guide: "/freshman-guid",
+    profile: "/profile#info"
+  };
+
+  const currentPath = pagePaths[navActive] || navBackHref || "/cylinder";
+
   const translate = typeof t === "function"
     ? t
-    : function (key) {
-        const fallback = {
+    : function (key, fallback) {
+        const fallbackText = {
           "nav.home": "Home",
           "nav.profile": "Profile",
           "nav.login": "Login",
           "nav.logout": "Logout",
-          "cylinder.edugate": "Edugate",
-          "cylinder.games": "Games",
-          "cylinder.ai": "AI Chat",
-          "cylinder.events": "Events",
-          "cylinder.matching": "Matching",
-          "cylinder.resources": "Resources",
-          "cylinder.freshman": "Guide"
+          "nav.events": "Events",
+          "nav.game": "Games",
+          "nav.resources": "Resources",
+          "nav.matching": "Match",
+          "nav.ai": "AI Chat",
+          "nav.guide": "Freshman"
         };
 
-        return fallback[key] || key;
+        return fallbackText[key] || fallback || key;
       };
 %>
 
@@ -29,64 +41,60 @@
   <div class="sb-page-nav__panel">
 
     <a class="sb-page-nav__link <%= navActive === 'home' ? 'is-active' : '' %>" href="/">
-      <%= translate("nav.home") %>
-    </a>
-
-    <a class="sb-page-nav__link <%= navActive === 'edugate' ? 'is-active' : '' %>" href="/edugate">
-      <%= translate("cylinder.edugate") %>
+      <%= translate("nav.home", "Home") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'events' ? 'is-active' : '' %>" href="/events">
-      <%= translate("cylinder.events") %>
+      <%= translate("nav.events", "Events") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'games' ? 'is-active' : '' %>" href="/game-landing-page">
-      <%= translate("cylinder.games") %>
+      <%= translate("nav.game", "Games") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'resources' ? 'is-active' : '' %>" href="/resources">
-      <%= translate("cylinder.resources") %>
+      <%= translate("nav.resources", "Resources") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'matching' ? 'is-active' : '' %>" href="/matching">
-      <%= translate("cylinder.matching") %>
+      <%= translate("nav.matching", "Match") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'ai' ? 'is-active' : '' %>" href="/ai">
-      <%= translate("cylinder.ai") %>
+      <%= translate("nav.ai", "AI Chat") %>
     </a>
 
     <a class="sb-page-nav__link <%= navActive === 'guide' ? 'is-active' : '' %>" href="/freshman-guid">
-      <%= translate("cylinder.freshman") %>
+      <%= translate("nav.guide", "Freshman") %>
     </a>
 
     <div class="sb-page-nav__language">
-      <a class="sb-page-nav__lang-btn <%= currentLang === 'en' ? 'is-active' : '' %>" href="/change-language/en">
+      <a
+        class="sb-page-nav__lang-btn <%= currentLang === 'en' ? 'is-active' : '' %>"
+        href="/change-language/en?redirect=<%= encodeURIComponent(currentPath) %>"
+      >
         EN
       </a>
 
-      <a class="sb-page-nav__lang-btn <%= currentLang === 'ar' ? 'is-active' : '' %>" href="/change-language/ar">
+      <a
+        class="sb-page-nav__lang-btn <%= currentLang === 'ar' ? 'is-active' : '' %>"
+        href="/change-language/ar?redirect=<%= encodeURIComponent(currentPath) %>"
+      >
         AR
       </a>
     </div>
 
     <% if (loggedUser) { %>
       <a class="sb-page-nav__link <%= navActive === 'profile' ? 'is-active' : '' %>" href="/profile#info">
-        <%= translate("nav.profile") %>
+        <%= translate("nav.profile", "Profile") %>
       </a>
 
-      <% if (loggedUser.role === "admin") { %>
-        <a class="sb-page-nav__link <%= navActive === 'admin' ? 'is-active' : '' %>" href="/admin">
-          Admin
-        </a>
-      <% } %>
-
       <a class="sb-page-nav__link sb-page-nav__logout" href="/logout">
-        <%= translate("nav.logout") %>
+        <%= translate("nav.logout", "Logout") %>
       </a>
     <% } else { %>
       <a class="sb-page-nav__link" href="/login">
-        <%= translate("nav.login") %>
+        <%= translate("nav.login", "Login") %>
       </a>
     <% } %>
 
