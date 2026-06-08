@@ -147,15 +147,33 @@ function addSelectedSubject(type) {
 
   if (!weakSelect || !strongSelect) return;
 
-  const value = type === "weak"
-  ? normalizeDropdownSubject(weakSelect.value)
-  : normalizeDropdownSubject(strongSelect.value);
-  if (!value) {
+  const rawValue = type === "weak"
+    ? String(weakSelect.value || "").trim()
+    : String(strongSelect.value || "").trim();
+
+  const isNone = rawValue.toLowerCase() === "none";
+  const value = normalizeDropdownSubject(rawValue);
+
+  if (!rawValue) {
     showToast("Choose a subject first.", "warning");
     return;
   }
 
   if (type === "weak") {
+    if (isNone) {
+      myWeakSubjects = [];
+      weakSelect.value = "";
+      studyListIsSaved = false;
+      studyListHasLocalChanges = true;
+
+      stopSavedMatchRefresh();
+      renderProfileList();
+      renderNoSearchState();
+
+      showToast("Weak list set to none. You can still search if you have strong subjects.", "info");
+      return;
+    }
+
     if (myStrongSubjects.includes(value)) {
       showToast("This subject is already in your strong list.", "warning");
       return;
@@ -169,6 +187,20 @@ function addSelectedSubject(type) {
   }
 
   if (type === "strong") {
+    if (isNone) {
+      myStrongSubjects = [];
+      strongSelect.value = "";
+      studyListIsSaved = false;
+      studyListHasLocalChanges = true;
+
+      stopSavedMatchRefresh();
+      renderProfileList();
+      renderNoSearchState();
+
+      showToast("Strong list set to none. You can still search if you have weak subjects.", "info");
+      return;
+    }
+
     if (myWeakSubjects.includes(value)) {
       showToast("This subject is already in your weak list.", "warning");
       return;
@@ -188,7 +220,6 @@ function addSelectedSubject(type) {
   renderProfileList();
   renderNoSearchState();
 }
-
 function removeSubject(subject, type) {
   if (type === "weak") {
     myWeakSubjects = myWeakSubjects.filter(item => item !== subject);
@@ -346,8 +377,24 @@ async function searchMatches() {
 
   if (!weakSelect || !strongSelect) return;
 
- selectedWeakSubject = normalizeDropdownSubject(weakSelect.value);
-selectedStrongSubject = normalizeDropdownSubject(strongSelect.value);
+ const rawSelectedWeakSubject = String(weakSelect.value || "").trim();
+const rawSelectedStrongSubject = String(strongSelect.value || "").trim();
+
+const weakSelectedNone = rawSelectedWeakSubject.toLowerCase() === "none";
+const strongSelectedNone = rawSelectedStrongSubject.toLowerCase() === "none";
+
+selectedWeakSubject = normalizeDropdownSubject(rawSelectedWeakSubject);
+selectedStrongSubject = normalizeDropdownSubject(rawSelectedStrongSubject);
+
+if (weakSelectedNone) {
+  myWeakSubjects = [];
+  weakSelect.value = "";
+}
+
+if (strongSelectedNone) {
+  myStrongSubjects = [];
+  strongSelect.value = "";
+}
 
   if (selectedWeakSubject) {
     if (myStrongSubjects.includes(selectedWeakSubject)) {
@@ -386,7 +433,7 @@ selectedStrongSubject = normalizeDropdownSubject(strongSelect.value);
   showToast("Add at least one weak subject or one strong subject before searching.", "warning");
   renderNoSearchState();
   return;
-}
+    }
 
   renderLoadingMatches();
 
