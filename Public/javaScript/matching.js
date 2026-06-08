@@ -1380,67 +1380,57 @@ async function loadPopupMessages() {
   }
 }
 
+function updatePopupChatLockState() {
+  const form = document.getElementById("popupChatForm");
+  const input = document.getElementById("popupMessageInput");
+  const sendButton = document.querySelector(".popup-send-btn");
+  const scheduleButton = document.querySelector(".popup-schedule-btn");
+  const matchNowButton = document.querySelector(".popup-match-now-btn");
+  const schedulePanel = document.getElementById("popupSchedulePanel");
+
+  const isLocked = Boolean(
+    popupCurrentRequest &&
+    (
+      popupCurrentRequest.status === "matched" ||
+      popupCurrentRequest.emailSentAt
+    )
+  );
+
+  if (input) {
+    input.disabled = isLocked;
+    input.placeholder = isLocked
+      ? "Chat locked. Meeting link was already sent."
+      : "Write your message...";
+  }
+
+  if (sendButton) {
+    sendButton.disabled = isLocked;
+  }
+
+  if (scheduleButton) {
+    scheduleButton.disabled = isLocked;
+  }
+
+  if (matchNowButton) {
+    matchNowButton.disabled = isLocked;
+  }
+
+  if (form) {
+    form.classList.toggle("chat-locked", isLocked);
+  }
+
+  if (schedulePanel && isLocked) {
+    schedulePanel.classList.add("hidden");
+  }
+}
+
 function renderPopupMessages(messages) {
   const messagesBox = document.getElementById("popupMessagesBox");
   if (!messagesBox) return;
 
+  updatePopupChatLockState();
+
   let statusHTML = "";
-
-  if (popupCurrentRequest && popupCurrentRequest.scheduledAt && !popupCurrentRequest.emailSentAt) {
-    statusHTML = `
-      <div class="popup-meeting-status">
-        <strong>Meeting Scheduled</strong>
-        <p>Email will be sent at ${escapeHTML(formatPopupFullDate(popupCurrentRequest.scheduledAt))}.</p>
-      </div>
-    `;
-  }
-
-  if (popupCurrentRequest && popupCurrentRequest.emailSentAt) {
-    statusHTML = `
-      <div class="popup-meeting-status sent">
-        <strong>Meeting Link Sent</strong>
-        <p>The meeting email was sent to both students.</p>
-      </div>
-    `;
-  }
-
-  if (!messages.length) {
-    messagesBox.innerHTML = `
-      ${statusHTML}
-      <div class="popup-empty-chat">
-        No messages yet. Start the conversation.
-      </div>
-    `;
-    return;
-  }
-
-  messagesBox.innerHTML = `
-    ${statusHTML}
-    ${messages.map(message => {
-      const isMine = String(message.sender) === String(popupCurrentUserId);
-
-      return `
-        <div class="popup-message-row ${isMine ? "mine" : "theirs"}">
-          <div class="popup-message-bubble">
-            <div class="popup-message-name">
-              ${escapeHTML(message.senderName || "Student")}
-            </div>
-
-            <div class="popup-message-text">
-              ${escapeHTML(message.text || "")}
-            </div>
-
-            <div class="popup-message-time">
-              ${formatPopupTime(message.createdAt)}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("")}
-  `;
-
-  messagesBox.scrollTop = messagesBox.scrollHeight;
-}
 
 async function sendPopupMessage(event) {
   event.preventDefault();

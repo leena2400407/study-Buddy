@@ -3547,6 +3547,7 @@ app.get("/matching/request/:requestId/reject", async (req, res) => {
 
 app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => {
   try {
+    const chatId = req.params.chatId;
     const text = String(req.body.text || "").trim();
 
     if (!text) {
@@ -3563,7 +3564,7 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
       });
     }
 
-    const chat = await Chat.findById(req.params.chatId);
+    const chat = await Chat.findById(chatId);
 
     if (!chat) {
       return res.status(404).json({
@@ -3572,14 +3573,30 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
       });
     }
 
-    const isParticipant = (chat.participants || []).some(participantId => {
+    const isParticipant = (chat.participants || []).some((participantId) => {
       return String(participantId) === String(req.session.user.id);
     });
 
     if (!isParticipant) {
       return res.status(403).json({
         success: false,
-        message: "You cannot send messages here."
+        message: "You cannot send messages in this chat."
+      });
+    }
+
+    const matchRequest = await MatchRequest.findById(chat.matchRequest);
+
+    if (!matchRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Match request was not found."
+      });
+    }
+
+    if (matchRequest.status === "matched" || matchRequest.emailSentAt) {
+      return res.status(403).json({
+        success: false,
+        message: "This chat is locked because the study meeting link was already sent."
       });
     }
 
@@ -3591,7 +3608,7 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
 
     await chat.save();
 
-    res.json({
+    return res.json({
       success: true,
       message: "Message sent."
     });
@@ -3599,7 +3616,7 @@ app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => 
   } catch (error) {
     console.error("Send chat message error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Could not send message."
     });
@@ -4819,67 +4836,7 @@ app.post("/api/matching/chat/:chatId/match-now", requireAuth, async (req, res) =
   }
 });
 
-app.post("/api/matching/chat/:chatId/message", requireAuth, async (req, res) => {
-  try {
-    const chatId = req.params.chatId;
-    const text = String(req.body.text || "").trim();
 
-    if (!text) {
-      return res.status(400).json({
-        success: false,
-        message: "Message cannot be empty."
-      });
-    }
-
-    if (text.length > 1000) {
-      return res.status(400).json({
-        success: false,
-        message: "Message is too long."
-      });
-    }
-
-    const chat = await Chat.findById(chatId);
-
-    if (!chat) {
-      return res.status(404).json({
-        success: false,
-        message: "Chat was not found."
-      });
-    }
-
-    const isParticipant = (chat.participants || []).some((participantId) => {
-      return String(participantId) === String(req.session.user.id);
-    });
-
-    if (!isParticipant) {
-      return res.status(403).json({
-        success: false,
-        message: "You cannot send messages in this chat."
-      });
-    }
-
-    chat.messages.push({
-      sender: req.session.user.id,
-      senderName: req.session.user.fullName || req.session.user.username || "Student",
-      text: text
-    });
-
-    await chat.save();
-
-    return res.json({
-      success: true,
-      message: "Message sent."
-    });
-
-  } catch (error) {
-    console.error("Send chat message error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Could not send message."
-    });
-  }
-});
 
 app.get("/cylinder/admin", (req, res) => {
   return res.status(403).render("UNAUTHORIZED");
