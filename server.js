@@ -3,7 +3,6 @@ const path = require("path");
 const session = require("express-session");
 const flash = require("connect-flash");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
@@ -22,6 +21,7 @@ const multer = require("multer");
 const dns = require("node:dns");
 const fs = require("fs");
 const Avatar = require("./models/Avatar");
+const sendEmail = require("./utils/sendEmail");
 require("dotenv").config();
 
 dns.setDefaultResultOrder("ipv4first");
@@ -42,15 +42,7 @@ const BASE_URL =
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : `http://localhost:${process.env.PORT || 8080}`);
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+
 
 connectDB();
 
@@ -89,21 +81,19 @@ const avatarUpload = multer({
 });
 app.get("/test-email", async (req, res) => {
   try {
-    const mailer = createEmailTransporter();
-
-    await mailer.sendMail({
-      from: `Study Buddy <${getEmailUser()}>`,
-      to: getEmailUser(),
-      subject: "Railway email test",
+    await sendEmail({
+      to: process.env.MAIL_TEST_TO,
+      subject: "Study Buddy Railway Email Test",
       html: `
-        <h2>Email works</h2>
+        <h2>Email works from Railway</h2>
         <p>BASE_URL is: ${BASE_URL}</p>
         <p>Test link:</p>
         <a href="${BASE_URL}">${BASE_URL}</a>
-      `
+      `,
+      text: `Email works from Railway. BASE_URL: ${BASE_URL}`
     });
 
-    res.send("Email sent successfully");
+    res.send("Email sent successfully from Railway");
   } catch (err) {
     console.error("EMAIL ERROR:", err);
     res.status(500).send("Email failed: " + err.message);
@@ -145,66 +135,10 @@ const getGeminiAI = async () => {
   });
 };
 
-const getEmailUser = () => {
-  return String(process.env.EMAIL_USER || "").trim();
-};
 
-const getEmailPass = () => {
-  return String(process.env.EMAIL_PASS || "").replace(/\s/g, "");
-};
-
-const ipv4Lookup = (hostname, options, callback) => {
-  return dns.lookup(hostname, { family: 4 }, callback);
-};
-
-const createEmailTransporter = () => {
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-
-    lookup: ipv4Lookup,
-    family: 4,
-
-    auth: {
-      user: getEmailUser(),
-      pass: getEmailPass()
-    },
-
-    tls: {
-      servername: "smtp.gmail.com"
-    },
-
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000
-  });
-};
-
-console.log("EMAIL_USER exists:", !!getEmailUser());
-console.log("EMAIL_PASS exists:", !!getEmailPass());
-console.log("EMAIL_USER value:", getEmailUser());
-
-if (getEmailUser() && getEmailPass()) {
-  createEmailTransporter().verify((error) => {
-    if (error) {
-      console.error("EMAIL TRANSPORTER ERROR:", error);
-    } else {
-      console.log("EMAIL SERVER IS READY TO SEND MESSAGES");
-    }
-  });
-}
 
 const sendSignupEmail = async (userEmail, fullName) => {
-  if (!getEmailUser() || !getEmailPass()) {
-    console.warn("Signup email was not sent because EMAIL_USER or EMAIL_PASS is missing.");
-    return;
-  }
-
-  const transporter = createEmailTransporter();
-
-  await transporter.sendMail({
-    from: `Study Buddy <${getEmailUser()}>`,
+  await sendEmail({
     to: userEmail,
     subject: "Welcome to Study Buddy",
     html: `
@@ -217,7 +151,8 @@ const sendSignupEmail = async (userEmail, fullName) => {
         <p>Best regards,</p>
         <p><strong>Study Buddy Team</strong></p>
       </div>
-    `
+    `,
+    text: `Hello ${fullName}, thank you for signing up to Study Buddy.`
   });
 
   console.log("Signup email sent successfully to:", userEmail);
@@ -225,47 +160,23 @@ const sendSignupEmail = async (userEmail, fullName) => {
 
 
 const sendPasswordResetLinkEmail = async (userEmail, fullName, resetLink) => {
-  const transporter = createEmailTransporter();
-
-  await transporter.sendMail({
-    from: `Study Buddy <${getEmailUser()}>`,
+  await sendEmail({
     to: userEmail,
     subject: "Reset your Study Buddy password",
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827;">
-        <h2>Reset Your Password</h2>
-
-        <p>Hello ${fullName || "Student"},</p>
-
-        <p>You requested to reset your Study Buddy password.</p>
-
-        <p>Click the button below to confirm your new password.</p>
-
-        <a href="${resetLink}" 
-           target="_blank"
-           style="
-            display: inline-block;
-            margin-top: 14px;
-            padding: 14px 22px;
-            background: #7c3aed;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: bold;
-           ">
-          Confirm New Password
-        </a>
-
-        <p style="margin-top: 18px;">
-          This link will expire in 15 minutes.
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>Password Reset</h2>
+        <p>Hello ${fullName},</p>
+        <p>Click the link below to reset your password:</p>
+        <p>
+          <a href="${resetLink}" target="_blank">${resetLink}</a>
         </p>
-
-        <p>If you did not request this, ignore this email.</p>
-
+        <p>This link expires in 15 minutes.</p>
         <br>
         <p><strong>Study Buddy Team</strong></p>
       </div>
-    `
+    `,
+    text: `Hello ${fullName}, reset your password here: ${resetLink}`
   });
 };
 
@@ -279,17 +190,27 @@ const sendEventRegistrationEmail = async ({
   eventCategory,
   eventDetailsLink
 }) => {
-  const transporter = createEmailTransporter();
+  const locationLink =
+    eventDetailsLink && String(eventDetailsLink).trim()
+      ? String(eventDetailsLink).trim()
+      : "Location link was not added yet.";
 
-  const locationLink = eventDetailsLink && String(eventDetailsLink).trim() ? String(eventDetailsLink).trim() : "Location link was not added yet.";
-
-  const safeDescription = eventDescription && String(eventDescription).trim() ? String(eventDescription).trim() : "No event description was added.";
+  const safeDescription =
+    eventDescription && String(eventDescription).trim()
+      ? String(eventDescription).trim()
+      : "No event description was added.";
 
   const cleanedCategory = String(eventCategory || "").toLowerCase();
   const cleanedTitle = String(tournamentName || "").toLowerCase();
 
-  const eventType = cleanedCategory.includes("padel") || cleanedTitle.includes("padel") ? "Padel Tournament" : cleanedCategory.includes("football") ||
-    cleanedCategory.includes("sports") || cleanedTitle.includes("football") ? "Football Tournament" : "Sports Tournament";
+  const eventType =
+    cleanedCategory.includes("padel") || cleanedTitle.includes("padel")
+      ? "Padel Tournament"
+      : cleanedCategory.includes("football") ||
+        cleanedCategory.includes("sports") ||
+        cleanedTitle.includes("football")
+        ? "Football Tournament"
+        : "Sports Tournament";
 
   const playersList = players
     .map((player, index) => {
@@ -302,109 +223,50 @@ const sendEventRegistrationEmail = async ({
     })
     .join("");
 
-  await transporter.sendMail({
-   from: `Study Buddy <${getEmailUser()}>`,
+  await sendEmail({
     to,
-    subject: `Registration Confirmed - ${tournamentName}`,
+    subject: `${eventType} Registration Confirmation`,
     html: `
-      <div style="font-family: Arial, sans-serif; background: #111827; color: #f9fafb; padding: 28px; max-width: 720px; margin: auto; border-radius: 18px;">
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
+        <h2>${eventType} Registration Confirmed</h2>
 
-        <p style="margin: 0 0 12px; color: #86efac; font-size: 14px; font-weight: bold;">
-          Accepted
+        <p>Hello ${leaderName},</p>
+        <p>Your team has been registered successfully.</p>
+
+        <p><strong>Tournament:</strong> ${tournamentName}</p>
+        <p><strong>Team Name:</strong> ${teamName}</p>
+
+        <h3>Event Description</h3>
+        <p>${safeDescription}</p>
+
+        <h3>Location / Details Link</h3>
+        <p>
+          ${
+            locationLink.startsWith("http")
+              ? `<a href="${locationLink}" target="_blank">${locationLink}</a>`
+              : locationLink
+          }
         </p>
 
-        <h1 style="margin: 0 0 18px; font-size: 28px; color: #ffffff;">
-          Booking accepted
-        </h1>
-
-        <p style="font-size: 16px; line-height: 1.7; color: #d1d5db;">
-          Hey <strong style="color: #ffffff;">${leaderName}</strong> — your registration request has been accepted.
-          Your team has been registered successfully.
-        </p>
-
-        <div style="margin-top: 26px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
-          <h2 style="margin: 0 0 18px; color: #ffffff; font-size: 22px;">
-            Registered booking
-          </h2>
-
-          <table style="width: 100%; border-collapse: collapse; color: #e5e7eb;">
+        <h3>Players</h3>
+        <table style="border-collapse: collapse; width: 100%; border: 1px solid #e5e7eb;">
+          <thead>
             <tr>
-              <td style="padding: 8px 0; color: #9ca3af;">Event</td>
-              <td style="padding: 8px 0; font-weight: bold;">${tournamentName}</td>
+              <th style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left;">#</th>
+              <th style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left;">Name</th>
             </tr>
+          </thead>
+          <tbody>
+            ${playersList}
+          </tbody>
+        </table>
 
-            <tr>
-              <td style="padding: 8px 0; color: #9ca3af;">Type</td>
-              <td style="padding: 8px 0;">${eventType}</td>
-            </tr>
-
-            <tr>
-              <td style="padding: 8px 0; color: #9ca3af;">Team name</td>
-              <td style="padding: 8px 0;">${teamName}</td>
-            </tr>
-
-            <tr>
-              <td style="padding: 8px 0; color: #9ca3af;">Location</td>
-              <td style="padding: 8px 0;">
-                <a href="${locationLink}" target="_blank" style="color: #60a5fa;">
-                  ${locationLink}
-                </a>
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <div style="margin-top: 22px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
-          <h2 style="margin: 0 0 14px; color: #ffffff; font-size: 22px;">
-            Event details
-          </h2>
-
-          <p style="margin: 0; color: #d1d5db; font-size: 16px; line-height: 1.7;">
-            ${safeDescription}
-          </p>
-        </div>
-
-        <div style="margin-top: 22px; padding: 22px; border-radius: 14px; background: #1f2937; border: 1px solid #374151;">
-          <h2 style="margin: 0 0 14px; color: #ffffff; font-size: 22px;">
-            Team players
-          </h2>
-
-          <table style="width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden;">
-            <thead>
-              <tr>
-                <th style="text-align: left; padding: 10px; background: #374151; color: #ffffff;">#</th>
-                <th style="text-align: left; padding: 10px; background: #374151; color: #ffffff;">Name</th>
-              </tr>
-            </thead>
-
-            <tbody style="color: #e5e7eb;">
-              ${playersList}
-            </tbody>
-          </table>
-        </div>
-
-        <div style="margin-top: 26px;">
-          <p style="margin: 0 0 10px; color: #d1d5db;">
-            Try to arrive early and keep this email with you.
-          </p>
-
-          <a href="${locationLink}" target="_blank" style="display: inline-block; margin-top: 10px; color: #60a5fa; font-size: 16px;">
-            Open location
-          </a>
-        </div>
-
-        <hr style="border: none; border-top: 1px solid #374151; margin: 28px 0;">
-
-        <p style="margin: 0; color: #9ca3af; font-size: 14px;">
-          This is a service notification — replies are not monitored.
-        </p>
-
-        <p style="margin: 8px 0 0; color: #86efac; font-size: 14px;">
-          © 2026 Study Buddy
-        </p>
-
+        <br>
+        <p>Best regards,</p>
+        <p><strong>Study Buddy Team</strong></p>
       </div>
-    `
+    `,
+    text: `Your ${eventType} registration is confirmed. Tournament: ${tournamentName}. Team: ${teamName}.`
   });
 };
 
@@ -2801,49 +2663,36 @@ const sendMatchRequestEmail = async ({
   acceptLink,
   rejectLink
 }) => {
-  const transporter = createEmailTransporter();
-
-  await transporter.sendMail({
-    from: `Study Buddy <${getEmailUser()}>`,
+  await sendEmail({
     to,
     subject: "New Study Buddy Match Request",
     html: `
-      <div style="font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 28px; max-width: 680px; margin: auto; border-radius: 18px;">
-        <h1 style="margin-top: 0; color: #ffffff;">New Study Match Request</h1>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
+        <h2>New Study Buddy Match Request</h2>
 
-        <p style="font-size: 16px; line-height: 1.7; color: #dbeafe;">
-          Hi <strong>${receiverName}</strong>,
-        </p>
+        <p>Hello ${receiverName},</p>
+        <p><strong>${senderName}</strong> wants to study with you.</p>
 
-        <p style="font-size: 16px; line-height: 1.7; color: #d1d5db;">
-          <strong>${senderName}</strong> wants to match with you on Study Buddy.
-        </p>
+        <p><strong>They need help with:</strong> ${senderWeakSubject}</p>
+        <p><strong>They can help with:</strong> ${senderStrongSubject}</p>
 
-        <div style="margin: 22px 0; padding: 18px; background: #1e293b; border-radius: 14px; border: 1px solid #334155;">
-          <p style="margin: 0 0 10px; color: #fca5a5;">
-            <strong>${senderName} needs help with:</strong> ${senderWeakSubject}
-          </p>
-
-          <p style="margin: 0; color: #86efac;">
-            <strong>${senderName} can help with:</strong> ${senderStrongSubject}
-          </p>
-        </div>
-
-        <div style="display: flex; gap: 12px; margin-top: 26px;">
-          <a href="${acceptLink}" target="_blank" style="display: inline-block; background: #22c55e; color: white; padding: 13px 20px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+        <p>
+          <a href="${acceptLink}" target="_blank" style="display:inline-block; padding:12px 18px; background:#16a34a; color:white; text-decoration:none; border-radius:8px;">
             Accept Request
           </a>
+        </p>
 
-          <a href="${rejectLink}" target="_blank" style="display: inline-block; background: #ef4444; color: white; padding: 13px 20px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+        <p>
+          <a href="${rejectLink}" target="_blank" style="display:inline-block; padding:12px 18px; background:#dc2626; color:white; text-decoration:none; border-radius:8px;">
             Reject Request
           </a>
-        </div>
-
-        <p style="margin-top: 26px; color: #94a3b8; font-size: 14px;">
-          Only accept if you want to open a private study chat with this student.
         </p>
+
+        <br>
+        <p><strong>Study Buddy Team</strong></p>
       </div>
-    `
+    `,
+    text: `${senderName} sent you a Study Buddy match request. Accept: ${acceptLink} Reject: ${rejectLink}`
   });
 };
 
@@ -2933,7 +2782,7 @@ const sendChatMatchEmail = async (matchRequest) => {
 
   await freshRequest.save();
 
-  const transporter = createEmailTransporter();
+  
 
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222; max-width: 650px; margin: auto; padding: 20px;">
@@ -2989,11 +2838,11 @@ const sendChatMatchEmail = async (matchRequest) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `Study Buddy <${getEmailUser()}>`,
-    to: emailList.join(", "),
-    subject: "Your Study Buddy Video Room",
-    html: emailHtml
+    await sendEmail({
+    to: emailList,
+    subject: "Your Study Buddy Room is Ready",
+    html: emailHtml,
+    text: `Your Study Buddy room is ready. Link: ${freshRequest.meetingLink}`
   });
 
   return {
@@ -3002,6 +2851,7 @@ const sendChatMatchEmail = async (matchRequest) => {
   };
 };
 
+  
 const checkScheduledChatMatches = async () => {
   try {
     const dueRequests = await MatchRequest.find({
