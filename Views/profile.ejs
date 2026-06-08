@@ -15,6 +15,7 @@
     const weakSubjects = studyProfile && studyProfile.weakSubjects ? studyProfile.weakSubjects : [];
     const strongSubjects = studyProfile && studyProfile.strongSubjects ? studyProfile.strongSubjects : [];
     const competitions = competitionRegistrations || [];
+    const profileAvatars = typeof avatars !== "undefined" && Array.isArray(avatars) ? avatars : [];
 
     const totalSubjects = weakSubjects.length + strongSubjects.length;
     const totalCompetitions = competitions.length;
@@ -60,6 +61,25 @@
 
   
   <main class="profile-page">
+        <% const pageErrors = typeof error !== "undefined" ? error : []; %>
+    <% const pageSuccess = typeof success !== "undefined" ? success : []; %>
+
+    <% if (pageErrors && pageErrors.length > 0) { %>
+      <div class="profile-alert profile-alert-error">
+        <% pageErrors.forEach(function(msg) { %>
+          <p><%= msg %></p>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (pageSuccess && pageSuccess.length > 0) { %>
+      <div class="profile-alert profile-alert-success">
+        <% pageSuccess.forEach(function(msg) { %>
+          <p><%= msg %></p>
+        <% }) %>
+      </div>
+    <% } %>
+
 
     <section class="profile-hero">
       <div class="hero-left">
@@ -127,10 +147,9 @@
             <strong><%= user.username || "-" %></strong>
           </div>
 
-          <div class="info-item locked-item">
+                    <div class="info-item">
             <span>Email</span>
             <strong><%= user.email || "-" %></strong>
-            <small>Email cannot be changed</small>
           </div>
 
           <div class="info-item">
@@ -149,40 +168,147 @@
           </div>
         </div>
 
-        <form class="edit-form hidden" id="infoEditForm" action="/profile/update-info" method="POST">
+                <form class="edit-form hidden" id="infoEditForm" action="/profile/update-info" method="POST" novalidate>
+                  <div class="form-group avatar-edit-group">
+  <label>Avatar</label>
+
+  <input 
+    type="hidden" 
+    id="selectedProfileAvatar" 
+    name="avatar" 
+    value="<%= user.avatar || '' %>"
+  />
+
+  <div class="profile-avatar-picker" id="profileAvatarPicker">
+    <% if (profileAvatars.length > 0) { %>
+      <% profileAvatars.forEach(function(avatar) { %>
+        <button 
+          type="button"
+          class="profile-avatar-option <%= user.avatar === avatar.imagePath ? 'selected' : '' %>"
+          data-avatar-path="<%= avatar.imagePath %>"
+          onclick="selectProfileAvatar(this)"
+        >
+          <img src="<%= avatar.imagePath %>" alt="<%= avatar.name %>">
+          <span><%= avatar.name %></span>
+        </button>
+      <% }) %>
+    <% } else { %>
+      <p class="avatar-empty">No avatars available. Ask admin to upload avatars.</p>
+    <% } %>
+  </div>
+
+  <small id="profileAvatarError" class="field-error"></small>
+</div>
           <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" name="fullName" value="<%= user.fullName || '' %>" />
+            <label for="profileFullName">Full Name</label>
+            <input 
+              type="text" 
+              id="profileFullName"
+              name="fullName" 
+              value="<%= user.fullName || '' %>" 
+              autocomplete="name"
+            />
+            <small id="profileFullNameError" class="field-error"></small>
           </div>
 
           <div class="form-group">
-            <label>Username</label>
-            <input type="text" name="username" value="<%= user.username || '' %>" />
+            <label for="profileUsername">Username</label>
+            <input 
+              type="text" 
+              id="profileUsername"
+              name="username" 
+              value="<%= user.username || '' %>" 
+              autocomplete="username"
+            />
+            <small id="profileUsernameError" class="field-error"></small>
           </div>
 
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" value="<%= user.email || '' %>" disabled />
-            <small>Email cannot be changed</small>
+            <label for="profileEmail">Email</label>
+            <input 
+              type="email" 
+              id="profileEmail"
+              name="email"
+              value="<%= user.email || '' %>" 
+              autocomplete="email"
+            />
+            <small id="profileEmailError" class="field-error"></small>
           </div>
 
           <div class="form-group">
-            <label>Gender</label>
-            <select name="gender">
+            <label for="profileGender">Gender</label>
+            <select id="profileGender" name="gender">
               <option value="">Select Gender</option>
               <option value="Male" <%= user.gender === "Male" ? "selected" : "" %>>Male</option>
               <option value="Female" <%= user.gender === "Female" ? "selected" : "" %>>Female</option>
             </select>
+            <small id="profileGenderError" class="field-error"></small>
           </div>
 
           <div class="form-group">
-            <label>University</label>
-            <input type="text" name="university" value="<%= user.university || '' %>" />
+            <label for="profileUniversity">University</label>
+            <select id="profileUniversity" name="university">
+              <option value="">Select your university...</option>
+              <option value="MIU" <%= user.university === "MIU" ? "selected" : "" %>>MIU</option>
+              <option value="GIU" <%= user.university === "GIU" || user.university === "GUC" ? "selected" : "" %>>GUC</option>
+              <option value="ACU" <%= user.university === "ACU" ? "selected" : "" %>>ACU (Chinese)</option>
+              <option value="ASU" <%= user.university === "ASU" ? "selected" : "" %>>ASU (Ain Shams)</option>
+            </select>
+            <small id="profileUniversityError" class="field-error"></small>
           </div>
 
           <div class="form-group">
-            <label>Major</label>
-            <input type="text" name="major" value="<%= user.major || '' %>" />
+            <label for="profileMajor">Major</label>
+            <select id="profileMajor" name="major">
+              <option value="">Select your major...</option>
+              <option value="cs" <%= user.major === "cs" || user.major === "Computer Science" ? "selected" : "" %>>Computer Science</option>
+              <option value="B" <%= user.major === "B" || user.major === "Business" ? "selected" : "" %>>Business</option>
+              <option value="Bi" <%= user.major === "Bi" || user.major === "Business Informatics" ? "selected" : "" %>>Business Informatics</option>
+              <option value="M" <%= user.major === "M" || user.major === "Masscom" ? "selected" : "" %>>Masscom</option>
+              <option value="E" <%= user.major === "E" || user.major === "Engineering" ? "selected" : "" %>>Engineering</option>
+            </select>
+            <small id="profileMajorError" class="field-error"></small>
+          </div>
+
+          <div class="profile-password-box">
+            <h3>Change Password</h3>
+            <p>Leave these 3 fields empty if you do not want to change your password.</p>
+
+            <div class="form-group">
+              <label for="profileCurrentPassword">Current Password</label>
+              <input 
+                type="password" 
+                id="profileCurrentPassword"
+                name="currentPassword" 
+                autocomplete="current-password"
+                placeholder="Only required if changing password"
+              />
+              <small id="profileCurrentPasswordError" class="field-error"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="profileNewPassword">New Password</label>
+              <input 
+                type="password" 
+                id="profileNewPassword"
+                name="newPassword" 
+                autocomplete="new-password"
+                placeholder="Uppercase, lowercase, number, special character"
+              />
+              <small id="profileNewPasswordError" class="field-error"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="profileConfirmPassword">Confirm New Password</label>
+              <input 
+                type="password" 
+                id="profileConfirmPassword"
+                name="confirmPassword" 
+                autocomplete="new-password"
+                placeholder="Type the new password again"
+              />
+              <small id="profileConfirmPasswordError" class="field-error"></small>
+            </div>
           </div>
 
           <div class="edit-actions">

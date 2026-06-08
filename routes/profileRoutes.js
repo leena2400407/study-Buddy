@@ -1,51 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
 
 const User = require("../models/user");
 const StudyProfile = require("../models/StudyProfile");
+const Avatar = require("../models/Avatar");
 const Event = require("../models/Events");
 const EventRegistration = require("../models/eventsReg");
+
 const { requirePageAuth } = require("../middleware/authMiddleware");
-
-const subjectAliases = {
-  algo: "Algorithms",
-  algorithm: "Algorithms",
-  algorithms: "Algorithms",
-
-  ds: "Data Structures",
-  datastructure: "Data Structures",
-  datastructures: "Data Structures",
-  "data structure": "Data Structures",
-  "data structures": "Data Structures",
-
-  os: "Operating Systems",
-  "operating system": "Operating Systems",
-  "operating systems": "Operating Systems",
-
-  db: "Database",
-  database: "Database",
-  databases: "Database",
-
-  oop: "Object Oriented Programming",
-  "object oriented programming": "Object Oriented Programming",
-  "object-oriented programming": "Object Oriented Programming",
-
-  math: "Math",
-  maths: "Math",
-  mathematics: "Math",
-
-  ai: "Artificial Intelligence",
-  "artificial intelligence": "Artificial Intelligence",
-
-  ml: "Machine Learning",
-  "machine learning": "Machine Learning",
-
-  web: "Web Development",
-  "web development": "Web Development",
-
-  se: "Software Engineering",
-  "software engineering": "Software Engineering"
-};
 
 const normalizeSubject = (subject) => {
   const cleaned = String(subject || "")
@@ -87,6 +50,9 @@ router.get("/profile", requirePageAuth, async (req, res) => {
     const studyProfile = await StudyProfile.findOne({
       user: userId
     }).lean();
+    const avatars = await Avatar.find()
+  .sort({ createdAt: -1 })
+  .lean();
 
     const competitionRegistrations = await EventRegistration.find({
       user: userId
@@ -94,20 +60,22 @@ router.get("/profile", requirePageAuth, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    res.render("profile", {
-      user: freshUser || req.session.user,
-      studyProfile,
-      competitionRegistrations
-    });
+   res.render("profile", {
+  user: freshUser || req.session.user,
+  studyProfile,
+  competitionRegistrations,
+  avatars
+});
 
   } catch (error) {
     console.error("Profile page error:", error);
 
     res.render("profile", {
-      user: req.session.user,
-      studyProfile: null,
-      competitionRegistrations: []
-    });
+  user: req.session.user,
+  studyProfile: null,
+  competitionRegistrations: [],
+  avatars: []
+});
   }
 });
 
@@ -115,19 +83,29 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    let {
-      fullName,
-      username,
-      gender,
-      university,
-      major
-    } = req.body;
+   let {
+  fullName,
+  username,
+  email,
+  gender,
+  university,
+  major,
+  avatar,
+  currentPassword,
+  newPassword,
+  confirmPassword
+} = req.body;
 
-    const cleanedFullName = String(fullName || "").trim();
+    const cleanedFullName = String(fullName || "").trim().replace(/\s+/g, " ");
     const cleanedUsername = String(username || "").trim();
+    const cleanedEmail = String(email || "").trim().toLowerCase();
     const cleanedGenderRaw = String(gender || "").trim().toLowerCase();
     const cleanedUniversity = String(university || "").trim();
     const cleanedMajor = String(major || "").trim();
+    const cleanedAvatar = String(avatar || "").trim();
+    const cleanedCurrentPassword = String(currentPassword || "");
+    const cleanedNewPassword = String(newPassword || "");
+    const cleanedConfirmPassword = String(confirmPassword || "");
 
     let finalGender = "";
 
@@ -140,6 +118,7 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
     if (
       !cleanedFullName ||
       !cleanedUsername ||
+      !cleanedEmail ||
       !finalGender ||
       !cleanedUniversity ||
       !cleanedMajor
@@ -148,52 +127,135 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
       return res.redirect("/profile#info");
     }
 
-    if (cleanedFullName.length < 3 || cleanedFullName.length > 60) {
-      req.flash("error", "Full name must be between 3 and 60 characters.");
+    const fullNameRegex = /^[A-Za-z]+(?: [A-Za-z]+)+$/;
+
+    if (!fullNameRegex.test(cleanedFullName)) {
+      req.flash("error", "Full name must contain first and last name using letters only.");
       return res.redirect("/profile#info");
     }
 
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (cleanedFullName.length < 5 || cleanedFullName.length > 60) {
+      req.flash("error", "Full name must be between 5 and 60 characters.");
+      return res.redirect("/profile#info");
+    }
+
+    const usernameRegex = /^[A-Za-z_]{3,20}$/;
 
     if (!usernameRegex.test(cleanedUsername)) {
-      req.flash(
-        "error",
-        "Username must be 3-20 characters and only contain letters, numbers, and underscores."
-      );
+      req.flash("error", "Username must be 3-20 characters and only contain letters and underscores.");
       return res.redirect("/profile#info");
     }
 
-    if (cleanedUniversity.length < 2 || cleanedUniversity.length > 80) {
-      req.flash("error", "Please enter a valid university.");
+    const allowedUniversities = ["MIU", "GIU", "ACU", "ASU"];
+    const allowedMajors = ["cs", "B", "Bi", "M", "E"];
+
+    if (!allowedUniversities.includes(cleanedUniversity)) {
+      req.flash("error", "Please select a valid university.");
       return res.redirect("/profile#info");
     }
 
-    if (cleanedMajor.length < 2 || cleanedMajor.length > 80) {
-      req.flash("error", "Please enter a valid major.");
+    if (!allowedMajors.includes(cleanedMajor)) {
+      req.flash("error", "Please select a valid major.");
       return res.redirect("/profile#info");
     }
 
-    const existingUsername = await User.findOne({
-      username: cleanedUsername,
-      _id: {
-        $ne: userId
-      }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(cleanedEmail)) {
+      req.flash("error", "Please enter a valid email.");
+      return res.redirect("/profile#info");
+    }
+
+    const currentUser = await User.findById(userId);
+
+    if (!currentUser) {
+      req.flash("error", "User was not found.");
+      return res.redirect("/profile#info");
+    }
+
+    let finalAvatar = currentUser.avatar || "";
+
+if (cleanedAvatar) {
+  const selectedAvatar = await Avatar.findOne({
+    imagePath: cleanedAvatar
+  }).lean();
+
+  if (!selectedAvatar) {
+    req.flash("error", "Please choose a valid avatar.");
+    return res.redirect("/profile#info");
+  }
+
+  finalAvatar = selectedAvatar.imagePath;
+}
+
+    const existingUser = await User.findOne({
+      _id: { $ne: userId },
+      $or: [
+        { username: cleanedUsername },
+        { email: cleanedEmail }
+      ]
     });
 
-    if (existingUsername) {
-      req.flash("error", "Username is already taken.");
+    if (existingUser) {
+      if (existingUser.email === cleanedEmail) {
+        req.flash("error", "Email is already taken.");
+      } else {
+        req.flash("error", "Username is already taken.");
+      }
+
       return res.redirect("/profile#info");
+    }
+
+    const wantsPasswordChange =
+      cleanedCurrentPassword || cleanedNewPassword || cleanedConfirmPassword;
+
+    const updateData = {
+  fullName: cleanedFullName,
+  username: cleanedUsername,
+  email: cleanedEmail,
+  gender: finalGender,
+  university: cleanedUniversity,
+  major: cleanedMajor,
+  avatar: finalAvatar
+};
+
+    if (wantsPasswordChange) {
+      if (!cleanedCurrentPassword || !cleanedNewPassword || !cleanedConfirmPassword) {
+        req.flash("error", "To change password, fill current password, new password, and confirm password.");
+        return res.redirect("/profile#info");
+      }
+
+      const isCurrentPasswordCorrect = await bcrypt.compare(
+        cleanedCurrentPassword,
+        currentUser.password
+      );
+
+      if (!isCurrentPasswordCorrect) {
+        req.flash("error", "Current password is wrong.");
+        return res.redirect("/profile#info");
+      }
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+      if (!passwordRegex.test(cleanedNewPassword)) {
+        req.flash(
+          "error",
+          "Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+        );
+        return res.redirect("/profile#info");
+      }
+
+      if (cleanedNewPassword !== cleanedConfirmPassword) {
+        req.flash("error", "Passwords do not match.");
+        return res.redirect("/profile#info");
+      }
+
+      updateData.password = await bcrypt.hash(cleanedNewPassword, 10);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        fullName: cleanedFullName,
-        username: cleanedUsername,
-        gender: finalGender,
-        university: cleanedUniversity,
-        major: cleanedMajor
-      },
+      updateData,
       {
         new: true,
         runValidators: true
@@ -209,10 +271,11 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
       ...req.session.user,
       fullName: updatedUser.fullName,
       username: updatedUser.username,
+      email: updatedUser.email,
       gender: updatedUser.gender,
       university: updatedUser.university,
       major: updatedUser.major,
-      avatar: updatedUser.avatar || req.session.user.avatar || "",
+     avatar: updatedUser.avatar || "",
       role: req.session.user.role || "student"
     };
 
@@ -223,6 +286,7 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
       {
         fullName: updatedUser.fullName,
         username: updatedUser.username,
+        email: updatedUser.email,
         university: updatedUser.university || "",
         major: updatedUser.major || ""
       },
@@ -231,12 +295,22 @@ router.post("/profile/update-info", requirePageAuth, async (req, res) => {
       }
     );
 
-    req.flash("success", "Profile information updated.");
+    req.flash(
+      "success",
+      wantsPasswordChange ? "Profile and password updated." : "Profile information updated."
+    );
+
     res.redirect("/profile#info");
 
   } catch (error) {
     console.error("Update profile info error:", error);
-    req.flash("error", "Could not update profile information.");
+
+    if (error && error.code === 11000) {
+      req.flash("error", "Email or username already exists.");
+    } else {
+      req.flash("error", "Could not update profile information.");
+    }
+
     res.redirect("/profile#info");
   }
 });
