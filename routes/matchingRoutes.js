@@ -1043,7 +1043,7 @@ router.get("/matching/request/:requestId/accept", async (req, res) => {
     matchRequest.chat = chat._id;
     await matchRequest.save();
 
-    res.redirect(`/matching/chat/${chat._id}`);
+    res.redirect("/matching");
 
   } catch (error) {
     console.error("Accept match request error:", error);
@@ -1063,12 +1063,7 @@ router.get("/matching/request/:requestId/reject", async (req, res) => {
     }
 
     if (matchRequest.status !== "pending") {
-      return res.send(`
-        <div style="font-family: Arial; max-width: 520px; margin: 80px auto; text-align: center;">
-          <h1>This request is already ${matchRequest.status}.</h1>
-          <a href="/matching">Back to Matching</a>
-        </div>
-      `);
+      return res.redirect("/matching");
     }
 
     matchRequest.status = "rejected";

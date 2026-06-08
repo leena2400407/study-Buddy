@@ -952,7 +952,7 @@ async function acceptMatchRequest(requestId, otherName = "Study Partner") {
     return;
   }
 
-  const confirmAccept = confirm("Accept this match request and open a chat?");
+ const confirmAccept = confirm("Accept this match request?");
 
   if (!confirmAccept) return;
 
@@ -976,14 +976,13 @@ async function acceptMatchRequest(requestId, otherName = "Study Partner") {
       return;
     }
 
-    showToast(data.message || "Request accepted.", "success");
+    showToast("Request accepted. The chat is now available in your requests section.", "success");
 
     await loadMyRequests();
+    await refreshSavedMatches(true);
 
-    if (data.chatId) {
-      window.location.href = `/matching/chat/${data.chatId}`;
-      return;
-    }
+    return;
+    
   } catch (error) {
     console.error("Accept match request error:", error);
     showToast("Server error while accepting request.", "error");
