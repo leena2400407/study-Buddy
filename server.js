@@ -4620,7 +4620,7 @@ app.get("/blockblast", requirePageAuth, (req, res) => {
   res.render("game");
 });
 
-app.get("/wordle", requirePageAuth, (req, res) => {
+app.get("/wordle", (req, res) => {
   res.render("Game2");
 });
 
