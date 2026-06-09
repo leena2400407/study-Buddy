@@ -58,6 +58,12 @@ const sendEventRegistrationEmail = async ({
 
         <p>Hello ${leaderName},</p>
         <p>Your team has been registered successfully.</p>
+        <p>Please note that  a down payment of 50% of the registration fee the must be paid within three 
+        days from the date of receiving this approval email. Failure 
+        to complete the payment within this period may result in 
+        cancellation of your registration.</p>
+        <p>Payment Method: Instapay 01111506687 (name: Mohamed Walid)</p>
+        <p>After Payment screenshot your transaction and forword it to us.</p>
 
         <p><strong>Tournament:</strong> ${tournamentName}</p>
         <p><strong>Team Name:</strong> ${teamName}</p>
